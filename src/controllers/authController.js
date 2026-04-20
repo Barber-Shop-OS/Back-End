@@ -1,3 +1,4 @@
+// Sprint 0: Authentication controller with secure password handling and Portuguese messages
 const User = require("../models/user");
 const Barber = require("../models/barber"); 
 const bcrypt = require("bcryptjs");
@@ -5,29 +6,37 @@ const jwt = require("jsonwebtoken");
 const { AppError, ValidationError, NotFoundError } = require('../utils/errorHandler');
 require("dotenv").config();
 
-// Função para registrar um novo usuário
+// Register a new user with secure password hashing
 const register = async (req, res, next) => {
   try {
     const { name, email, password, role, bio } = req.body;
 
-    // Verifica se o e-mail já está cadastrado
-    const existingUser = await User.findOne({ where: { email } });
+    // Check if email already exists
+    const existingUser = await User.findOne({ 
+      where: { email },
+      attributes: ['id']
+    });
     if (existingUser) {
-      throw new ValidationError("E-mail já cadastrado!");
+      throw new ValidationError("E-mail já está em uso");
     }
 
-    // Criptografa a senha
+    // Validate password length
+    if (!password || String(password).trim().length < 6) {
+      throw new ValidationError("Senha deve ter no mínimo 6 caracteres");
+    }
+
+    // Hash password securely
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Cria o usuário
+    // Create user
     const user = await User.create({
       name,
       email,
-      password: hashedPassword, // Armazena a senha encriptada
-      role,
+      password: hashedPassword,
+      role: role || 'cliente',
     });
 
-    // Se o usuário for barbeiro, adiciona na tabela barbers
+    // If user is barber, create barber profile
     if (role === "barbeiro") {
       await Barber.create({
         user_id: user.id,
@@ -36,41 +45,58 @@ const register = async (req, res, next) => {
       });
     }
 
-    res.status(201).json({ message: "Usuário cadastrado com sucesso!", user });
+    // Return user without password
+    const userResponse = await User.findByPk(user.id, {
+      attributes: { exclude: ['password'] }
+    });
+
+    res.status(201).json({ 
+      message: "Usuário cadastrado com sucesso", 
+      user: userResponse 
+    });
   } catch (error) {
     return next(error);
   }
 };
 
-// Função para login de usuário
+// Login user and return JWT token
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      throw new NotFoundError("Usuário não encontrado!");
+    if (!email || !password) {
+      throw new ValidationError("E-mail e senha são obrigatórios");
     }
 
-    // Compara a senha fornecida com a senha encriptada no banco
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundError("Credenciais inválidas");
+    }
+
+    // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      throw new AppError("Senha inválida!", 401);
+      throw new AppError("Credenciais inválidas", 401);
     }
-    // Gera um token JWT
+
+    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
 
-    res.json({ message: "Login realizado com sucesso!", token });
+    res.json({ 
+      message: "Login realizado com sucesso", 
+      token 
+    });
   } catch (error) {
     return next(error);
   }
 };
 
-// Função para obter os dados do usuário autenticado
+// Get authenticated user profile
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -78,7 +104,7 @@ const getMe = async (req, res, next) => {
     });
 
     if (!user) {
-      throw new NotFoundError("Usuário não encontrado!");
+      throw new NotFoundError("Usuário não encontrado");
     }
 
     res.json(user);
@@ -87,7 +113,6 @@ const getMe = async (req, res, next) => {
   }
 };
 
-// Exporta as funções do controlador de autenticação
 module.exports = { 
     register,
     login,

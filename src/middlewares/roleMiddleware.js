@@ -1,30 +1,43 @@
+// Sprint 0: Dynamic role-based access control middleware
 const User = require('../models/user');
+const { ForbiddenError, UnauthorizedError } = require('../utils/errorHandler');
 
-// Middleware para verificar se o usuário é administrador
-const verificaAdm = async (req, res, next) => {
-    const tokenUser = req.user;
-    // Um if para garantir que o usuário autenticado exista
-    if (!tokenUser) {
-        return res.status(401).json({ message: 'Acesso negado! Usuário não autenticado.' });
-    }
-    // Verifica se o usuário é administrador
-    try {
-        const userExists = await User.findByPk(tokenUser.id);
-        // Se o usuário não existir, retorna erro
-        if (!userExists) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
-        }
-        // Se o cargo do usuário for 'admin', permite o acesso
-        if (tokenUser.role === 'admin') {
-            return next();
-        }
-        return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem acessar esta rota.' });
-    // Se ocorrer algum erro durante o processo, retorna erro interno do servidor
-    } catch (error) {
-        return res.status(500).json({ message: 'Erro interno do servidor.' });
-    }
+// Factory function: returns middleware that checks if user has one of the allowed roles
+const roleMiddleware = (allowedRoles = []) => {
+	return async (req, res, next) => {
+		try {
+			const tokenUser = req.user;
+
+			// Ensure user is authenticated
+			if (!tokenUser) {
+				return next(new UnauthorizedError('Usuário não autenticado'));
+			}
+
+			// Fetch user from database to get current role
+			const userExists = await User.findByPk(tokenUser.id, {
+				attributes: ['id', 'role'],
+			});
+
+			if (!userExists) {
+				return next(new UnauthorizedError('Usuário não encontrado'));
+			}
+
+			// Check if user's role is in the allowed list
+			if (!allowedRoles.includes(userExists.role)) {
+				return next(new ForbiddenError(`Acesso restrito. Permissão necessária: ${allowedRoles.join(', ')}`));
+			}
+
+			// Update req.user with fresh role from DB
+			req.user.role = userExists.role;
+			next();
+		} catch (error) {
+			return next(error);
+		}
+	};
 };
 
-module.exports = {
-    verificaAdm,
-};
+// Legacy export for backward compatibility
+const verificaAdm = roleMiddleware(['admin']);
+
+module.exports = roleMiddleware;
+module.exports.verificaAdm = verificaAdm;

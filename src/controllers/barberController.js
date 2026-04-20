@@ -1,7 +1,8 @@
+// Sprint 0.4: Barber controller with Portuguese messages
 const barberService = require('../services/barberService');
 const { success, created, noContent } = require('../utils/responseHandler');
 
-// Função para gerenciar barbers
+// Get all barbers
 const getAllBarbers = async (req, res, next) => {
     try {
         const barbers = await barberService.getAllBarbers(req.query);
@@ -11,7 +12,7 @@ const getAllBarbers = async (req, res, next) => {
     }
 };
 
-// Função para obter um barber por ID
+// Get barber by ID
 const getBarberById = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -22,7 +23,7 @@ const getBarberById = async (req, res, next) => {
     }
 };
 
-// Função para criar um novo barber
+// Create new barber
 const createBarber = async (req, res, next) => {
   try {
     const barber = await barberService.createBarber(req.body);
@@ -32,18 +33,18 @@ const createBarber = async (req, res, next) => {
   }
 };
 
-// Função para atualizar um barber existente
+// Update barber
 const updateBarber = async (req, res, next) => {
     const { id } = req.params;
     try {
         const barber = await barberService.updateBarber(id, req.body);
-        return success(res, barber);
+        return success(res, { message: 'Barbeiro atualizado com sucesso', barber });
     } catch (err) {
         return next(err);
     }
 };
 
-// Função para remover um barber
+// Delete barber
 const deleteBarber = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -54,7 +55,6 @@ const deleteBarber = async (req, res, next) => {
     }
 };
 
-// Exporta as funções do controlador de Barbeiro
 module.exports = {
     getAllBarbers,
     getBarberById,

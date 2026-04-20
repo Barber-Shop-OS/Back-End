@@ -1,7 +1,8 @@
+// Sprint 0.4: Appointment controller with Portuguese messages
 const appointmentService = require('../services/appointmentService');
 const { success, created, noContent } = require('../utils/responseHandler');
 
-// Função para gerenciar agendamentos
+// Get all appointments
 const getAllAppointments = async (req, res, next) => {
     try {
         const result = await appointmentService.getAllAppointments(req.query);
@@ -11,7 +12,7 @@ const getAllAppointments = async (req, res, next) => {
     }
 };
 
-// Função para obter um agendamento por ID
+// Get appointment by ID
 const getAppointmentById = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -22,7 +23,7 @@ const getAppointmentById = async (req, res, next) => {
     }
 };
 
-// Função para criar um novo agendamento
+// Create new appointment
 const createAppointment = async (req, res, next) => {
   try {
     const appointment = await appointmentService.createAppointment(req.body);
@@ -32,7 +33,7 @@ const createAppointment = async (req, res, next) => {
   }
 };
 
-// Função para atualizar o status de um agendamento
+// Update appointment status
 const updateAppointmentStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -44,7 +45,7 @@ const updateAppointmentStatus = async (req, res, next) => {
     }
 };
 
-// Função para remover um agendamento
+// Delete appointment
 const deleteAppointment = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -55,7 +56,6 @@ const deleteAppointment = async (req, res, next) => {
     }
 };
 
-// Exporta as funções do controlador de agendamento
 module.exports = {
     getAllAppointments,
     getAppointmentById,

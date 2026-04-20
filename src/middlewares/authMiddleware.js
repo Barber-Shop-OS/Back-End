@@ -1,23 +1,25 @@
+// Sprint 0: JWT authentication middleware with proper error handling
 const jwt = require("jsonwebtoken");
+const { UnauthorizedError } = require("../utils/errorHandler");
 require("dotenv").config();
 
-// Middleware de autenticação para proteger rotas
+// Middleware to verify JWT token and attach user to request
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
-  // Verifica se o token está presente
+
+  // Check if token is provided
   if (!token) {
-    return res.status(401).json({ message: "Acesso negado! Token não fornecido." });
+    return next(new UnauthorizedError('Token não fornecido'));
   }
-  // Verifica e decodifica o token
+
+  // Verify and decode JWT
   try {
     const verified = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-    req.user = verified; 
+    req.user = verified;
     next();
-  // Se o token for inválido, retorna erro
   } catch (error) {
-    res.status(401).json({ message: "Token inválido!" });
+    return next(new UnauthorizedError('Token inválido ou expirado'));
   }
 };
 
-// Exporta o middleware de autenticação
 module.exports = authMiddleware;

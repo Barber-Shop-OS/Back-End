@@ -1,7 +1,8 @@
+// Sprint 0.4: Services controller with Portuguese messages
 const serviceService = require('../services/serviceService');
 const { success, created, noContent } = require('../utils/responseHandler');
 
-// Função para gerenciar serviços
+// Create new service
 const createService = async (req, res, next) => {
     try {
         const service = await serviceService.createService(req.body);
@@ -11,7 +12,7 @@ const createService = async (req, res, next) => {
     }
 };
 
-// Função para obter todos os serviços
+// Get all services
 const getAllServices = async (req, res, next) => {
     try {
         const services = await serviceService.getAllServices(req.query);
@@ -21,7 +22,7 @@ const getAllServices = async (req, res, next) => {
     }
 };
 
-// Função para obter um serviço por ID
+// Get service by ID
 const getServiceById = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -32,7 +33,7 @@ const getServiceById = async (req, res, next) => {
     }
 };
 
-// Função para atualizar um serviço existente
+// Update service
 const updateService = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -43,7 +44,7 @@ const updateService = async (req, res, next) => {
     }
 };
 
-// Função para remover um serviço
+// Delete service
 const deleteService = async (req, res, next) => {
     const { id } = req.params;
     try {
@@ -54,7 +55,6 @@ const deleteService = async (req, res, next) => {
     }
 };
 
-// Exporta as funções do controlador de serviços
 module.exports = {
     createService,
     getAllServices,

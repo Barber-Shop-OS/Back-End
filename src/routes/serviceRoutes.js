@@ -1,14 +1,35 @@
-// Rotas para operações relacionadas a serviços
+// Sprint 0.2: Service routes with auth and role protection
 const express = require('express');
-const router = express.Router();
 const servicesController = require('../controllers/servicesController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const roleMiddleware = require('../middlewares/roleMiddleware');
 const { validateCreate, validateUpdate } = require('../middlewares/validateServicePayload');
 
-// Definição das rotas para serviços
-router.post('/', validateCreate, servicesController.createService);
+const router = express.Router();
+
+// Public routes - list and read
 router.get('/', servicesController.getAllServices);
 router.get('/:id', servicesController.getServiceById);
-router.put('/:id', validateUpdate, servicesController.updateService);
-router.delete('/:id', servicesController.deleteService);
+
+// Protected routes - create, update, delete (admin/owner only)
+router.post('/', 
+  authMiddleware, 
+  roleMiddleware(['admin', 'owner']), 
+  validateCreate, 
+  servicesController.createService
+);
+
+router.put('/:id', 
+  authMiddleware, 
+  roleMiddleware(['admin', 'owner']), 
+  validateUpdate, 
+  servicesController.updateService
+);
+
+router.delete('/:id', 
+  authMiddleware, 
+  roleMiddleware(['admin', 'owner']), 
+  servicesController.deleteService
+);
 
 module.exports = router;
