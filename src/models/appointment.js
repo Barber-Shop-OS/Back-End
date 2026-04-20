@@ -1,8 +1,13 @@
-// Estrutura de dados para a classe Appointment usando Sequelize
+// Sprint 1.9: Updated Appointment model with branch and payment association
 const {DataTypes} = require('sequelize');
 const sequelize = require('../config/sequelize');
 
 const Appointment = sequelize.define('appointments', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
     user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -24,6 +29,14 @@ const Appointment = sequelize.define('appointments', {
         allowNull: false,
         references: {
         model: 'services',
+        key: 'id',
+        },
+    },
+    branch_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+        model: 'branches',
         key: 'id',
         },
     },

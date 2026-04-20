@@ -1,8 +1,13 @@
-// Estrutura de dados para a classe Service usando Sequelize
+// Sprint 1.7: Updated Service model with proper name and barbershop association
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize');
 
-const Service = sequelize.define('barbearia', {
+const Service = sequelize.define('Service', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -18,6 +23,14 @@ const Service = sequelize.define('barbearia', {
   duration: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  barbershop_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'barbershops',
+      key: 'id',
+    },
   },
   created_at: {
     type: DataTypes.DATE,
