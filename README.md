@@ -49,14 +49,9 @@ npm run dev
 
 ## 📚 Documentação
 
-| Documento | Propósito |
-|-----------|----------|
-| [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) | Passo a passo de deployment |
-| [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) | Checklist para colocar em produção |
-| [REFACTORING_SUMMARY.md](./REFACTORING_SUMMARY.md) | O que mudou na v2.0 |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Diagramas e arquitetura |
-| [FILES_CHANGED.md](./FILES_CHANGED.md) | Lista de arquivos modificados |
-| [EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md) | Resumo para stakeholders |
+O repositório mantém apenas um documento de apoio além deste README:
+
+- [RELATORIO_MUDANCAS.md](./RELATORIO_MUDANCAS.md) | Resumo consolidado do que foi mudado
 
 ---
 
@@ -374,10 +369,7 @@ Este projeto está sob a licença MIT. Veja [LICENSE](./LICENSE) para detalhes.
 
 ## 📞 Suporte
 
-Para suporte, consulte a documentação em:
-- [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)
-- [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
+Para suporte, consulte o relatório consolidado em [RELATORIO_MUDANCAS.md](./RELATORIO_MUDANCAS.md).
 
 ---
 
