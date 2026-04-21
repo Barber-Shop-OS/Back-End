@@ -1,9 +1,11 @@
 # Relatório de Mudanças do Back-End
 
 ## Resumo
-Este relatório consolida as mudanças aplicadas no back-end BarberOS em duas frentes principais:
+Este relatório consolida as mudanças aplicadas no back-end BarberOS em quatro frentes principais:
 - reforço de segurança e autenticação
 - expansão do modelo de dados para suportar cenário SaaS multi-barbearia
+- criação dos módulos de negócio para barbershop, branch, address e payment
+- reorganização da arquitetura para seguir a estrutura por módulos
 
 ## O que foi alterado
 
@@ -35,15 +37,34 @@ Este relatório consolida as mudanças aplicadas no back-end BarberOS em duas fr
 - Criação de configuração de banco separada para desenvolvimento, teste e produção.
 - Ajuste da inicialização da aplicação para não depender de `sequelize.sync()`.
 
-### 4. Documentação
+### 4. Novos módulos de negócio
+- Criação da stack completa de `routes → controller → service → repository` para:
+  - Barbershop
+  - Branch
+  - Address
+  - Payment
+- Inclusão de filtros e paginação nos módulos principais.
+- Validações específicas para endereço, pagamento, barbeiro, serviço e agendamento.
+
+### 5. Reorganização da arquitetura
+- Criação da nova estrutura baseada em `src/modules/*`.
+- Atualização do roteamento central para importar as rotas a partir dos módulos.
+- Refatoração de autenticação e usuários para `authService` e `userService`.
+- Manutenção de compatibilidade com a base existente por meio da nova organização interna.
+
+### 6. Documentação
 - Criação de documentação consolidada sobre arquitetura, implementação, mudanças e checklist.
 - Atualização do README com visão geral do projeto e orientações de uso.
+- Remoção dos documentos Markdown auxiliares para manter apenas o README e este relatório.
 
 ## Impacto principal
 - A API ficou mais segura.
 - A estrutura de dados passou a suportar múltiplas barbearias e filiais.
 - O projeto ficou preparado para uso com migrações e deploy controlado.
-- A base de código ganhou documentação mais completa para operação e manutenção.
+- A base de código ganhou módulos de negócio separados por domínio.
+- O repositório ficou mais enxuto, com apenas dois Markdown principais.
 
-## Observação
-Se a ideia for manter apenas um único arquivo Markdown no repositório, preciso da sua confirmação para apagar os demais documentos `.md` e deixar apenas este relatório.
+## Estado atual do repositório
+- Markdown mantidos: `README.md` e `RELATORIO_MUDANCAS.md`.
+- Código organizado em módulos sob `src/modules/`.
+- Rotas centrais apontando para a nova estrutura modular.
