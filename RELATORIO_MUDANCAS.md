@@ -1,11 +1,12 @@
 # Relatório de Mudanças do Back-End
 
 ## Resumo
-Este relatório consolida as mudanças aplicadas no back-end BarberOS em quatro frentes principais:
+Este relatório consolida as mudanças aplicadas no back-end BarberOS em cinco frentes principais:
 - reforço de segurança e autenticação
 - expansão do modelo de dados para suportar cenário SaaS multi-barbearia
 - criação dos módulos de negócio para barbershop, branch, address e payment
 - reorganização da arquitetura para seguir a estrutura por módulos
+- melhoria de qualidade, observabilidade e hardening de segurança da API
 
 ## O que foi alterado
 
@@ -57,14 +58,50 @@ Este relatório consolida as mudanças aplicadas no back-end BarberOS em quatro 
 - Atualização do README com visão geral do projeto e orientações de uso.
 - Remoção dos documentos Markdown auxiliares para manter apenas o README e este relatório.
 
+### 7. Qualidade, observabilidade e hardening (Sprint 4)
+- Implementação de logging estruturado com Winston em `src/utils/logger.js`.
+- Criação de middleware de log de requisições em `src/middlewares/requestLoggerMiddleware.js` com captura de método, rota, IP, user-agent, status e tempo de resposta.
+- Substituição de `console.log` e `console.error` por `logger.info` e `logger.error` em pontos de inicialização, conexão e tratamento de erro.
+- Inclusão de arquivos de log em `logs/error.log` e `logs/combined.log`, com exclusão de `logs/` no `.gitignore`.
+- Implementação de rate limiting com `express-rate-limit` em `src/middlewares/rateLimitMiddleware.js`:
+  - `authLimiter` para login e registro
+  - `apiLimiter` global para toda a API
+  - `paymentLimiter` para rotas sensíveis de pagamento
+- Aplicação de headers de segurança com Helmet no bootstrap da aplicação:
+  - `helmet()`
+  - `helmet.crossOriginResourcePolicy({ policy: 'cross-origin' })`
+  - `helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' })`
+- Manutenção do `cors()` após Helmet para preservar compatibilidade com clientes existentes.
+- Configuração de documentação OpenAPI com `swagger-jsdoc` + `swagger-ui-express` em `src/config/swagger.js`.
+- Exposição de `/api/docs` apenas fora de produção e log da URL de documentação na inicialização.
+- Inclusão de anotações Swagger nas rotas dos módulos:
+  - auth, user, barber, barbershop, branch, address, service, appointment e payment.
+- Configuração de testes com Jest + Supertest no `package.json`:
+  - scripts: `test`, `test:watch`, `test:coverage`
+  - configuração de cobertura para `src/**/*.js`, excluindo migrations e config.
+- Criação de `src/config/testSequelize.js` com SQLite em memória para execução isolada de testes.
+- Criação de testes de integração em `src/__tests__/`:
+  - `auth.test.js`
+  - `barbershop.test.js`
+  - `appointment.test.js`
+  - `payment.test.js`
+- Execução da suíte de testes com sucesso (4 suítes, 27 testes aprovados).
+
 ## Impacto principal
 - A API ficou mais segura.
 - A estrutura de dados passou a suportar múltiplas barbearias e filiais.
 - O projeto ficou preparado para uso com migrações e deploy controlado.
 - A base de código ganhou módulos de negócio separados por domínio.
+- A aplicação agora possui observabilidade padronizada, proteção contra abuso de requisições e documentação viva da API.
+- A base passou a ter testes de integração automatizados para fluxos críticos.
 - O repositório ficou mais enxuto, com apenas dois Markdown principais.
 
 ## Estado atual do repositório
 - Markdown mantidos: `README.md` e `RELATORIO_MUDANCAS.md`.
 - Código organizado em módulos sob `src/modules/`.
 - Rotas centrais apontando para a nova estrutura modular.
+- Logging estruturado ativo com arquivos de log locais e middleware de request logging.
+- Rate limit ativo nas rotas de autenticação, pagamento e na camada global da API.
+- Helmet e políticas de segurança HTTP aplicadas no bootstrap do Express.
+- Swagger ativo em ambiente não produtivo via `/api/docs`.
+- Testes de integração configurados e executáveis via Jest/Supertest.
