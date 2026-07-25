@@ -15,6 +15,12 @@ const sequelize = isTestEnv
       host: process.env.DB_HOST,
       dialect: 'mysql',
       logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false // Permite conexões com certificados autoassinados da nuvem
+        }
+      }
     });
 
 sequelize.authenticate()
