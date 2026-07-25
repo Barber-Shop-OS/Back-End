@@ -2,15 +2,15 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require('helmet');
-const config = require("../src/config/config");
-const indexRoutes = require("../src/routes/indexRoutes");
-const { NotFoundError } = require("../src/utils/errorHandler");
-const logger = require('../src/utils/logger');
-const requestLoggerMiddleware = require('../src/middlewares/requestLoggerMiddleware');
-const { apiLimiter } = require('../src/middlewares/rateLimitMiddleware');
-const { swaggerUi, specs } = require('../src/config/swagger');
+const config = require("./config/config");
+const indexRoutes = require("./routes/indexRoutes");
+const { NotFoundError } = require("./utils/errorHandler");
+const logger = require('./utils/logger');
+const requestLoggerMiddleware = require('./middlewares/requestLoggerMiddleware');
+const { apiLimiter } = require('./middlewares/rateLimitMiddleware');
+const { swaggerUi, specs } = require('./config/swagger');
 
-require("../src/models/index");
+require("./models/index");
 const app = express();
 
 // Middleware
@@ -34,7 +34,7 @@ app.use(indexRoutes);
 app.use((req, res, next) => next(new NotFoundError('Rota não encontrada')));
 
 // Global error handler (must be last)
-const errorMiddleware = require('../src/middlewares/errorMiddleware');
+const errorMiddleware = require('./middlewares/errorMiddleware');
 app.use(errorMiddleware);
 
 app.set("port", config.port);

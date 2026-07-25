@@ -5,8 +5,8 @@ dotenv.config();
 module.exports = {
   development: {
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || 'barbershop_dev',
+    password: process.env.MYSQL_ROOT_PASSWORD || 'rootpassword',
+    database: process.env.DB_NAME || 'barbershop_db',
     host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
     logging: false,
