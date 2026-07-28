@@ -11,17 +11,22 @@ const sequelize = isTestEnv
       storage: ':memory:',
       logging: false,
     })
-  : new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-      host: process.env.DB_HOST,
-      dialect: 'mysql',
-      logging: false,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false // Permite conexões com certificados autoassinados da nuvem
-        }
+  : new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASS,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'mysql',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false // Permite a conexão caso não esteja passando a CA explicitamente
       }
-    });
+    }
+  }
+);
 
 sequelize.authenticate()
   .then(() => {
