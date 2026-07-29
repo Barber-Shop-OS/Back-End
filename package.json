@@ -6,7 +6,11 @@
     "test": "jest --runInBand --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "dev": "nodemon ./server.js"
+    "dev": "nodemon ./server.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "migrate:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate",
+    "migrate:status": "npx sequelize-cli db:migrate:status"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +32,7 @@
     "sequelize": "^6.37.6",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "umzug": "^3.8.3",
     "winston": "^3.18.3"
   },
   "devDependencies": {
