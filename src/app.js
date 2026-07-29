@@ -27,6 +27,11 @@ if (process.env.NODE_ENV !== 'production') {
 	logger.info('Swagger disponível em http://localhost:3000/api/docs');
 }
 
+// Health check endpoint for hosting platforms such as Render.
+app.get('/', (req, res) => {
+	res.status(200).send('OK');
+});
+
 // Routes
 app.use(indexRoutes);
 
