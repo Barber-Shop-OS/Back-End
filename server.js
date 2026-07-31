@@ -1,9 +1,11 @@
 const app = require('./src/app');
 const logger = require('./src/utils/logger');
 const { runMigrations } = require('./src/config/migrator');
+const { connectDatabase } = require('./src/config/sequelize');
 
 const startServer = async () => {
   try {
+    await connectDatabase();
     // Executa migrations pendentes antes de iniciar o servidor
     await runMigrations();
     

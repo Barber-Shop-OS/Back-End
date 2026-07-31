@@ -25,6 +25,11 @@ const User = sequelize.define("users", {
       type: DataTypes.ENUM("cliente", "barbeiro", "owner", "admin"),
       defaultValue: "cliente",
     },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     timestamps: false, 
