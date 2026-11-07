@@ -72,7 +72,7 @@
   - Endpoint dedicado admin para trocar role: `PATCH /api/admin/users/:id/role` (admin apenas).
 - **Aceite:** teste prova que `role` no body é ignorado/400; usuário A recebe 403 ao editar/ler B; admin consegue.
 
-### [ ] BE-02 — Configuração e JWT endurecidos `[SEC-05]`
+### [x] BE-02 — Configuração e JWT endurecidos `[SEC-05]`
 - **Depende de:** —
 - **Arquivos:** `src/config/config.js`, `src/middlewares/authMiddleware.js`, `src/modules/auth/authService.js`, `server.js`, `.env.example`.
 - **Fazer:**

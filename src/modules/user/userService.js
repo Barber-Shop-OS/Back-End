@@ -2,6 +2,7 @@
 const { Op } = require('sequelize');
 const userRepository = require('./userRepository');
 const { normalizePhone } = require('../../shared/phone');
+const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
 const { AppError, ValidationError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
@@ -9,13 +10,6 @@ const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
 const SELF_EDITABLE_FIELDS = ['name', 'phone'];
 // Admin também corrige e-mail (suporte). Papel só pela rota dedicada.
 const ADMIN_EDITABLE_FIELDS = ['name', 'phone', 'email'];
-
-const sanitizeUser = (user) => {
-  if (!user) return null;
-  const plainUser = user.toJSON ? user.toJSON() : user;
-  const { password, ...safeUser } = plainUser;
-  return safeUser;
-};
 
 const isAdmin = (currentUser) => Boolean(currentUser) && currentUser.role === 'admin';
 const isSelf = (currentUser, id) => Boolean(currentUser) && String(currentUser.id) === String(id);
@@ -37,7 +31,7 @@ const findAll = async (query = {}) => {
     limit: pageSize,
     offset,
     order: [[sortBy, sortDir]],
-    attributes: { exclude: ['password'] },
+    attributes: { exclude: PRIVATE_USER_FIELDS },
   });
 
   return {
@@ -54,7 +48,7 @@ const findById = async (id, currentUser) => {
   if (!isSelf(currentUser, id) && !isAdmin(currentUser)) {
     throw new NotFoundError('Usuário não encontrado');
   }
-  const user = await userRepository.findById(id, { attributes: { exclude: ['password'] } });
+  const user = await userRepository.findById(id, { attributes: { exclude: PRIVATE_USER_FIELDS } });
   if (!user) {
     throw new NotFoundError('Usuário não encontrado');
   }
@@ -121,7 +115,8 @@ const changeRole = async (id, role, currentUser) => {
   if (!user) {
     throw new NotFoundError('Usuário não encontrado');
   }
-  await userRepository.update(id, { role });
+  // Incrementar token_version derruba as sessões abertas com o papel antigo.
+  await userRepository.update(id, { role, token_version: Number(user.token_version || 0) + 1 });
   return sanitizeUser(await userRepository.findById(id));
 };
 

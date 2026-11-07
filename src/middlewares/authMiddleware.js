@@ -1,24 +1,42 @@
-// Sprint 0: JWT authentication middleware with proper error handling
-const jwt = require("jsonwebtoken");
-const { UnauthorizedError } = require("../utils/errorHandler");
-require("dotenv").config();
+// BE-02 / SEC-05: autenticação por Bearer token. O papel vem sempre do banco (nunca só do token)
+// e tokens emitidos antes de uma troca de papel/senha são rejeitados via token_version.
+const { verifyAccessToken } = require('../shared/tokens');
+const { UnauthorizedError } = require('../utils/errorHandler');
 
-// Middleware to verify JWT token and attach user to request
-const authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization");
+const BEARER = /^Bearer ([A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+)$/;
 
-  // Check if token is provided
-  if (!token) {
+const authMiddleware = async (req, res, next) => {
+  const header = req.header('Authorization');
+  if (!header) {
     return next(new UnauthorizedError('Token não fornecido'));
   }
 
-  // Verify and decode JWT
+  const match = BEARER.exec(header.trim());
+  if (!match) {
+    return next(new UnauthorizedError('Token inválido ou expirado'));
+  }
+
+  let payload;
   try {
-    const verified = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-    req.user = verified;
-    next();
+    payload = verifyAccessToken(match[1]);
   } catch (error) {
     return next(new UnauthorizedError('Token inválido ou expirado'));
+  }
+
+  try {
+    // require tardio para evitar ciclo models → config durante o boot.
+    const { User } = require('../models');
+    const user = await User.findByPk(payload.sub, {
+      attributes: ['id', 'email', 'role', 'token_version'],
+    });
+    if (!user || Number(user.token_version || 0) !== Number(payload.tv || 0)) {
+      return next(new UnauthorizedError('Token inválido ou expirado'));
+    }
+
+    req.user = { id: user.id, email: user.email, role: user.role };
+    return next();
+  } catch (error) {
+    return next(error);
   }
 };
 

@@ -1,15 +1,9 @@
 // Auth service responsible for registration, login, and profile lookup.
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { User } = require('../../models');
+const { signAccessToken } = require('../../shared/tokens');
+const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
 const { AppError, ValidationError, NotFoundError } = require('../../utils/errorHandler');
-
-const sanitizeUser = (user) => {
-  if (!user) return null;
-  const plainUser = user.toJSON ? user.toJSON() : user;
-  const { password, ...safeUser } = plainUser;
-  return safeUser;
-};
 
 const register = async (data = {}) => {
   const { name, email, password } = data;
@@ -55,11 +49,7 @@ const login = async (email, password) => {
     throw new AppError('Credenciais inválidas', 401);
   }
 
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '8h' }
-  );
+  const token = signAccessToken(user);
 
   return {
     token,
@@ -69,7 +59,7 @@ const login = async (email, password) => {
 
 const getMe = async (userId) => {
   const user = await User.findByPk(userId, {
-    attributes: { exclude: ['password'] },
+    attributes: { exclude: PRIVATE_USER_FIELDS },
   });
 
   if (!user) {

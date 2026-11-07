@@ -1,17 +1,21 @@
+# Ambiente local. Exige um .env (ver .env.example) — não há senhas/segredos padrão (SEC-05, SEC-14).
 services:
   db:
     image: mysql:5.7
     container_name: barberos-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASS:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:-barbershop_db}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:?Defina DB_ROOT_PASS no .env}
+      MYSQL_DATABASE: ${DB_NAME:?Defina DB_NAME no .env}
+      # Usuário da aplicação (não-root).
+      MYSQL_USER: ${DB_USER:?Defina DB_USER no .env}
+      MYSQL_PASSWORD: ${DB_PASS:?Defina DB_PASS no .env}
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASS:-rootpassword}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,12 +29,14 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${PORT:-3000}
-      DB_HOST: ${DB_HOST:-db}
-      DB_USER: ${DB_USER:-root}
-      DB_PASS: ${DB_PASS:-rootpassword}
-      DB_NAME: ${DB_NAME:-barbershop_db}
-      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret}
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no .env (mínimo 32 caracteres)}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
     ports:
       - "${PORT:-3000}:3000"
 

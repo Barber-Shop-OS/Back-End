@@ -17,12 +17,19 @@ const app = express();
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
-app.use(cors());
+// SEC-08: só as origens configuradas recebem cabeçalhos CORS. Requisições sem Origin
+// (app mobile, curl, servidor-a-servidor) não dependem de CORS e seguem normalmente.
+app.use(
+	cors({
+		origin: (origin, callback) => callback(null, !origin || config.corsOrigins.includes(origin)),
+		credentials: true,
+	})
+);
 app.use(requestLoggerMiddleware);
 app.use(apiLimiter);
 app.use(express.json());
 
-if (process.env.NODE_ENV !== 'production') {
+if (!config.isProduction) {
 	app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
 	logger.info('Swagger disponível em http://localhost:3000/api/docs');
 }

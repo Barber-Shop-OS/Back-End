@@ -53,7 +53,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Ataque:** criar agendamentos em nome de outra pessoa / já `confirmado`; lotar a agenda de um concorrente.
 - **Correção:** `user_id` do token; status definido pelo servidor.
 
-### [ ] SEC-05 — Segredo JWT com fallback e validação frouxa — **Alto** → BE-02
+### [x] SEC-05 — Segredo JWT com fallback e validação frouxa — **Alto** → BE-02
 - **Onde:** `src/config/config.js` (`jwtSecret: process.env.JWT_SECRET || "********"`), `authMiddleware` (`token.replace("Bearer ", "")`, sem `algorithms`), `docker-compose.yml` (`JWT_SECRET:-your_jwt_secret`).
 - **Ataque:** ambiente subido sem `.env` ou com o default do compose → tokens forjáveis com segredo conhecido.
 - **Correção:** validação de env no boot, secret ≥ 32 bytes aleatórios, `algorithms:['HS256']`, `iss/aud`, `token_version` para revogação.
@@ -71,7 +71,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** `app.set('trust proxy', <n de proxies>)`; store compartilhado (`rate-limit-redis` ou tabela MySQL) quando houver > 1 instância; limitador de login por **e-mail** (5 falhas/15 min → atraso progressivo) além de por IP; limites específicos para `forgot-password`, `resend-verification`, `availability`, `POST /appointment`.
 - **Teste:** 6ª tentativa de login errada na mesma conta, de IPs diferentes → 429.
 
-### [ ] SEC-08 — CORS aberto para qualquer origem — **Médio** → BE-02
+### [x] SEC-08 — CORS aberto para qualquer origem — **Médio** → BE-02
 - **Onde:** `app.js` `app.use(cors())`.
 - **Correção:** `CORS_ORIGINS` (lista) com `credentials: true` só para o domínio do web; app mobile não precisa de CORS.
 - **Teste:** `Origin: https://evil.example` não recebe `Access-Control-Allow-Origin`.
