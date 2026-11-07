@@ -18,7 +18,7 @@ describe('POST /api/auth/register', () => {
   it('deve criar um novo usuário com sucesso (201)', async () => {
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Test User', email: 'test@test.com', password: '123456' });
+      .send({ name: 'Test User', email: 'test@test.com', password: 'Senha@123' });
 
     expect(response.status).toBe(201);
     expect(response.body.user).toMatchObject({
@@ -33,11 +33,11 @@ describe('POST /api/auth/register', () => {
   it('deve retornar 409 se e-mail já estiver em uso', async () => {
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Duplicate User', email: 'dup@test.com', password: '123456' });
+      .send({ name: 'Duplicate User', email: 'dup@test.com', password: 'Senha@123' });
 
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Duplicate User 2', email: 'dup@test.com', password: '123456' });
+      .send({ name: 'Duplicate User 2', email: 'dup@test.com', password: 'Senha@123' });
 
     expect(response.status).toBe(409);
   });
@@ -53,13 +53,13 @@ describe('POST /api/auth/login', () => {
     await sequelize.sync({ force: true });
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Login User', email: 'login@test.com', password: '123456' });
+      .send({ name: 'Login User', email: 'login@test.com', password: 'Senha@123' });
   });
 
   it('deve retornar token JWT com credenciais válidas (200)', async () => {
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'login@test.com', password: '123456' });
+      .send({ email: 'login@test.com', password: 'Senha@123' });
 
     expect(response.status).toBe(200);
     expect(response.body.token).toBeDefined();
@@ -77,7 +77,7 @@ describe('POST /api/auth/login', () => {
   it('deve retornar 401 com e-mail inexistente', async () => {
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'naoexiste@test.com', password: '123456' });
+      .send({ email: 'naoexiste@test.com', password: 'Senha@123' });
 
     expect(response.status).toBe(401);
   });
@@ -91,11 +91,11 @@ describe('GET /api/auth/me', () => {
 
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Me User', email: 'me@test.com', password: '123456' });
+      .send({ name: 'Me User', email: 'me@test.com', password: 'Senha@123' });
 
     const login = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'me@test.com', password: '123456' });
+      .send({ email: 'me@test.com', password: 'Senha@123' });
 
     token = login.body.token;
   });

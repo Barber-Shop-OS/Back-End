@@ -1,5 +1,6 @@
 // Barber service with branch filtering and per-user role downgrade support.
 const { Op } = require('sequelize');
+const { parsePagination, likeContains } = require('../../shared/query');
 const { User, Barber } = require('../../models');
 const barberRepository = require('./barberRepository');
 const { assertCanManageBranch, assertCanManageBarber } = require('../../shared/authz');
@@ -7,14 +8,12 @@ const { pickFields } = require('../../shared/pickFields');
 const { ValidationError, NotFoundError } = require('../../utils/errorHandler');
 
 const findAll = async (query = {}) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
   if (query.user_id) where.user_id = Number(query.user_id);
   if (query.branch_id) where.branch_id = Number(query.branch_id);
-  if (query.bio) where.bio = { [Op.like]: `%${query.bio}%` };
+  if (query.bio) where.bio = likeContains(query.bio);
 
   const allowedSortFields = ['created_at', 'bio'];
   const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'created_at';

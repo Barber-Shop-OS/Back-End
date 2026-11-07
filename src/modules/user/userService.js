@@ -1,5 +1,6 @@
 // User service: listagem (admin), leitura/edição do próprio perfil e troca de papel (admin).
 const { Op } = require('sequelize');
+const { parsePagination, likeContains } = require('../../shared/query');
 const userRepository = require('./userRepository');
 const { normalizePhone } = require('../../shared/phone');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
@@ -15,13 +16,11 @@ const isAdmin = (currentUser) => Boolean(currentUser) && currentUser.role === 'a
 const isSelf = (currentUser, id) => Boolean(currentUser) && String(currentUser.id) === String(id);
 
 const findAll = async (query = {}) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
-  if (query.name) where.name = { [Op.like]: `%${query.name}%` };
-  if (query.email) where.email = { [Op.like]: `%${query.email}%` };
+  if (query.name) where.name = likeContains(query.name);
+  if (query.email) where.email = likeContains(query.email);
 
   const allowedSortFields = ['name', 'email', 'created_at'];
   const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'created_at';

@@ -27,7 +27,7 @@ app.use(
 );
 app.use(requestLoggerMiddleware);
 app.use(apiLimiter);
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 if (!config.isProduction) {
 	app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));

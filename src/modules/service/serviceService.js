@@ -1,5 +1,6 @@
 // Service service with barbershop filtering and CRUD validation.
 const { Op } = require('sequelize');
+const { parsePagination, likeContains } = require('../../shared/query');
 const { Barbershop } = require('../../models');
 const serviceRepository = require('./serviceRepository');
 const { assertCanManageBarbershop, assertCanManageService } = require('../../shared/authz');
@@ -17,12 +18,10 @@ const validateServiceFields = (data) => {
 };
 
 const findAll = async (query = {}) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
-  if (query.name) where.name = { [Op.like]: `%${query.name}%` };
+  if (query.name) where.name = likeContains(query.name);
   if (query.barbershop_id) where.barbershop_id = Number(query.barbershop_id);
 
   const allowedSortFields = ['name', 'price', 'duration', 'created_at'];

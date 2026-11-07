@@ -1,5 +1,6 @@
 // Branch service: filiais e seus endereços, sempre dentro do tenant do usuário (BE-03).
 const { Op } = require('sequelize');
+const { parsePagination, likeContains } = require('../../shared/query');
 const { sequelize, Address, Barber } = require('../../models');
 const branchRepository = require('./branchRepository');
 const addressService = require('../address/addressService');
@@ -14,13 +15,11 @@ const ADDRESS_FIELDS = ['cep', 'number', 'complement', 'city', 'state'];
 const isEmpty = (value) => value === undefined || value === null || String(value).trim() === '';
 
 const findAll = async (query = {}) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
   if (query.barbershop_id) where.barbershop_id = Number(query.barbershop_id);
-  if (query.name) where.name = { [Op.like]: `%${query.name}%` };
+  if (query.name) where.name = likeContains(query.name);
 
   const allowedSortFields = ['name', 'created_at'];
   const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'created_at';

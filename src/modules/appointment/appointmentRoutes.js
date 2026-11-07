@@ -3,7 +3,7 @@ const express = require('express');
 const appointmentController = require('./appointmentController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
-const { validateCreate, validateUpdateStatus } = require('../../middlewares/validators/validateAppointmentPayload');
+const schemas = require('./appointmentSchemas');
 
 const router = express.Router();
 
@@ -40,7 +40,7 @@ const router = express.Router();
  *         description: Sem permissão para listar agendamentos
  */
 // Escopo por usuário aplicado no service (cliente vê os seus, barbeiro os que atende, dono os do tenant).
-router.get('/', authMiddleware, appointmentController.getAllAppointments);
+router.get('/', authMiddleware, schemas.list, appointmentController.getAllAppointments);
 
 /**
  * @swagger
@@ -65,7 +65,7 @@ router.get('/', authMiddleware, appointmentController.getAllAppointments);
  *       404:
  *         description: Agendamento não encontrado
  */
-router.get('/:id', authMiddleware, appointmentController.getAppointmentById);
+router.get('/:id', authMiddleware, schemas.byId, appointmentController.getAppointmentById);
 
 /**
  * @swagger
@@ -114,7 +114,7 @@ router.get('/:id', authMiddleware, appointmentController.getAppointmentById);
  *       404:
  *         description: Entidade relacionada não encontrada
  */
-router.post('/', authMiddleware, validateCreate, appointmentController.createAppointment);
+router.post('/', authMiddleware, schemas.create, appointmentController.createAppointment);
 
 /**
  * @swagger
@@ -153,7 +153,7 @@ router.post('/', authMiddleware, validateCreate, appointmentController.createApp
  *       404:
  *         description: Agendamento não encontrado
  */
-router.put('/:id', authMiddleware, validateUpdateStatus, appointmentController.updateAppointmentStatus);
+router.put('/:id', authMiddleware, schemas.updateStatus, appointmentController.updateAppointmentStatus);
 
 /**
  * @swagger
@@ -179,6 +179,6 @@ router.put('/:id', authMiddleware, validateUpdateStatus, appointmentController.u
  *         description: Agendamento não encontrado
  */
 // Exclusão física só para admin; os demais cancelam via PUT { status: 'cancelado' }.
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), appointmentController.deleteAppointment);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin']), schemas.byId, appointmentController.deleteAppointment);
 
 module.exports = router;

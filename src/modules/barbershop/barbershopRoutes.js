@@ -4,6 +4,8 @@ const barbershopController = require('./barbershopController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
+const schemas = require('./barbershopSchemas');
+
 const router = express.Router();
 
 /**
@@ -45,7 +47,7 @@ const router = express.Router();
  *               total: 0
  *               totalPages: 0
  */
-router.get('/', barbershopController.getAll);
+router.get('/', schemas.list, barbershopController.getAll);
 
 /**
  * @swagger
@@ -70,7 +72,7 @@ router.get('/', barbershopController.getAll);
  *             example:
  *               message: Barbearia não encontrada
  */
-router.get('/:id', barbershopController.getById);
+router.get('/:id', schemas.byId, barbershopController.getById);
 
 /**
  * @swagger
@@ -103,7 +105,7 @@ router.get('/:id', barbershopController.getById);
  *       409:
  *         description: Nome já existe para o mesmo owner
  */
-router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), barbershopController.create);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.create, barbershopController.create);
 
 /**
  * @swagger
@@ -140,7 +142,7 @@ router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), barbershopC
  *       404:
  *         description: Barbearia não encontrada
  */
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), barbershopController.update);
+router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.update, barbershopController.update);
 
 /**
  * @swagger
@@ -167,6 +169,6 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), barbersho
  *       404:
  *         description: Barbearia não encontrada
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), barbershopController.remove);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin']), schemas.byId, barbershopController.remove);
 
 module.exports = router;

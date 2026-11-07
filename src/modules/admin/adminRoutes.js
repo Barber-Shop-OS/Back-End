@@ -4,6 +4,8 @@ const userController = require('../user/userController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
+const userSchemas = require('../user/userSchemas');
+
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware(['admin']));
@@ -43,6 +45,6 @@ router.use(authMiddleware, roleMiddleware(['admin']));
  *       404:
  *         description: Usuário não encontrado
  */
-router.patch('/users/:id/role', userController.changeUserRole);
+router.patch('/users/:id/role', userSchemas.changeRole, userController.changeUserRole);
 
 module.exports = router;

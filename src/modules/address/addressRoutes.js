@@ -3,7 +3,7 @@ const express = require('express');
 const addressController = require('./addressController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
-const validateAddressPayload = require('../../middlewares/validators/validateAddressPayload');
+const schemas = require('./addressSchemas');
 
 const router = express.Router();
 
@@ -48,7 +48,7 @@ const router = express.Router();
  *       403:
  *         description: Sem permissão para criar endereço
  */
-router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateAddressPayload, addressController.create);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.create, addressController.create);
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateAdd
  *       404:
  *         description: Endereço não encontrado
  */
-router.get('/:id', authMiddleware, addressController.getById);
+router.get('/:id', authMiddleware, schemas.byId, addressController.getById);
 
 /**
  * @swagger
@@ -125,6 +125,6 @@ router.get('/:id', authMiddleware, addressController.getById);
  *       404:
  *         description: Endereço não encontrado
  */
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), validateAddressPayload, addressController.update);
+router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.update, addressController.update);
 
 module.exports = router;

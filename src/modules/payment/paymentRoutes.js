@@ -3,7 +3,7 @@ const express = require('express');
 const paymentController = require('./paymentController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
-const validatePaymentPayload = require('../../middlewares/validators/validatePaymentPayload');
+const schemas = require('./paymentSchemas');
 const { paymentLimiter } = require('../../middlewares/rateLimitMiddleware');
 
 const router = express.Router();
@@ -46,7 +46,7 @@ const router = express.Router();
  *       409:
  *         description: Pagamento já registrado para o agendamento
  */
-router.post('/', paymentLimiter, authMiddleware, validatePaymentPayload, paymentController.create);
+router.post('/', paymentLimiter, authMiddleware, schemas.create, paymentController.create);
 
 /**
  * @swagger
@@ -71,7 +71,7 @@ router.post('/', paymentLimiter, authMiddleware, validatePaymentPayload, payment
  *       404:
  *         description: Pagamento não encontrado para o agendamento
  */
-router.get('/appointment/:appointment_id', authMiddleware, paymentController.getByAppointment);
+router.get('/appointment/:appointment_id', authMiddleware, schemas.byAppointment, paymentController.getByAppointment);
 
 /**
  * @swagger
@@ -96,7 +96,7 @@ router.get('/appointment/:appointment_id', authMiddleware, paymentController.get
  *       404:
  *         description: Pagamento não encontrado
  */
-router.get('/:id', authMiddleware, paymentController.getById);
+router.get('/:id', authMiddleware, schemas.byId, paymentController.getById);
 
 /**
  * @swagger
@@ -137,6 +137,6 @@ router.get('/:id', authMiddleware, paymentController.getById);
  *       404:
  *         description: Pagamento não encontrado
  */
-router.put('/:id/status', paymentLimiter, authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro']), paymentController.updateStatus);
+router.put('/:id/status', paymentLimiter, authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro']), schemas.updateStatus, paymentController.updateStatus);
 
 module.exports = router;

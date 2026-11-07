@@ -1,21 +1,35 @@
 // Auth service responsible for registration, login, and profile lookup.
 const bcrypt = require('bcryptjs');
 const { User } = require('../../models');
+const config = require('../../config/config');
 const { signAccessToken } = require('../../shared/tokens');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
 const { ValidationError, NotFoundError, UnauthorizedError, ConflictError, CODES } = require('../../utils/errorHandler');
 
-const register = async (data = {}) => {
-  const { name, email, password } = data;
+// SEC-10: custo 12 em produção/dev; 4 em teste para a suíte rodar rápido.
+const BCRYPT_ROUNDS = config.isTest ? 4 : 12;
+const MIN_PASSWORD_LENGTH = 8;
+// Hash fixo usado quando o e-mail não existe, para o tempo de resposta não revelar contas.
+const DUMMY_HASH = bcrypt.hashSync('barberos-dummy-password', BCRYPT_ROUNDS);
 
-  if (!name || String(name).trim() === '') {
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
+const register = async (data = {}) => {
+  const name = String(data.name || '').trim();
+  const email = normalizeEmail(data.email);
+  const { password } = data;
+
+  if (!name) {
     throw new ValidationError("Campo 'name' é obrigatório");
   }
-  if (!email || String(email).trim() === '') {
+  if (!email) {
     throw new ValidationError("Campo 'email' é obrigatório");
   }
-  if (!password || String(password).trim().length < 6) {
-    throw new ValidationError('Senha deve ter no mínimo 6 caracteres');
+  if (!password || String(password).length < MIN_PASSWORD_LENGTH) {
+    throw new ValidationError(`Senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres`);
+  }
+  if (String(password).trim().toLowerCase() === email) {
+    throw new ValidationError('A senha não pode ser igual ao e-mail');
   }
 
   const existingUser = await User.findOne({ where: { email } });
@@ -23,7 +37,7 @@ const register = async (data = {}) => {
     throw new ConflictError('E-mail já está em uso', CODES.EMAIL_IN_USE);
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const user = await User.create({
     name,
     email,
@@ -34,13 +48,15 @@ const register = async (data = {}) => {
   return sanitizeUser(user);
 };
 
-const login = async (email, password) => {
+const login = async (rawEmail, password) => {
+  const email = normalizeEmail(rawEmail);
   if (!email || !password) {
     throw new ValidationError('E-mail e senha são obrigatórios');
   }
 
   const user = await User.findOne({ where: { email } });
   if (!user) {
+    await bcrypt.compare(String(password), DUMMY_HASH);
     throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);
   }
 

@@ -85,7 +85,7 @@ describe('BE-03 — isolamento entre tenants', () => {
     });
 
     it('dono A não edita nem exclui filial de B (403)', async () => {
-      const put = await request(app).put(`/api/branch/${b.branch.id}`).set(bearer(ownerA)).send({ name: 'X' });
+      const put = await request(app).put(`/api/branch/${b.branch.id}`).set(bearer(ownerA)).send({ name: 'Invasão' });
       const del = await request(app).delete(`/api/branch/${b.branch.id}`).set(bearer(ownerA));
       expect(put.status).toBe(403);
       expect(del.status).toBe(403);

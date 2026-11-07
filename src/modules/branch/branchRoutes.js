@@ -4,6 +4,8 @@ const branchController = require('./branchController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
+const schemas = require('./branchSchemas');
+
 const router = express.Router();
 
 /**
@@ -32,7 +34,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de filiais retornada com sucesso
  */
-router.get('/', branchController.getAll);
+router.get('/', schemas.list, branchController.getAll);
 
 /**
  * @swagger
@@ -53,7 +55,7 @@ router.get('/', branchController.getAll);
  *       404:
  *         description: Filial não encontrada
  */
-router.get('/:id', branchController.getById);
+router.get('/:id', schemas.byId, branchController.getById);
 
 /**
  * @swagger
@@ -104,7 +106,7 @@ router.get('/:id', branchController.getById);
  *       404:
  *         description: Barbearia não encontrada
  */
-router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), branchController.create);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.create, branchController.create);
 
 /**
  * @swagger
@@ -153,7 +155,7 @@ router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), branchContr
  *       404:
  *         description: Filial não encontrada
  */
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), branchController.update);
+router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.update, branchController.update);
 
 /**
  * @swagger
@@ -180,6 +182,6 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), branchCon
  *       404:
  *         description: Filial não encontrada
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), branchController.remove);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.byId, branchController.remove);
 
 module.exports = router;

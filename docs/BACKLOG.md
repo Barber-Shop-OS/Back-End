@@ -330,7 +330,7 @@
 - **Fazer:** `AppError(message, status, code, details)`; catálogo em `src/shared/errorCodes.js` (`VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `SLOT_TAKEN`, `CANCELLATION_WINDOW_CLOSED`, `PLAN_LIMIT_REACHED`, `SLUG_TAKEN`, `EMAIL_IN_USE`, ...). Mapear `SequelizeUniqueConstraintError` → 409, `ForeignKeyConstraintError` → 409, `ValidationError` → 400. Em produção, 500 responde `{"message":"Erro interno","code":"INTERNAL","request_id"}` — **nunca** `err.message` de erro não tratado `[SEC-11]`.
 - **Aceite:** teste garante que erro de SQL não vaza mensagem.
 
-### [ ] BE-38 — Validação de entrada centralizada `[SEC-09]`
+### [x] BE-38 — Validação de entrada centralizada `[SEC-09]`
 - **Depende de:** BE-08
 - **Fazer:** Joi + `validate({body, query, params})` com `stripUnknown`, `abortEarly:false`; ids inteiros positivos; `pageSize` máx. 100 (hoje ilimitado → DoS por `pageSize=1000000`); strings com tamanho máximo; `express.json({ limit: '100kb' })`; e-mail normalizado (`trim().toLowerCase()`) no cadastro/login. Substituir os validators manuais de `middlewares/validators/*`.
 - **Aceite:** `pageSize=100000` → 100 itens no máximo; campos extras ignorados.

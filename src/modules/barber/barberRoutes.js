@@ -3,7 +3,7 @@ const express = require('express');
 const barberController = require('./barberController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
-const { validateCreate, validateUpdate } = require('../../middlewares/validators/validateBarberPayload');
+const schemas = require('./barberSchemas');
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ const router = express.Router();
  *               total: 0
  *               totalPages: 0
  */
-router.get('/', barberController.getAll);
+router.get('/', schemas.list, barberController.getAll);
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ router.get('/', barberController.getAll);
  *             example:
  *               message: Barbeiro não encontrado
  */
-router.get('/:id', barberController.getById);
+router.get('/:id', schemas.byId, barberController.getById);
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ router.get('/:id', barberController.getById);
  *       403:
  *         description: Sem permissão para criar barbeiro
  */
-router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateCreate, barberController.create);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.create, barberController.create);
 
 /**
  * @swagger
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateCre
  *       404:
  *         description: Barbeiro não encontrado
  */
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), validateUpdate, barberController.update);
+router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.update, barberController.update);
 
 /**
  * @swagger
@@ -188,6 +188,6 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), validateU
  *       404:
  *         description: Barbeiro não encontrado
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), barberController.remove);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.byId, barberController.remove);
 
 module.exports = router;

@@ -1,0 +1,20 @@
+// BE-38: schemas de filial (dados da filial + endereço no mesmo corpo).
+const validate = require('../../middlewares/validate');
+const { Joi, id, text, idParams, pagination } = require('../../shared/schemas');
+const { addressFields, requiredAddress } = require('../address/addressSchemas');
+
+module.exports = {
+  list: validate({ query: Joi.object({ ...pagination, barbershop_id: id(), name: text(100) }) }),
+  byId: validate({ params: idParams }),
+  create: validate({
+    body: Joi.object({
+      name: text(120).min(2).required(),
+      barbershop_id: id().required(),
+      ...requiredAddress,
+    }),
+  }),
+  update: validate({
+    params: idParams,
+    body: Joi.object({ name: text(120).min(2), ...addressFields }).min(1),
+  }),
+};

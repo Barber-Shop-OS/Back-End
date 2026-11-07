@@ -30,13 +30,13 @@ describe('Payment integration', () => {
 
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Owner', email: 'owner@pay.com', password: '123456' });
+      .send({ name: 'Owner', email: 'owner@pay.com', password: 'Senha@123' });
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Client', email: 'client@pay.com', password: '123456' });
+      .send({ name: 'Client', email: 'client@pay.com', password: 'Senha@123' });
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Barber', email: 'barber@pay.com', password: '123456' });
+      .send({ name: 'Barber', email: 'barber@pay.com', password: 'Senha@123' });
 
     const ownerUser = await User.findOne({ where: { email: 'owner@pay.com' } });
     clientUser = await User.findOne({ where: { email: 'client@pay.com' } });
@@ -49,7 +49,7 @@ describe('Payment integration', () => {
 
     const ownerLogin = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'owner@pay.com', password: '123456' });
+      .send({ email: 'owner@pay.com', password: 'Senha@123' });
     ownerToken = ownerLogin.body.token;
 
     const barbershop = await Barbershop.create({ name: 'Pay Shop', owner_id: ownerUser.id });

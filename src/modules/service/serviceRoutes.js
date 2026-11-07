@@ -3,7 +3,7 @@ const express = require('express');
 const servicesController = require('./servicesController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
-const { validateCreate, validateUpdate } = require('../../middlewares/validators/validateServicePayload');
+const schemas = require('./serviceSchemas');
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de serviços retornada com sucesso
  */
-router.get('/', servicesController.getAllServices);
+router.get('/', schemas.list, servicesController.getAllServices);
 
 /**
  * @swagger
@@ -49,7 +49,7 @@ router.get('/', servicesController.getAllServices);
  *       404:
  *         description: Serviço não encontrado
  */
-router.get('/:id', servicesController.getServiceById);
+router.get('/:id', schemas.byId, servicesController.getServiceById);
 
 /**
  * @swagger
@@ -92,7 +92,7 @@ router.get('/:id', servicesController.getServiceById);
  *       403:
  *         description: Sem permissão para criar serviço
  */
-router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateCreate, servicesController.createService);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.create, servicesController.createService);
 
 /**
  * @swagger
@@ -144,7 +144,7 @@ router.post('/', authMiddleware, roleMiddleware(['admin', 'owner']), validateCre
  *       404:
  *         description: Serviço não encontrado
  */
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), validateUpdate, servicesController.updateService);
+router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.update, servicesController.updateService);
 
 /**
  * @swagger
@@ -171,6 +171,6 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), validateU
  *       404:
  *         description: Serviço não encontrado
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), servicesController.deleteService);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.byId, servicesController.deleteService);
 
 module.exports = router;

@@ -35,10 +35,10 @@ describe('Appointment integration', () => {
 
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Client', email: 'client@app.com', password: '123456' });
+      .send({ name: 'Client', email: 'client@app.com', password: 'Senha@123' });
     await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Barber User', email: 'barber@app.com', password: '123456' });
+      .send({ name: 'Barber User', email: 'barber@app.com', password: 'Senha@123' });
 
     clientUser = await User.findOne({ where: { email: 'client@app.com' } });
     barberUser = await User.findOne({ where: { email: 'barber@app.com' } });
@@ -47,7 +47,7 @@ describe('Appointment integration', () => {
 
     const login = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'client@app.com', password: '123456' });
+      .send({ email: 'client@app.com', password: 'Senha@123' });
     clientToken = login.body.token;
 
     const barbershop = await Barbershop.create({ name: 'Shop', owner_id: clientUser.id });

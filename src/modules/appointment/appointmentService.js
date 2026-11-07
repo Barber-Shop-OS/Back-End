@@ -6,6 +6,7 @@
 //   - "modo cliente": qualquer outro usuário agenda para si → `user_id` do body é ignorado.
 // O status inicial é sempre `confirmado` (decisão de produto de 2026-10-23).
 const { Op } = require('sequelize');
+const { parsePagination } = require('../../shared/query');
 const { User, Barber, Service, Branch, Barbershop } = require('../../models');
 const appointmentRepository = require('./appointmentRepository');
 const {
@@ -50,9 +51,7 @@ const buildVisibilityScope = async (currentUser) => {
 };
 
 const findAll = async (query = {}, currentUser) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const filters = {};
 
   if (query.status) filters.status = query.status;

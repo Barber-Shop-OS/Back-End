@@ -1,5 +1,6 @@
 // Barbershop service responsible for search, ownership checks, and CRUD.
 const { Op } = require('sequelize');
+const { parsePagination, likeContains } = require('../../shared/query');
 const { AppError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 const { Barbershop, Branch, Address, User } = require('../../models');
 const barbershopRepository = require('./barbershopRepository');
@@ -7,12 +8,10 @@ const { assertCanManageBarbershop } = require('../../shared/authz');
 const { pickFields } = require('../../shared/pickFields');
 
 const findAll = async (query = {}) => {
-  const page = Number(query.page) > 0 ? Number(query.page) : 1;
-  const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 10;
-  const offset = (page - 1) * pageSize;
+  const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
-  if (query.name) where.name = { [Op.like]: `%${query.name}%` };
+  if (query.name) where.name = likeContains(query.name);
 
   const include = [
     { model: User, as: 'owner', attributes: ['id', 'name', 'email'] },
@@ -24,7 +23,7 @@ const findAll = async (query = {}) => {
   ];
 
   if (query.city) {
-    include[1].include[0].where = { city: { [Op.like]: `%${query.city}%` } };
+    include[1].include[0].where = { city: likeContains(query.city) };
   }
 
   const allowedSortFields = ['name', 'created_at'];

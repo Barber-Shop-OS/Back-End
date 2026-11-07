@@ -3,6 +3,7 @@ const express = require('express');
 const authController = require('./authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const { authLimiter } = require('../../middlewares/rateLimitMiddleware');
+const schemas = require('./authSchemas');
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ const router = express.Router();
  *             example:
  *               message: E-mail já está em uso
  */
-router.post('/register', authLimiter, authController.register);
+router.post('/register', authLimiter, schemas.register, authController.register);
 
 /**
  * @swagger
@@ -103,7 +104,7 @@ router.post('/register', authLimiter, authController.register);
  *             example:
  *               message: Credenciais inválidas
  */
-router.post('/login', authLimiter, authController.login);
+router.post('/login', authLimiter, schemas.login, authController.login);
 
 /**
  * @swagger

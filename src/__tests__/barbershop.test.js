@@ -30,13 +30,13 @@ describe('Barbershop integration', () => {
     ownerToken = await registerAndLogin({
       name: 'Owner User',
       email: 'owner@shop.com',
-      password: '123456',
+      password: 'Senha@123',
       role: 'owner',
     });
     clientToken = await registerAndLogin({
       name: 'Client User',
       email: 'client@shop.com',
-      password: '123456',
+      password: 'Senha@123',
       role: 'cliente',
     });
   });

@@ -4,6 +4,8 @@ const userController = require('./userController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
+const schemas = require('./userSchemas');
+
 const router = express.Router();
 
 /**
@@ -49,7 +51,7 @@ const router = express.Router();
  *             example:
  *               message: "Acesso restrito. Permissão necessária: admin"
  */
-router.get('/', authMiddleware, roleMiddleware(['admin']), userController.getAllUsers);
+router.get('/', authMiddleware, roleMiddleware(['admin']), schemas.list, userController.getAllUsers);
 
 /**
  * @swagger
@@ -89,7 +91,7 @@ router.get('/', authMiddleware, roleMiddleware(['admin']), userController.getAll
  *             example:
  *               message: Usuário não encontrado
  */
-router.get('/:id', authMiddleware, userController.getUserById);
+router.get('/:id', authMiddleware, schemas.byId, userController.getUserById);
 
 /**
  * @swagger
@@ -157,8 +159,8 @@ router.get('/:id', authMiddleware, userController.getUserById);
  *             example:
  *               message: Usuário não encontrado
  */
-router.put('/:id', authMiddleware, userController.updateUser);
-router.patch('/:id', authMiddleware, userController.updateUser);
+router.put('/:id', authMiddleware, schemas.update, userController.updateUser);
+router.patch('/:id', authMiddleware, schemas.update, userController.updateUser);
 
 /**
  * @swagger
@@ -197,6 +199,6 @@ router.patch('/:id', authMiddleware, userController.updateUser);
  *             example:
  *               message: Usuário não encontrado
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), userController.deleteUser);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin']), schemas.byId, userController.deleteUser);
 
 module.exports = router;
