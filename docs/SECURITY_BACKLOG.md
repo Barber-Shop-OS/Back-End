@@ -36,7 +36,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** whitelist de campos, só o próprio usuário/admin, troca de role só por rota admin.
 - **Teste:** `role` no body não altera o papel; usuário A editando B → 403.
 
-### [ ] SEC-02 — IDOR em usuários, agendamentos, pagamentos e endereços — **Crítico** → BE-01, BE-04, BE-07, BE-17
+### [x] SEC-02 — IDOR em usuários, agendamentos, pagamentos e endereços — **Crítico** → BE-01, BE-04, BE-07, BE-17
 - **Onde:** `GET/PUT /api/user/:id`, `GET/PUT/DELETE /api/appointment/:id`, `GET /api/payment/:id`, `GET /api/payment/appointment/:id`, `GET /api/address/:id` — todos só exigem estar logado.
 - **Ataque:** iterar ids sequenciais (`/api/appointment/1..N`) → lê agenda e dados de clientes de todas as barbearias; `DELETE` apaga agendamentos de terceiros; `PUT` muda status.
 - **Correção:** `authz.js` (BE-03) em todo acesso por id; 404 para recurso de outro tenant.
@@ -48,7 +48,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** checagem de posse por `barbershop_id` derivado do recurso; whitelist de campos.
 - **Teste:** owner A × recursos de B → 403/404 em todos os verbos.
 
-### [ ] SEC-04 — Agendamento em nome de terceiros e status forjado — **Alto** → BE-04
+### [x] SEC-04 — Agendamento em nome de terceiros e status forjado — **Alto** → BE-04
 - **Onde:** `appointmentService.create(req.body)` usa `user_id` e `status` do body.
 - **Ataque:** criar agendamentos em nome de outra pessoa / já `confirmado`; lotar a agenda de um concorrente.
 - **Correção:** `user_id` do token; status definido pelo servidor.

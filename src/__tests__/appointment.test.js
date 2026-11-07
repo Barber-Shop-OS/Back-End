@@ -15,6 +15,8 @@ const {
   Appointment,
 } = require('../models');
 
+const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
 describe('Appointment integration', () => {
   let clientToken;
   let clientUser;
@@ -79,7 +81,7 @@ describe('Appointment integration', () => {
           barber_id: barber.id,
           service_id: service.id,
           branch_id: branch.id,
-          appointment_date: '2026-06-10T10:00:00.000Z',
+          appointment_date: FUTURE_DATE,
           status: 'pendente',
         });
 
@@ -96,7 +98,7 @@ describe('Appointment integration', () => {
           barber_id: barber.id,
           service_id: service.id,
           branch_id: otherBranch.id,
-          appointment_date: '2026-06-10T10:00:00.000Z',
+          appointment_date: FUTURE_DATE,
           status: 'pendente',
         });
 
@@ -116,7 +118,7 @@ describe('Appointment integration', () => {
         barber_id: barber.id,
         service_id: service.id,
         branch_id: branch.id,
-        appointment_date: '2026-06-10T10:00:00.000Z',
+        appointment_date: FUTURE_DATE,
         status: 'pendente',
       });
 

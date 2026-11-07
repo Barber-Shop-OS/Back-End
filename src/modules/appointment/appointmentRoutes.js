@@ -39,7 +39,8 @@ const router = express.Router();
  *       403:
  *         description: Sem permissão para listar agendamentos
  */
-router.get('/', authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro']), appointmentController.getAllAppointments);
+// Escopo por usuário aplicado no service (cliente vê os seus, barbeiro os que atende, dono os do tenant).
+router.get('/', authMiddleware, appointmentController.getAllAppointments);
 
 /**
  * @swagger
@@ -71,6 +72,10 @@ router.get('/:id', authMiddleware, appointmentController.getAppointmentById);
  * /appointment:
  *   post:
  *     summary: Criar um novo agendamento
+ *     description: >
+ *       Cliente agenda para si (user_id do body é ignorado). Dono/admin da filial ou o próprio
+ *       barbeiro agendam para um cliente e devem informar user_id. O status inicial é sempre
+ *       `confirmado`; o campo status do body é ignorado.
  *     tags: [Appointment]
  *     security:
  *       - bearerAuth: []
@@ -80,10 +85,11 @@ router.get('/:id', authMiddleware, appointmentController.getAppointmentById);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [user_id, barber_id, service_id, branch_id, appointment_date, status]
+ *             required: [barber_id, service_id, branch_id, appointment_date]
  *             properties:
  *               user_id:
  *                 type: integer
+ *                 description: Obrigatório apenas quando a barbearia agenda para um cliente
  *                 example: 1
  *               barber_id:
  *                 type: integer
@@ -97,11 +103,7 @@ router.get('/:id', authMiddleware, appointmentController.getAppointmentById);
  *               appointment_date:
  *                 type: string
  *                 format: date-time
- *                 example: 2026-06-10T14:00:00.000Z
- *               status:
- *                 type: string
- *                 enum: [pendente, confirmado, cancelado]
- *                 example: pendente
+ *                 example: 2026-12-10T14:00:00.000Z
  *     responses:
  *       201:
  *         description: Agendamento criado com sucesso
@@ -176,6 +178,7 @@ router.put('/:id', authMiddleware, validateUpdateStatus, appointmentController.u
  *       404:
  *         description: Agendamento não encontrado
  */
-router.delete('/:id', authMiddleware, appointmentController.deleteAppointment);
+// Exclusão física só para admin; os demais cancelam via PUT { status: 'cancelado' }.
+router.delete('/:id', authMiddleware, roleMiddleware(['admin']), appointmentController.deleteAppointment);
 
 module.exports = router;

@@ -1,20 +1,29 @@
-// Appointment repository with list, lookup, creation, and status updates.
+// Appointment repository. Includes com allowlist de atributos: nunca expõe senha/token_version.
 const { Appointment, User, Barber, Service, Branch } = require('../../models');
 
-const findAll = async (where = {}, options = {}) => {
-  return Appointment.findAndCountAll({
+const defaultInclude = () => [
+  { model: User, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
+  {
+    model: Barber,
+    attributes: ['id', 'user_id', 'branch_id', 'bio'],
+    include: [{ model: User, attributes: ['id', 'name'] }],
+  },
+  { model: Service, attributes: ['id', 'name', 'price', 'duration', 'barbershop_id'] },
+  { model: Branch, attributes: ['id', 'name', 'barbershop_id'] },
+];
+
+const findAll = async (where = {}, options = {}) =>
+  Appointment.findAndCountAll({
     where,
     ...options,
-    include: options.include || [User, Barber, Service, Branch],
+    include: options.include || defaultInclude(),
     distinct: true,
   });
-};
 
-const findById = async (id, includeOptions = []) => {
-  return Appointment.findByPk(id, {
-    include: includeOptions.length ? includeOptions : [User, Barber, Service, Branch],
+const findById = async (id, includeOptions = []) =>
+  Appointment.findByPk(id, {
+    include: includeOptions.length ? includeOptions : defaultInclude(),
   });
-};
 
 const create = async (data) => Appointment.create(data);
 

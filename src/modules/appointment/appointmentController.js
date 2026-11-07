@@ -4,7 +4,7 @@ const { success, created, noContent } = require('../../utils/responseHandler');
 
 const getAllAppointments = async (req, res, next) => {
   try {
-    const result = await appointmentService.findAll(req.query);
+    const result = await appointmentService.findAll(req.query, req.user);
     return success(res, result);
   } catch (error) {
     return next(error);
@@ -13,7 +13,7 @@ const getAllAppointments = async (req, res, next) => {
 
 const getAppointmentById = async (req, res, next) => {
   try {
-    const appointment = await appointmentService.findById(req.params.id);
+    const appointment = await appointmentService.findById(req.params.id, req.user);
     return success(res, appointment);
   } catch (error) {
     return next(error);
@@ -22,7 +22,7 @@ const getAppointmentById = async (req, res, next) => {
 
 const createAppointment = async (req, res, next) => {
   try {
-    const appointment = await appointmentService.create(req.body);
+    const appointment = await appointmentService.create(req.body, req.user);
     return created(res, { message: 'Agendamento criado com sucesso', appointment });
   } catch (error) {
     return next(error);
@@ -31,7 +31,7 @@ const createAppointment = async (req, res, next) => {
 
 const updateAppointmentStatus = async (req, res, next) => {
   try {
-    const appointment = await appointmentService.updateStatus(req.params.id, req.body.status);
+    const appointment = await appointmentService.updateStatus(req.params.id, req.body.status, req.user);
     return success(res, { message: 'Status do agendamento atualizado com sucesso', appointment });
   } catch (error) {
     return next(error);

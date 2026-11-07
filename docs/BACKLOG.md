@@ -92,7 +92,7 @@
   - `barbershopService.update`: whitelist (`name`, + campos de BE-18); **`owner_id` nunca pelo body**. `DELETE /api/barbershop/:id` → soft delete (BE-36) só admin ou owner com confirmação.
 - **Aceite:** matriz de testes owner A × recursos do tenant B em todos os módulos → 403/404.
 
-### [ ] BE-04 — Agendamento: identidade e status vindos do servidor `[SEC-04]`
+### [x] BE-04 — Agendamento: identidade e status vindos do servidor `[SEC-04]`
 - **Depende de:** BE-03
 - **Arquivos:** `src/modules/appointment/*`, `src/middlewares/validators/validateAppointmentPayload.js`.
 - **Fazer:**
