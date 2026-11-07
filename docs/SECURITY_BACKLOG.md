@@ -138,8 +138,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [ ] SEC-22 — Uploads — **Médio** → BE-34
 - Tipos permitidos por magic bytes (jpeg/png/webp), sem SVG/HTML; ≤ 2 MB; nome gerado pelo servidor; bucket sem listagem; servir de domínio separado da aplicação; remover EXIF (reprocessar com `sharp`) [recomendado].
 
-### [ ] SEC-23 — Suíte automatizada de segurança — **Alto** → BE-09
-- **Parcial (2026-11-07, BE-09):** matriz `authz.matrix.test.js` (41 rotas × papéis, falha se rota nova não for declarada), testes de mass assignment e de JWT feitos. **Falta:** OWASP ZAP baseline contra staging.
+### [x] SEC-23 — Suíte automatizada de segurança — **Alto** → BE-09
+- **Feito (2026-11-07):** matriz `authz.matrix.test.js` (41 rotas × papéis; falha se rota nova não for declarada); `mass-assignment.test.js` cobrindo todas as 17 rotas de escrita; testes de JWT (`auth-token.test.js`); DAST com OWASP ZAP API scan em `.github/workflows/dast.yml` (semanal + manual) contra instância temporária com MySQL 8, alvo `/api/docs.json`, exceções em `.zap/rules.tsv`. **Quando o staging existir (BE-44):** apontar o ZAP para ele.
 - `authz.matrix.test.js`: tabela declarativa `{method, path, roles_allowed, tenant_scoped}` para **toda** rota; o teste gera casos para cada papel (anônimo, cliente, barbeiro A, owner A, owner B, admin) e falha se a rota nova não estiver na tabela.
 - Testes de mass assignment: para cada `POST/PUT/PATCH`, enviar campos proibidos (`id`, `role`, `owner_id`, `barbershop_id`, `status`, `created_at`) e afirmar que não persistem.
 - Testes de JWT: alg `none`, secret errado, expirado, `token_version` antigo.

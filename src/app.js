@@ -30,6 +30,8 @@ app.use(apiLimiter);
 app.use(express.json({ limit: '100kb' }));
 
 if (!config.isProduction) {
+	// Especificação OpenAPI em JSON (consumida pelo scan do OWASP ZAP — SEC-23 — e pelos geradores de tipos).
+	app.get('/api/docs.json', (req, res) => res.json(specs));
 	app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
 	logger.info('Swagger disponível em http://localhost:3000/api/docs');
 }

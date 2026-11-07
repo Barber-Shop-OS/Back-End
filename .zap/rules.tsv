@@ -1,0 +1,3 @@
+10049	IGNORE	(Non-Storable Content) API JSON não deve ser cacheada; comportamento esperado.
+10036	IGNORE	(Server Leaks Version Information) helmet remove X-Powered-By; o alerta costuma vir do runner de CI.
+90004	IGNORE	(Insufficient Site Isolation Against Spectre) Cross-Origin-Resource-Policy é cross-origin de propósito para o front e o mobile.

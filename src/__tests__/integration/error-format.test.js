@@ -35,6 +35,13 @@ describe('BE-37 — formato de erro da API', () => {
     expect(res.body.code).toBe('EMAIL_IN_USE');
   });
 
+  it('especificação OpenAPI disponível fora de produção (alvo do OWASP ZAP — SEC-23)', async () => {
+    const res = await request(app).get('/api/docs.json');
+    expect(res.status).toBe(200);
+    expect(res.body.openapi).toMatch(/^3\./);
+    expect(Object.keys(res.body.paths).length).toBeGreaterThan(20);
+  });
+
   it('sem token → 401 UNAUTHORIZED', async () => {
     const res = await request(app).get('/api/auth/me');
     expect(res.status).toBe(401);
