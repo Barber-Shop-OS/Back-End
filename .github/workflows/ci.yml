@@ -1,0 +1,69 @@
+# BE-09 / SEC-16: CI do back-end. Roda em todo PR e push na main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, testes e cobertura (SQLite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:coverage
+      - name: Dependências de produção sem vulnerabilidade alta/crítica
+        run: npm audit --omit=dev --audit-level=high
+
+  mysql:
+    name: Migrations em MySQL 8
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: barberos_test
+          MYSQL_USER: barberos
+          MYSQL_PASSWORD: ci-password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      TEST_DB_DIALECT: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: barberos
+      DB_PASS: ci-password
+      DB_NAME: barberos_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Valida no MySQL real o que o SQLite não pega (ENUM, DECIMAL, índices, ordem das FKs).
+      - run: npx cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit src/__tests__/integration/migrations.test.js
+
+  secrets:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

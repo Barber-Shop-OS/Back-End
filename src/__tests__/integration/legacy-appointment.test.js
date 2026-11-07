@@ -3,7 +3,7 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 
 const request = require('supertest');
-const app = require('../app');
+const app = require('../../app');
 const {
   sequelize,
   User,
@@ -13,7 +13,7 @@ const {
   Barber,
   Service,
   Appointment,
-} = require('../models');
+} = require('../../models');
 
 const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 

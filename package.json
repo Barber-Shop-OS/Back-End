@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.js\" \"*.js\"",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test:mysql": "cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit"
   },
   "keywords": [],
   "author": "",
@@ -30,7 +31,7 @@
     "joi": "^17.13.9",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.13.0",
-    "nodemailer": "^6.10.0",
+    "nodemailer": "^10.3.1",
     "sequelize": "^6.37.6",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "cross-env": "^7.0.3",
     "eslint": "^9.39.5",
     "globals": "^15.15.0",
     "jest": "^30.2.0",
@@ -61,7 +63,18 @@
     ],
     "setupFiles": [
       "<rootDir>/src/__tests__/helpers/setupEnv.js"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 85,
+        "branches": 65,
+        "functions": 90,
+        "lines": 85
+      },
+      "./src/modules/**/*Service.js": {
+        "lines": 80
+      }
+    }
   },
   "engines": {
     "node": ">=20"

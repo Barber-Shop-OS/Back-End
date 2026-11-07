@@ -12,18 +12,21 @@ const findAll = async (query = {}) => {
 
   if (query.name) where.name = likeContains(query.name);
 
+  // Filtro por cidade em duas etapas: um include aninhado obrigatório + limit faz o Sequelize gerar
+  // uma subquery inválida (500). Primeiro achamos as barbearias com filial na cidade, depois paginamos.
+  if (query.city) {
+    const branches = await Branch.findAll({
+      attributes: ['barbershop_id'],
+      include: [{ model: Address, attributes: [], where: { city: likeContains(query.city) }, required: true }],
+      raw: true,
+    });
+    where.id = [...new Set(branches.map((branch) => branch.barbershop_id))];
+  }
+
   const include = [
     { model: User, as: 'owner', attributes: ['id', 'name', 'email'] },
-    {
-      model: Branch,
-      include: [{ model: Address }],
-      required: Boolean(query.city),
-    },
+    { model: Branch, include: [{ model: Address }] },
   ];
-
-  if (query.city) {
-    include[1].include[0].where = { city: likeContains(query.city) };
-  }
 
   const allowedSortFields = ['name', 'created_at'];
   const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'created_at';

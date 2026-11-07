@@ -115,6 +115,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Teste:** assinatura inválida, timestamp velho, evento repetido, valor divergente → nenhuma mudança de status.
 
 ### [ ] SEC-16 — Cadeia de dependências — **Alto**
+- **Parcial (2026-11-07, Back-End):** `npm audit fix` (18 → 1 vulnerabilidade de produção, só moderada: `uuid` interno do Sequelize), nodemailer 10, CI com `npm audit --audit-level=high`, Dependabot, gitleaks, deps sem uso removidas, `engines`. **Falta:** Front-End e Mobile.
 - `npm audit --omit=dev --audit-level=high` falhando o CI nos 3 repos; Dependabot (npm + GitHub Actions) semanal; `npm ci` com lockfile; fixar versão do Node (`.nvmrc` / `engines`); remover dependências sem uso (`mysql`, `body-parser`, `react-icons` — BE-08/FE-04); revisar `babel-plugin-react-compiler` beta.
 
 ### [ ] SEC-17 — Cabeçalhos de segurança no web (Cloudflare) — **Alto** → FE
@@ -138,6 +139,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - Tipos permitidos por magic bytes (jpeg/png/webp), sem SVG/HTML; ≤ 2 MB; nome gerado pelo servidor; bucket sem listagem; servir de domínio separado da aplicação; remover EXIF (reprocessar com `sharp`) [recomendado].
 
 ### [ ] SEC-23 — Suíte automatizada de segurança — **Alto** → BE-09
+- **Parcial (2026-11-07, BE-09):** matriz `authz.matrix.test.js` (41 rotas × papéis, falha se rota nova não for declarada), testes de mass assignment e de JWT feitos. **Falta:** OWASP ZAP baseline contra staging.
 - `authz.matrix.test.js`: tabela declarativa `{method, path, roles_allowed, tenant_scoped}` para **toda** rota; o teste gera casos para cada papel (anônimo, cliente, barbeiro A, owner A, owner B, admin) e falha se a rota nova não estiver na tabela.
 - Testes de mass assignment: para cada `POST/PUT/PATCH`, enviar campos proibidos (`id`, `role`, `owner_id`, `barbershop_id`, `status`, `created_at`) e afirmar que não persistem.
 - Testes de JWT: alg `none`, secret errado, expirado, `token_version` antigo.

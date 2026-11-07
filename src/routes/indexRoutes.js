@@ -1,28 +1,33 @@
-// Central route registry for the module-based API structure.
+// Registro central das rotas. `mounts` também é usado pelo teste de matriz de autorização (SEC-23),
+// que falha se uma rota nova não declarar quem pode acessá-la.
 const express = require('express');
+
+const mounts = [
+  ['/api/auth', require('../modules/auth/authRoutes')],
+  ['/api/user', require('../modules/user/userRoutes')],
+  ['/api/barber', require('../modules/barber/barberRoutes')],
+  ['/api/services', require('../modules/service/serviceRoutes')],
+  ['/api/appointment', require('../modules/appointment/appointmentRoutes')],
+  ['/api/barbershop', require('../modules/barbershop/barbershopRoutes')],
+  ['/api/branch', require('../modules/branch/branchRoutes')],
+  ['/api/address', require('../modules/address/addressRoutes')],
+  ['/api/payment', require('../modules/payment/paymentRoutes')],
+  ['/api/admin', require('../modules/admin/adminRoutes')],
+];
+
 const router = express.Router();
+mounts.forEach(([prefix, moduleRouter]) => router.use(prefix, moduleRouter));
 
-const authRoutes = require('../modules/auth/authRoutes');
-const userRoutes = require('../modules/user/userRoutes');
-const barberRoutes = require('../modules/barber/barberRoutes');
-const serviceRoutes = require('../modules/service/serviceRoutes');
-const appointmentRoutes = require('../modules/appointment/appointmentRoutes');
-const barbershopRoutes = require('../modules/barbershop/barbershopRoutes');
-const branchRoutes = require('../modules/branch/branchRoutes');
-const addressRoutes = require('../modules/address/addressRoutes');
-const paymentRoutes = require('../modules/payment/paymentRoutes');
-const adminRoutes = require('../modules/admin/adminRoutes');
-
-router.use('/api/auth', authRoutes);
-router.use('/api/user', userRoutes);
-router.use('/api/barber', barberRoutes);
-router.use('/api/services', serviceRoutes);
-router.use('/api/appointment', appointmentRoutes);
-router.use('/api/barbershop', barbershopRoutes);
-router.use('/api/branch', branchRoutes);
-router.use('/api/address', addressRoutes);
-router.use('/api/payment', paymentRoutes);
-router.use('/api/admin', adminRoutes);
+/** Lista "MÉTODO /caminho" de todas as rotas registradas. */
+const listRoutes = () =>
+  mounts.flatMap(([prefix, moduleRouter]) =>
+    moduleRouter.stack
+      .filter((layer) => layer.route)
+      .flatMap((layer) =>
+        Object.keys(layer.route.methods).map((method) => `${method.toUpperCase()} ${prefix}${layer.route.path === '/' ? '' : layer.route.path}`)
+      )
+  );
 
 module.exports = router;
-
+module.exports.mounts = mounts;
+module.exports.listRoutes = listRoutes;

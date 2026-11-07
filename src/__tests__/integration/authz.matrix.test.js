@@ -1,0 +1,118 @@
+// BE-09 / SEC-23: matriz de autorização declarativa.
+// TODA rota registrada precisa estar nesta tabela — rota nova sem declaração quebra o teste.
+//   'public'          → acessível sem login
+//   'auth'            → qualquer usuário logado (regras finas de tenant ficam no service e em
+//                        tenant-isolation.test.js / appointment-authz.test.js)
+//   ['admin', ...]    → somente esses papéis; os demais recebem 403
+const { app, request, resetDatabase, createUser, loginAs, bearer, sequelize } = require('../helpers/factories');
+const { listRoutes } = require('../../routes/indexRoutes');
+
+const MATRIX = {
+  'POST /api/auth/register': 'public',
+  'POST /api/auth/login': 'public',
+  'GET /api/auth/me': 'auth',
+
+  'GET /api/user': ['admin'],
+  'GET /api/user/:id': 'auth',
+  'PUT /api/user/:id': 'auth',
+  'PATCH /api/user/:id': 'auth',
+  'DELETE /api/user/:id': ['admin'],
+
+  'GET /api/barber': 'public',
+  'GET /api/barber/:id': 'public',
+  'POST /api/barber': ['admin', 'owner'],
+  'PUT /api/barber/:id': ['admin', 'owner'],
+  'DELETE /api/barber/:id': ['admin', 'owner'],
+
+  'GET /api/services': 'public',
+  'GET /api/services/:id': 'public',
+  'POST /api/services': ['admin', 'owner'],
+  'PUT /api/services/:id': ['admin', 'owner'],
+  'DELETE /api/services/:id': ['admin', 'owner'],
+
+  'GET /api/appointment': 'auth',
+  'GET /api/appointment/:id': 'auth',
+  'POST /api/appointment': 'auth',
+  'PUT /api/appointment/:id': 'auth',
+  'DELETE /api/appointment/:id': ['admin'],
+
+  'GET /api/barbershop': 'public',
+  'GET /api/barbershop/:id': 'public',
+  'POST /api/barbershop': ['admin', 'owner'],
+  'PUT /api/barbershop/:id': ['admin', 'owner'],
+  'DELETE /api/barbershop/:id': ['admin'],
+
+  'GET /api/branch': 'public',
+  'GET /api/branch/:id': 'public',
+  'POST /api/branch': ['admin', 'owner'],
+  'PUT /api/branch/:id': ['admin', 'owner'],
+  'DELETE /api/branch/:id': ['admin', 'owner'],
+
+  'POST /api/address': ['admin', 'owner'],
+  'GET /api/address/:id': 'auth',
+  'PUT /api/address/:id': ['admin', 'owner'],
+
+  'POST /api/payment': 'auth',
+  'GET /api/payment/appointment/:appointment_id': 'auth',
+  'GET /api/payment/:id': 'auth',
+  'PUT /api/payment/:id/status': ['admin', 'owner', 'barbeiro'],
+
+  'PATCH /api/admin/users/:id/role': ['admin'],
+};
+
+const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
+
+const entries = Object.entries(MATRIX).map(([route, access]) => {
+  const [method, path] = route.split(' ');
+  return { route, method: method.toLowerCase(), url: path.replace(/:\w+/g, '1'), access };
+});
+
+const send = (method, url, token) => {
+  const req = request(app)[method](url);
+  if (token) req.set(bearer(token));
+  return ['post', 'put', 'patch'].includes(method) ? req.send({}) : req;
+};
+
+describe('SEC-23 — matriz de autorização', () => {
+  const tokens = {};
+
+  beforeAll(async () => {
+    await resetDatabase();
+    for (const role of ROLES) {
+      tokens[role] = await loginAs(await createUser({ role, email: `${role}@matrix.test` }));
+    }
+  });
+
+  afterAll(() => sequelize.close());
+
+  it('toda rota registrada está declarada na matriz (e vice-versa)', () => {
+    const registered = listRoutes().sort();
+    const declared = Object.keys(MATRIX).sort();
+    expect(registered.filter((route) => !declared.includes(route))).toEqual([]);
+    expect(declared.filter((route) => !registered.includes(route))).toEqual([]);
+  });
+
+  describe.each(entries.filter((entry) => entry.access !== 'public'))('$route', ({ method, url, access }) => {
+    it('anônimo → 401', async () => {
+      const res = await send(method, url);
+      expect(res.status).toBe(401);
+    });
+
+    if (Array.isArray(access)) {
+      const denied = ROLES.filter((role) => !access.includes(role));
+      if (denied.length) {
+        it.each(denied)('papel %s → 403', async (role) => {
+          const res = await send(method, url, tokens[role]);
+          expect(res.status).toBe(403);
+        });
+      }
+    }
+  });
+
+  describe.each(entries.filter((entry) => entry.access === 'public'))('$route (pública)', ({ method, url }) => {
+    it('anônimo não recebe 401/403', async () => {
+      const res = await send(method, url);
+      expect([401, 403]).not.toContain(res.status);
+    });
+  });
+});

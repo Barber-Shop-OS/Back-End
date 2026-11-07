@@ -134,7 +134,7 @@
   - `README.md`: corrigir porta (3000 vs 3001 do `.env.example`), remover "Production Ready".
 - **Aceite:** `npm run lint` e `npm run migrate:reset` passam em MySQL 8; nenhum arquivo morto.
 
-### [ ] BE-09 — Infraestrutura de testes e CI
+### [x] BE-09 — Infraestrutura de testes e CI
 - **Depende de:** BE-08
 - **Fazer:**
   - Testes de integração rodando **sobre as migrations** (umzug) e não `sync`; job opcional com MySQL real via service container no CI (SQLite não pega erros de ENUM/DECIMAL/locks).
