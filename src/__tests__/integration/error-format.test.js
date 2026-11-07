@@ -30,7 +30,7 @@ describe('BE-37 — formato de erro da API', () => {
     await createUser({ email: 'dup@test.com' });
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Dup', email: 'dup@test.com', password: 'Senha@123' });
+      .send({ name: 'Dup', email: 'dup@test.com', password: 'Tesoura#Navalha9' });
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('EMAIL_IN_USE');
   });

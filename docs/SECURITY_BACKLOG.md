@@ -82,8 +82,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** schemas Joi, `pageSize ≤ 100`, escapar `%`/`_`, datas ISO validadas, `express.json({limit:'100kb'})`.
 - **Teste:** `pageSize=100000` retorna ≤ 100.
 
-### [ ] SEC-10 — Política de senha fraca e enumeração de contas — **Médio** → BE-29, BE-26
-- **Parcial (2026-11-07, BE-38):** feitos mínimo 8 / máximo 72, senha ≠ e-mail, e-mail normalizado, bcrypt 12, login com tempo constante para e-mail inexistente. **Falta:** bloquear as senhas mais comuns.
+### [x] SEC-10 — Política de senha fraca e enumeração de contas — **Médio** → BE-29, BE-26
+- **Feito (2026-11-07):** mínimo 8 / máximo 72; bloqueio das 10 mil senhas mais comuns (SecLists) + lista pt-BR, inclusive "comum + números/símbolos no fim" (password123, Flamengo2026!); caracteres repetidos e sequências; senha ≠ e-mail, parte local do e-mail e nome; e-mail normalizado; bcrypt 12; login com tempo constante para e-mail inexistente (`src/shared/passwordPolicy.js`, code `WEAK_PASSWORD`). Cadastro segue com 409 para e-mail em uso, limitado pelo `authLimiter` (10 req/15 min por IP).
 - **Onde:** `authService.register` (mínimo 6 caracteres), `409 E-mail já está em uso` no cadastro.
 - **Correção:** mínimo 8, bloquear as 10 mil senhas mais comuns (lista local) e senha = e-mail; bcrypt cost 12; cadastro mantém 409 (UX) mas com rate limit forte; `forgot-password` sempre neutro. Normalizar e-mail (`lowercase/trim`) para evitar contas duplicadas `A@x.com` / `a@x.com`.
 

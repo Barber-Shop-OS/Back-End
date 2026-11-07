@@ -4,11 +4,11 @@ const { User } = require('../../models');
 const config = require('../../config/config');
 const { signAccessToken } = require('../../shared/tokens');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
+const { assertStrongPassword } = require('../../shared/passwordPolicy');
 const { ValidationError, NotFoundError, UnauthorizedError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 // SEC-10: custo 12 em produção/dev; 4 em teste para a suíte rodar rápido.
 const BCRYPT_ROUNDS = config.isTest ? 4 : 12;
-const MIN_PASSWORD_LENGTH = 8;
 // Hash fixo usado quando o e-mail não existe, para o tempo de resposta não revelar contas.
 const DUMMY_HASH = bcrypt.hashSync('barberos-dummy-password', BCRYPT_ROUNDS);
 
@@ -25,12 +25,7 @@ const register = async (data = {}) => {
   if (!email) {
     throw new ValidationError("Campo 'email' é obrigatório");
   }
-  if (!password || String(password).length < MIN_PASSWORD_LENGTH) {
-    throw new ValidationError(`Senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres`);
-  }
-  if (String(password).trim().toLowerCase() === email) {
-    throw new ValidationError('A senha não pode ser igual ao e-mail');
-  }
+  assertStrongPassword(password, { email, name });
 
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {

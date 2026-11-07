@@ -75,19 +75,19 @@ describe('BE-38 — validação de entrada', () => {
     it('e-mail é normalizado no cadastro e no login', async () => {
       const register = await request(app)
         .post('/api/auth/register')
-        .send({ name: 'Carla', email: '  Carla@Example.COM ', password: 'Senha@123' });
+        .send({ name: 'Carla', email: '  Carla@Example.COM ', password: 'Tesoura#Navalha9' });
       expect(register.status).toBe(201);
       expect(register.body.user.email).toBe('carla@example.com');
 
       const login = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'CARLA@example.com', password: 'Senha@123' });
+        .send({ email: 'CARLA@example.com', password: 'Tesoura#Navalha9' });
       expect(login.status).toBe(200);
     });
 
     it('não permite duas contas que só diferem em maiúsculas', async () => {
-      await request(app).post('/api/auth/register').send({ name: 'Ana', email: 'ana@x.com', password: 'Senha@123' });
-      const dup = await request(app).post('/api/auth/register').send({ name: 'Ana 2', email: 'ANA@x.com', password: 'Senha@123' });
+      await request(app).post('/api/auth/register').send({ name: 'Ana', email: 'ana@x.com', password: 'Tesoura#Navalha9' });
+      const dup = await request(app).post('/api/auth/register').send({ name: 'Ana 2', email: 'ANA@x.com', password: 'Tesoura#Navalha9' });
       expect(dup.status).toBe(409);
       expect(await User.count()).toBe(1);
     });
@@ -106,6 +106,16 @@ describe('BE-38 — validação de entrada', () => {
         .send({ name: 'Leo', email: 'leo@exemplo.com', password: 'leo@exemplo.com' });
       expect(res.status).toBe(400);
     });
+
+    it.each(['password123', '12345678', 'Senha123', 'qwertyuiop'])(
+      'senha comum (%s) → 400 WEAK_PASSWORD e nenhuma conta criada',
+      async (password) => {
+        const res = await request(app).post('/api/auth/register').send({ name: 'Leo', email: 'leo@x.com', password });
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe('WEAK_PASSWORD');
+        expect(await User.count()).toBe(0);
+      }
+    );
 
     it('conta antiga com senha de 6 caracteres ainda consegue logar', async () => {
       const legacy = await createUser({ email: 'antigo@x.com', password: '123456' });

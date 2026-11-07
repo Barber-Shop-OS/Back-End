@@ -13,7 +13,7 @@ const {
   Appointment,
 } = require('../../models');
 
-const DEFAULT_PASSWORD = 'Senha@123';
+const DEFAULT_PASSWORD = 'Tesoura#Navalha9';
 let sequence = 0;
 const next = () => {
   sequence += 1;

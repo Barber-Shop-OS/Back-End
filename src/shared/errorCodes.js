@@ -15,6 +15,7 @@ module.exports = Object.freeze({
   // Autenticação e conta
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   EMAIL_IN_USE: 'EMAIL_IN_USE',
+  WEAK_PASSWORD: 'WEAK_PASSWORD',
 
   // Domínio
   BARBERSHOP_NAME_TAKEN: 'BARBERSHOP_NAME_TAKEN',
