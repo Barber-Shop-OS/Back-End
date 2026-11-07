@@ -3,7 +3,7 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 
 const request = require('supertest');
-const app = require('../../app');
+const app = require('../app');
 const { sequelize, User } = require('../models');
 
 const registerAndLogin = async ({ name, email, password, role }) => {

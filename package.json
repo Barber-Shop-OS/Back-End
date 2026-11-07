@@ -50,6 +50,9 @@
       "src/**/*.js",
       "!src/migrations/**",
       "!src/config/**"
+    ],
+    "setupFiles": [
+      "<rootDir>/src/__tests__/helpers/setupEnv.js"
     ]
   }
 }
