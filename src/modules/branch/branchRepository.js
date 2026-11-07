@@ -16,12 +16,12 @@ const findById = async (id, includeOptions = []) => {
   });
 };
 
-const create = async (data) => Branch.create(data);
+const create = async (data, options = {}) => Branch.create(data, options);
 
-const update = async (id, data) => {
-  const branch = await Branch.findByPk(id);
+const update = async (id, data, options = {}) => {
+  const branch = await Branch.findByPk(id, options);
   if (!branch) return null;
-  return branch.update(data);
+  return branch.update(data, options);
 };
 
 const remove = async (id) => {

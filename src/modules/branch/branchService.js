@@ -1,21 +1,15 @@
-// Branch service that creates and updates address records together with branches.
+// Branch service: filiais e seus endereços, sempre dentro do tenant do usuário (BE-03).
 const { Op } = require('sequelize');
-const { Branch, Address, Barbershop, Barber } = require('../../models');
+const { sequelize, Address, Barber } = require('../../models');
 const branchRepository = require('./branchRepository');
 const addressService = require('../address/addressService');
-const { AppError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
+const { assertCanManageBarbershop, assertCanManageBranch } = require('../../shared/authz');
+const { pickFields } = require('../../shared/pickFields');
+const { AppError, NotFoundError } = require('../../utils/errorHandler');
 
-const canManageBarbershop = async (barbershopId, currentUser) => {
-  if (currentUser.role === 'admin') return true;
-  const barbershop = await Barbershop.findByPk(barbershopId);
-  if (!barbershop) {
-    throw new NotFoundError('Barbearia não encontrada');
-  }
-  if (String(barbershop.owner_id) !== String(currentUser.id)) {
-    throw new ForbiddenError('Sem permissão para gerenciar esta filial');
-  }
-  return true;
-};
+// barbershop_id e address_id nunca mudam via update (SEC-03).
+const BRANCH_UPDATABLE_FIELDS = ['name'];
+const ADDRESS_FIELDS = ['cep', 'number', 'complement', 'city', 'state'];
 
 const isEmpty = (value) => value === undefined || value === null || String(value).trim() === '';
 
@@ -64,44 +58,49 @@ const create = async (branchData, addressData, currentUser) => {
     throw new AppError("Campo 'barbershop_id' é obrigatório e deve ser um inteiro positivo", 400);
   }
 
-  await canManageBarbershop(branchData.barbershop_id, currentUser);
+  await assertCanManageBarbershop(currentUser, branchData.barbershop_id);
 
-  const address = await addressService.create(addressData);
-  const branch = await branchRepository.create({
-    name: branchData.name,
-    barbershop_id: branchData.barbershop_id,
-    address_id: address.id,
+  // Endereço e filial juntos: falha em um não deixa endereço órfão.
+  const branchId = await sequelize.transaction(async (transaction) => {
+    const address = await addressService.create(addressData || {}, { transaction });
+    const branch = await branchRepository.create(
+      {
+        name: String(branchData.name).trim(),
+        barbershop_id: Number(branchData.barbershop_id),
+        address_id: address.id,
+      },
+      { transaction }
+    );
+    return branch.id;
   });
 
-  return branchRepository.findById(branch.id, [Address, Barber]);
+  return branchRepository.findById(branchId, [Address, Barber]);
 };
 
 const update = async (id, branchData, addressData, currentUser) => {
-  const branch = await Branch.findByPk(id);
-  if (!branch) {
-    throw new NotFoundError('Filial não encontrada');
+  const branch = await assertCanManageBranch(currentUser, id);
+  const updateData = pickFields(branchData, BRANCH_UPDATABLE_FIELDS);
+  const addressUpdate = addressData ? pickFields(addressData, ADDRESS_FIELDS) : {};
+
+  if ('name' in updateData) {
+    if (isEmpty(updateData.name)) throw new AppError("Campo 'name' é obrigatório", 400);
+    updateData.name = String(updateData.name).trim();
   }
 
-  await canManageBarbershop(branch.barbershop_id, currentUser);
+  await sequelize.transaction(async (transaction) => {
+    if (Object.keys(addressUpdate).length) {
+      await addressService.update(branch.address_id, addressUpdate, { transaction, partial: true });
+    }
+    if (Object.keys(updateData).length) {
+      await branchRepository.update(id, updateData, { transaction });
+    }
+  });
 
-  if (addressData && Object.values(addressData).some((value) => value !== undefined)) {
-    const filteredAddressData = Object.fromEntries(
-      Object.entries(addressData).filter(([, value]) => value !== undefined)
-    );
-    await Address.update(filteredAddressData, { where: { id: branch.address_id } });
-  }
-
-  await branchRepository.update(id, branchData);
   return branchRepository.findById(id, [Address, Barber]);
 };
 
 const remove = async (id, currentUser) => {
-  const branch = await Branch.findByPk(id);
-  if (!branch) {
-    throw new NotFoundError('Filial não encontrada');
-  }
-
-  await canManageBarbershop(branch.barbershop_id, currentUser);
+  await assertCanManageBranch(currentUser, id);
   await branchRepository.delete(id);
   return true;
 };

@@ -3,6 +3,8 @@ const { Op } = require('sequelize');
 const { AppError, NotFoundError } = require('../../utils/errorHandler');
 const { Barbershop, Branch, Address, User } = require('../../models');
 const barbershopRepository = require('./barbershopRepository');
+const { assertCanManageBarbershop } = require('../../shared/authz');
+const { pickFields } = require('../../shared/pickFields');
 
 const findAll = async (query = {}) => {
   const page = Number(query.page) > 0 ? Number(query.page) : 1;
@@ -71,12 +73,24 @@ const create = async (data) => {
   return barbershopRepository.create(data);
 };
 
-const update = async (id, data) => {
-  const barbershop = await Barbershop.findByPk(id);
-  if (!barbershop) {
-    throw new NotFoundError('Barbearia não encontrada');
+// Campos editáveis pelo dono. owner_id nunca vem do body (SEC-03); BE-18 amplia a lista.
+const UPDATABLE_FIELDS = ['name'];
+
+const update = async (id, data, currentUser) => {
+  const barbershop = await assertCanManageBarbershop(currentUser, id);
+  const updateData = pickFields(data, UPDATABLE_FIELDS);
+
+  if ('name' in updateData) {
+    const name = String(updateData.name || '').trim();
+    if (!name) throw new AppError("Campo 'name' é obrigatório", 400);
+    const duplicate = await Barbershop.findOne({ where: { owner_id: barbershop.owner_id, name } });
+    if (duplicate && String(duplicate.id) !== String(id)) {
+      throw new AppError('Barbearia com este nome já existe', 409);
+    }
+    updateData.name = name;
   }
-  return barbershopRepository.update(id, data);
+
+  return barbershopRepository.update(id, updateData);
 };
 
 const remove = async (id) => {

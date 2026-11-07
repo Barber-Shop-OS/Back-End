@@ -1,8 +1,20 @@
 // Service service with barbershop filtering and CRUD validation.
 const { Op } = require('sequelize');
-const { Service, Barbershop } = require('../../models');
+const { Barbershop } = require('../../models');
 const serviceRepository = require('./serviceRepository');
+const { assertCanManageBarbershop, assertCanManageService } = require('../../shared/authz');
+const { pickFields } = require('../../shared/pickFields');
 const { ValidationError, NotFoundError } = require('../../utils/errorHandler');
+
+// barbershop_id nunca muda após a criação (SEC-03).
+const UPDATABLE_FIELDS = ['name', 'description', 'price', 'duration'];
+
+const validateServiceFields = (data) => {
+  if ('name' in data && String(data.name || '').trim() === '') throw new ValidationError("Campo 'name' é obrigatório");
+  if ('description' in data && String(data.description || '').trim() === '') throw new ValidationError("Campo 'description' é obrigatório");
+  if ('price' in data && (data.price === null || isNaN(Number(data.price)) || Number(data.price) <= 0)) throw new ValidationError('Preço deve ser um número positivo');
+  if ('duration' in data && (data.duration === null || isNaN(Number(data.duration)) || Number(data.duration) <= 0)) throw new ValidationError('Duração deve ser um número positivo');
+};
 
 const findAll = async (query = {}) => {
   const page = Number(query.page) > 0 ? Number(query.page) : 1;
@@ -41,7 +53,7 @@ const findById = async (id) => {
   return service;
 };
 
-const create = async (data) => {
+const create = async (data, currentUser) => {
   const { name, description, price, duration, barbershop_id } = data;
   if (!name || String(name).trim() === '') throw new ValidationError("Campo 'name' é obrigatório");
   if (!description || String(description).trim() === '') throw new ValidationError("Campo 'description' é obrigatório");
@@ -49,9 +61,11 @@ const create = async (data) => {
   if (price === undefined || price === null || isNaN(Number(price)) || Number(price) <= 0) throw new ValidationError('Preço deve ser um número positivo');
   if (duration === undefined || duration === null || isNaN(Number(duration)) || Number(duration) <= 0) throw new ValidationError('Duração deve ser um número positivo');
 
+  await assertCanManageBarbershop(currentUser, barbershop_id);
+
   const service = await serviceRepository.create({
-    name,
-    description,
+    name: String(name).trim(),
+    description: String(description).trim(),
     price: Number(price),
     duration: Number(duration),
     barbershop_id: Number(barbershop_id),
@@ -60,15 +74,21 @@ const create = async (data) => {
   return serviceRepository.findById(service.id, [Barbershop]);
 };
 
-const update = async (id, data) => {
-  const service = await serviceRepository.update(id, data);
-  if (!service) {
-    throw new NotFoundError('Serviço não encontrado');
-  }
-  return service;
+const update = async (id, data, currentUser) => {
+  await assertCanManageService(currentUser, id);
+  const updateData = pickFields(data, UPDATABLE_FIELDS);
+  validateServiceFields(updateData);
+  if ('name' in updateData) updateData.name = String(updateData.name).trim();
+  if ('description' in updateData) updateData.description = String(updateData.description).trim();
+  if ('price' in updateData) updateData.price = Number(updateData.price);
+  if ('duration' in updateData) updateData.duration = Number(updateData.duration);
+
+  await serviceRepository.update(id, updateData);
+  return serviceRepository.findById(id, [Barbershop]);
 };
 
-const remove = async (id) => {
+const remove = async (id, currentUser) => {
+  await assertCanManageService(currentUser, id);
   const ok = await serviceRepository.delete(id);
   if (!ok) {
     throw new NotFoundError('Serviço não encontrado');

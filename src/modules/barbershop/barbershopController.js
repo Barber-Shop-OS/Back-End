@@ -1,8 +1,7 @@
 // Barbershop controller handling list, detail, create, update, and delete actions.
 const barbershopService = require('./barbershopService');
-const { Barbershop } = require('../../models');
-const { success, created, noContent } = require('../../utils/responseHandler');
-const { NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
+const { success, created } = require('../../utils/responseHandler');
+const { NotFoundError } = require('../../utils/errorHandler');
 
 const getAll = async (req, res, next) => {
   try {
@@ -39,16 +38,7 @@ const create = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const barbershop = await Barbershop.findByPk(req.params.id);
-    if (!barbershop) {
-      throw new NotFoundError('Barbearia não encontrada');
-    }
-
-    if (req.user.role !== 'admin' && String(barbershop.owner_id) !== String(req.user.id)) {
-      throw new ForbiddenError('Sem permissão para editar esta barbearia');
-    }
-
-    const updated = await barbershopService.update(req.params.id, req.body);
+    const updated = await barbershopService.update(req.params.id, req.body, req.user);
     return success(res, { message: 'Barbearia atualizada com sucesso', barbershop: updated });
   } catch (error) {
     return next(error);

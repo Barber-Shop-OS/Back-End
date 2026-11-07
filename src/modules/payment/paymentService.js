@@ -1,9 +1,12 @@
-// Payment service with validation, duplicate checks, and status updates.
+// Payment service: pagamento presencial de um agendamento (BE-03; regras completas em BE-07).
+// Criar/alterar: equipe da barbearia (dono, barbeiro que atendeu) ou admin.
+// Ler: os mesmos + o cliente do agendamento. Qualquer outro usuário recebe 404.
 const { Appointment } = require('../../models');
 const paymentRepository = require('./paymentRepository');
+const { assertCanViewAppointment, assertCanOperateAppointment } = require('../../shared/authz');
 const { AppError, NotFoundError, ValidationError } = require('../../utils/errorHandler');
 
-const create = async (data) => {
+const create = async (data, currentUser) => {
   const { appointment_id, amount, method } = data;
 
   if (!Number.isInteger(Number(appointment_id)) || Number(appointment_id) <= 0) {
@@ -16,10 +19,7 @@ const create = async (data) => {
     throw new ValidationError('Método inválido. Use PIX ou CASH');
   }
 
-  const appointment = await Appointment.findByPk(appointment_id);
-  if (!appointment) {
-    throw new NotFoundError('Agendamento não encontrado');
-  }
+  await assertCanOperateAppointment(currentUser, appointment_id);
 
   const existingPayment = await paymentRepository.findByAppointmentId(appointment_id);
   if (existingPayment) {
@@ -27,22 +27,28 @@ const create = async (data) => {
   }
 
   return paymentRepository.create({
-    appointment_id,
+    appointment_id: Number(appointment_id),
     amount,
     method,
     status: 'PENDING',
   });
 };
 
-const findById = async (id) => {
+const findById = async (id, currentUser) => {
   const payment = await paymentRepository.findById(id, [Appointment]);
   if (!payment) {
     throw new NotFoundError('Pagamento não encontrado');
   }
+  try {
+    await assertCanViewAppointment(currentUser, payment.appointment_id);
+  } catch (error) {
+    if (error instanceof NotFoundError) throw new NotFoundError('Pagamento não encontrado');
+    throw error;
+  }
   return payment;
 };
 
-const updateStatus = async (id, status) => {
+const updateStatus = async (id, status, currentUser) => {
   if (!['PAID', 'FAILED'].includes(status)) {
     throw new ValidationError('Status inválido. Use PAID ou FAILED');
   }
@@ -50,6 +56,12 @@ const updateStatus = async (id, status) => {
   const currentPayment = await paymentRepository.findById(id);
   if (!currentPayment) {
     throw new NotFoundError('Pagamento não encontrado');
+  }
+  try {
+    await assertCanOperateAppointment(currentUser, currentPayment.appointment_id);
+  } catch (error) {
+    if (error instanceof NotFoundError) throw new NotFoundError('Pagamento não encontrado');
+    throw error;
   }
 
   const payload = { status };
@@ -60,7 +72,8 @@ const updateStatus = async (id, status) => {
   return paymentRepository.update(id, payload);
 };
 
-const findByAppointmentId = async (appointmentId) => {
+const findByAppointmentId = async (appointmentId, currentUser) => {
+  await assertCanViewAppointment(currentUser, appointmentId);
   const payment = await paymentRepository.findByAppointmentId(appointmentId, [Appointment]);
   if (!payment) {
     throw new NotFoundError('Nenhum pagamento encontrado para este agendamento');

@@ -42,7 +42,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** `authz.js` (BE-03) em todo acesso por id; 404 para recurso de outro tenant.
 - **Teste:** matriz `authz.matrix.test.js` (endpoint × papel × tenant).
 
-### [ ] SEC-03 — Falta de isolamento entre tenants em barbeiros, serviços e barbearia — **Crítico** → BE-03, BE-05, BE-06
+### [x] SEC-03 — Falta de isolamento entre tenants em barbeiros, serviços e barbearia — **Crítico** → BE-03, BE-05, BE-06
 - **Onde:** `barberService.create/update/remove`, `serviceService` (rotas exigem só papel `owner`), `barbershopService.update(id, req.body)`.
 - **Ataque:** qualquer owner cria/edita/exclui barbeiros e serviços (inclusive preço) de outra barbearia; `PUT /api/barbershop/:id` aceita `owner_id` no body → dono transfere a barbearia ou, combinado com outro bug, assume uma alheia.
 - **Correção:** checagem de posse por `barbershop_id` derivado do recurso; whitelist de campos.

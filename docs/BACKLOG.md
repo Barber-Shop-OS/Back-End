@@ -82,7 +82,7 @@
   - Coluna `users.token_version` (int, default 0) — incrementar no logout-all/troca de senha; middleware rejeita token com `tv` antigo.
 - **Aceite:** app não sobe sem `JWT_SECRET`; token com alg `none`/outro secret → 401; token antigo após troca de senha → 401.
 
-### [ ] BE-03 — Camada de autorização por tenant `[SEC-03]`
+### [x] BE-03 — Camada de autorização por tenant `[SEC-03]`
 - **Depende de:** BE-01
 - **Arquivos:** novo `src/shared/authz.js`; usar em `barbershop`, `branch`, `barber`, `service`, `address`, `payment`, `appointment`.
 - **Fazer:**

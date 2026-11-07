@@ -1,4 +1,4 @@
-// Address controller for direct address management.
+// Address controller para gestão direta de endereços (acesso restrito ao tenant — BE-03).
 const addressService = require('./addressService');
 const { created, success } = require('../../utils/responseHandler');
 
@@ -13,7 +13,7 @@ const create = async (req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const address = await addressService.findById(req.params.id);
+    const address = await addressService.findById(req.params.id, req.user);
     return success(res, address);
   } catch (error) {
     return next(error);
@@ -22,7 +22,7 @@ const getById = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const address = await addressService.update(req.params.id, req.body);
+    const address = await addressService.updateAsUser(req.params.id, req.body, req.user);
     return success(res, address);
   } catch (error) {
     return next(error);

@@ -4,7 +4,7 @@ const { success, created, noContent } = require('../../utils/responseHandler');
 
 const createService = async (req, res, next) => {
   try {
-    const service = await serviceService.create(req.body);
+    const service = await serviceService.create(req.body, req.user);
     return created(res, { message: 'Serviço criado com sucesso', service });
   } catch (error) {
     return next(error);
@@ -31,7 +31,7 @@ const getServiceById = async (req, res, next) => {
 
 const updateService = async (req, res, next) => {
   try {
-    const service = await serviceService.update(req.params.id, req.body);
+    const service = await serviceService.update(req.params.id, req.body, req.user);
     return success(res, { message: 'Serviço atualizado com sucesso', service });
   } catch (error) {
     return next(error);
@@ -40,7 +40,7 @@ const updateService = async (req, res, next) => {
 
 const deleteService = async (req, res, next) => {
   try {
-    await serviceService.remove(req.params.id);
+    await serviceService.remove(req.params.id, req.user);
     return noContent(res);
   } catch (error) {
     return next(error);

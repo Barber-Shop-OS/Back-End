@@ -22,7 +22,7 @@ const getById = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    const barber = await barberService.create(req.body);
+    const barber = await barberService.create(req.body, req.user);
     return created(res, { message: 'Barbeiro criado com sucesso', barber });
   } catch (error) {
     return next(error);
@@ -31,7 +31,7 @@ const create = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const barber = await barberService.update(req.params.id, req.body);
+    const barber = await barberService.update(req.params.id, req.body, req.user);
     return success(res, { message: 'Barbeiro atualizado com sucesso', barber });
   } catch (error) {
     return next(error);
@@ -40,7 +40,7 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    await barberService.remove(req.params.id);
+    await barberService.remove(req.params.id, req.user);
     return noContent(res);
   } catch (error) {
     return next(error);
