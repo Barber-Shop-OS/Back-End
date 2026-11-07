@@ -1,6 +1,6 @@
 // Barbershop service responsible for search, ownership checks, and CRUD.
 const { Op } = require('sequelize');
-const { AppError, NotFoundError } = require('../../utils/errorHandler');
+const { AppError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 const { Barbershop, Branch, Address, User } = require('../../models');
 const barbershopRepository = require('./barbershopRepository');
 const { assertCanManageBarbershop } = require('../../shared/authz');
@@ -67,7 +67,7 @@ const create = async (data) => {
   });
 
   if (duplicate) {
-    throw new AppError('Barbearia com este nome já existe', 409);
+    throw new ConflictError('Barbearia com este nome já existe', CODES.BARBERSHOP_NAME_TAKEN);
   }
 
   return barbershopRepository.create(data);
@@ -85,7 +85,7 @@ const update = async (id, data, currentUser) => {
     if (!name) throw new AppError("Campo 'name' é obrigatório", 400);
     const duplicate = await Barbershop.findOne({ where: { owner_id: barbershop.owner_id, name } });
     if (duplicate && String(duplicate.id) !== String(id)) {
-      throw new AppError('Barbearia com este nome já existe', 409);
+      throw new ConflictError('Barbearia com este nome já existe', CODES.BARBERSHOP_NAME_TAKEN);
     }
     updateData.name = name;
   }

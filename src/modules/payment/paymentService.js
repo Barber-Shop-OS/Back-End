@@ -4,7 +4,7 @@
 const { Appointment } = require('../../models');
 const paymentRepository = require('./paymentRepository');
 const { assertCanViewAppointment, assertCanOperateAppointment } = require('../../shared/authz');
-const { AppError, NotFoundError, ValidationError } = require('../../utils/errorHandler');
+const { NotFoundError, ValidationError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 const create = async (data, currentUser) => {
   const { appointment_id, amount, method } = data;
@@ -23,7 +23,7 @@ const create = async (data, currentUser) => {
 
   const existingPayment = await paymentRepository.findByAppointmentId(appointment_id);
   if (existingPayment) {
-    throw new AppError('Pagamento já registrado para este agendamento', 409);
+    throw new ConflictError('Pagamento já registrado para este agendamento', CODES.PAYMENT_ALREADY_REGISTERED);
   }
 
   return paymentRepository.create({

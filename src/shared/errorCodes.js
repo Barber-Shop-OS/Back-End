@@ -1,0 +1,26 @@
+// BE-37: catálogo de códigos de erro da API. O front/mobile traduz `code` em mensagens amigáveis.
+// Adicionar códigos novos aqui (nunca strings soltas) para manter o contrato documentado.
+module.exports = Object.freeze({
+  // Genéricos
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_JSON: 'INVALID_JSON',
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  RATE_LIMITED: 'RATE_LIMITED',
+  INTERNAL: 'INTERNAL',
+
+  // Autenticação e conta
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  EMAIL_IN_USE: 'EMAIL_IN_USE',
+
+  // Domínio
+  BARBERSHOP_NAME_TAKEN: 'BARBERSHOP_NAME_TAKEN',
+  PAYMENT_ALREADY_REGISTERED: 'PAYMENT_ALREADY_REGISTERED',
+  SLOT_TAKEN: 'SLOT_TAKEN',
+  CANCELLATION_WINDOW_CLOSED: 'CANCELLATION_WINDOW_CLOSED',
+  PLAN_LIMIT_REACHED: 'PLAN_LIMIT_REACHED',
+  SLUG_TAKEN: 'SLUG_TAKEN',
+});

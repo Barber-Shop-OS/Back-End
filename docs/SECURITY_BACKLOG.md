@@ -86,7 +86,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Onde:** `authService.register` (mínimo 6 caracteres), `409 E-mail já está em uso` no cadastro.
 - **Correção:** mínimo 8, bloquear as 10 mil senhas mais comuns (lista local) e senha = e-mail; bcrypt cost 12; cadastro mantém 409 (UX) mas com rate limit forte; `forgot-password` sempre neutro. Normalizar e-mail (`lowercase/trim`) para evitar contas duplicadas `A@x.com` / `a@x.com`.
 
-### [ ] SEC-11 — Vazamento de detalhes internos em erros — **Médio** → BE-37
+### [x] SEC-11 — Vazamento de detalhes internos em erros — **Médio** → BE-37
 - **Onde:** `utils/errorHandler.handleErrorResponse` devolve `err.message` para qualquer erro, inclusive Sequelize/MySQL (nomes de tabela, colunas, SQL).
 - **Correção:** só mensagens de `AppError` vão ao cliente; 500 genérico com `request_id`.
 

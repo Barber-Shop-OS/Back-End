@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const userRepository = require('./userRepository');
 const { normalizePhone } = require('../../shared/phone');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
-const { AppError, ValidationError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
+const { ValidationError, NotFoundError, ForbiddenError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
 // Campos que o próprio usuário pode alterar. E-mail e senha terão fluxos próprios (BE-29).
@@ -92,7 +92,7 @@ const update = async (id, data = {}, currentUser) => {
     }
     const duplicate = await userRepository.findAll({ email }, { attributes: ['id'] });
     if (duplicate.rows.some((item) => String(item.id) !== String(id))) {
-      throw new AppError('E-mail já está em uso', 409);
+      throw new ConflictError('E-mail já está em uso', CODES.EMAIL_IN_USE);
     }
     updateData.email = email;
   }

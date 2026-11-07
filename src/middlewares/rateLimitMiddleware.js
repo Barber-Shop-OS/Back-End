@@ -6,7 +6,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: {
-    success: false,
+    code: 'RATE_LIMITED',
     message: 'Muitas tentativas. Tente novamente em 15 minutos.',
   },
   standardHeaders: true,
@@ -18,7 +18,7 @@ const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
   message: {
-    success: false,
+    code: 'RATE_LIMITED',
     message: 'Limite de requisições atingido. Tente novamente em instantes.',
   },
   standardHeaders: true,
@@ -30,7 +30,7 @@ const paymentLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 20,
   message: {
-    success: false,
+    code: 'RATE_LIMITED',
     message: 'Muitas requisições de pagamento. Aguarde alguns minutos.',
   },
   standardHeaders: true,

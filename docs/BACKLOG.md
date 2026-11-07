@@ -325,7 +325,7 @@
 - **Fazer:** `paranoid: true` (`deleted_at`) em barbershops, branches, barbers, services, users. Tabela `audit_logs (actor_id, barbershop_id, action, entity, entity_id, before JSON, after JSON, ip, created_at)` gravada no service em ações sensíveis (troca de role, exclusões, preço, assinatura, pagamentos). `GET /api/audit-logs?barbershop_id` (owner/admin).
 - **Aceite:** excluir serviço não quebra histórico de agendamentos.
 
-### [ ] BE-37 — Padrão de erros com `code`
+### [x] BE-37 — Padrão de erros com `code`
 - **Depende de:** BE-08
 - **Fazer:** `AppError(message, status, code, details)`; catálogo em `src/shared/errorCodes.js` (`VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `SLOT_TAKEN`, `CANCELLATION_WINDOW_CLOSED`, `PLAN_LIMIT_REACHED`, `SLUG_TAKEN`, `EMAIL_IN_USE`, ...). Mapear `SequelizeUniqueConstraintError` → 409, `ForeignKeyConstraintError` → 409, `ValidationError` → 400. Em produção, 500 responde `{"message":"Erro interno","code":"INTERNAL","request_id"}` — **nunca** `err.message` de erro não tratado `[SEC-11]`.
 - **Aceite:** teste garante que erro de SQL não vaza mensagem.

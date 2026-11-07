@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { User } = require('../../models');
 const { signAccessToken } = require('../../shared/tokens');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
-const { AppError, ValidationError, NotFoundError } = require('../../utils/errorHandler');
+const { ValidationError, NotFoundError, UnauthorizedError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 const register = async (data = {}) => {
   const { name, email, password } = data;
@@ -20,7 +20,7 @@ const register = async (data = {}) => {
 
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
-    throw new AppError('E-mail já está em uso', 409);
+    throw new ConflictError('E-mail já está em uso', CODES.EMAIL_IN_USE);
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,12 +41,12 @@ const login = async (email, password) => {
 
   const user = await User.findOne({ where: { email } });
   if (!user) {
-    throw new AppError('Credenciais inválidas', 401);
+    throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);
   }
 
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) {
-    throw new AppError('Credenciais inválidas', 401);
+    throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);
   }
 
   const token = signAccessToken(user);

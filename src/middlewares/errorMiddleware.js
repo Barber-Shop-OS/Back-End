@@ -1,13 +1,22 @@
-const { handleErrorResponse } = require('../utils/errorHandler');
+// Middleware global de erros (registrar após as rotas). Detalhes ficam só no log; o cliente
+// recebe { message, code } seguro (BE-37 / SEC-11).
+const { toErrorResponse } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
-// Middleware global de tratamento de erros
-// Deve ser registrado após as rotas no app
+// eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
-  // Se já foi enviado, apenas passa adiante
   if (res.headersSent) {
     return next(err);
   }
-  logger.error({ message: err.message, stack: err.stack });
-  return handleErrorResponse(res, err);
+
+  const { status, body } = toErrorResponse(err);
+  const context = { method: req.method, url: req.originalUrl, status, code: body.code };
+
+  if (status >= 500) {
+    logger.error('Erro não tratado', { ...context, error: err && err.message, stack: err && err.stack });
+  } else {
+    logger.warn('Requisição rejeitada', { ...context, message: body.message });
+  }
+
+  return res.status(status).json(body);
 };
