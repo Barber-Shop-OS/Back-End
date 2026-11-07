@@ -30,7 +30,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 
 ## 1. Achados confirmados no código (corrigir primeiro)
 
-### [ ] SEC-01 — Escalonamento de privilégio para admin — **Crítico** → BE-01
+### [x] SEC-01 — Escalonamento de privilégio para admin — **Crítico** → BE-01
 - **Onde:** `src/modules/user/userRoutes.js` (`PUT /:id` só com `authMiddleware`) + `userService.update` (`const updateData = { ...data }`).
 - **Ataque:** cliente se cadastra, faz `PUT /api/user/<seu id>` com `{"role":"admin"}` → vira admin da plataforma (API Top 10: BOPLA/mass assignment + BFLA).
 - **Correção:** whitelist de campos, só o próprio usuário/admin, troca de role só por rota admin.

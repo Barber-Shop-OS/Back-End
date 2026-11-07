@@ -61,7 +61,7 @@
 
 ## Fase P0 — Corrigir base, segurança e infraestrutura de testes
 
-### [ ] BE-01 — Usuários: travar escalonamento de privilégio e IDOR; perfil próprio `[SEC-01, SEC-02]`
+### [x] BE-01 — Usuários: travar escalonamento de privilégio e IDOR; perfil próprio `[SEC-01, SEC-02]`
 - **Depende de:** —
 - **Arquivos:** `src/modules/user/{userRoutes,userController,userService}.js`, nova migration `add-phone-to-users`.
 - **Problema:** `userService.update` faz `{...data}` → qualquer usuário logado envia `{"role":"admin"}` para `PUT /api/user/<seu id>` e vira admin; também altera dados de qualquer outro id. `GET /api/user/:id` expõe qualquer usuário.

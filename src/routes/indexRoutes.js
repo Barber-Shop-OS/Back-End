@@ -11,6 +11,7 @@ const barbershopRoutes = require('../modules/barbershop/barbershopRoutes');
 const branchRoutes = require('../modules/branch/branchRoutes');
 const addressRoutes = require('../modules/address/addressRoutes');
 const paymentRoutes = require('../modules/payment/paymentRoutes');
+const adminRoutes = require('../modules/admin/adminRoutes');
 
 router.use('/api/auth', authRoutes);
 router.use('/api/user', userRoutes);
@@ -21,6 +22,7 @@ router.use('/api/barbershop', barbershopRoutes);
 router.use('/api/branch', branchRoutes);
 router.use('/api/address', addressRoutes);
 router.use('/api/payment', paymentRoutes);
+router.use('/api/admin', adminRoutes);
 
 module.exports = router;
 

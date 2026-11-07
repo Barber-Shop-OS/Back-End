@@ -1,8 +1,14 @@
-// User service responsible for pagination, lookup, update, and delete.
-const bcrypt = require('bcryptjs');
+// User service: listagem (admin), leitura/edição do próprio perfil e troca de papel (admin).
 const { Op } = require('sequelize');
 const userRepository = require('./userRepository');
-const { AppError, ValidationError, NotFoundError } = require('../../utils/errorHandler');
+const { normalizePhone } = require('../../shared/phone');
+const { AppError, ValidationError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
+
+const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
+// Campos que o próprio usuário pode alterar. E-mail e senha terão fluxos próprios (BE-29).
+const SELF_EDITABLE_FIELDS = ['name', 'phone'];
+// Admin também corrige e-mail (suporte). Papel só pela rota dedicada.
+const ADMIN_EDITABLE_FIELDS = ['name', 'phone', 'email'];
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -11,10 +17,8 @@ const sanitizeUser = (user) => {
   return safeUser;
 };
 
-const sanitizeList = (result) => ({
-  ...result,
-  rows: result.rows.map(sanitizeUser),
-});
+const isAdmin = (currentUser) => Boolean(currentUser) && currentUser.role === 'admin';
+const isSelf = (currentUser, id) => Boolean(currentUser) && String(currentUser.id) === String(id);
 
 const findAll = async (query = {}) => {
   const page = Number(query.page) > 0 ? Number(query.page) : 1;
@@ -36,55 +40,89 @@ const findAll = async (query = {}) => {
     attributes: { exclude: ['password'] },
   });
 
-  const sanitized = sanitizeList(result);
   return {
-    items: sanitized.rows,
+    items: result.rows.map(sanitizeUser),
     page,
     pageSize,
-    total: sanitized.count,
-    totalPages: Math.ceil(sanitized.count / pageSize),
+    total: result.count,
+    totalPages: Math.ceil(result.count / pageSize),
   };
 };
 
-const findById = async (id) => {
-  const user = await userRepository.findById(id, {
-    attributes: { exclude: ['password'] },
-  });
-
+const findById = async (id, currentUser) => {
+  // Outro usuário recebe 404 para não revelar quais ids existem.
+  if (!isSelf(currentUser, id) && !isAdmin(currentUser)) {
+    throw new NotFoundError('Usuário não encontrado');
+  }
+  const user = await userRepository.findById(id, { attributes: { exclude: ['password'] } });
   if (!user) {
     throw new NotFoundError('Usuário não encontrado');
   }
-
   return user;
 };
 
-const update = async (id, data = {}) => {
+const update = async (id, data = {}, currentUser) => {
+  if (!isSelf(currentUser, id) && !isAdmin(currentUser)) {
+    throw new NotFoundError('Usuário não encontrado');
+  }
+
   const user = await userRepository.findById(id);
   if (!user) {
     throw new NotFoundError('Usuário não encontrado');
   }
 
-  const updateData = { ...data };
-  if (updateData.password) {
-    if (String(updateData.password).trim().length < 6) {
-      throw new ValidationError('Senha deve ter no mínimo 6 caracteres');
-    }
-    updateData.password = await bcrypt.hash(updateData.password, 10);
+  const allowedFields = isAdmin(currentUser) ? ADMIN_EDITABLE_FIELDS : SELF_EDITABLE_FIELDS;
+  const forbidden = Object.keys(data).filter((key) => !allowedFields.includes(key));
+  if (forbidden.length) {
+    throw new ValidationError(`Campos não permitidos: ${forbidden.join(', ')}`);
   }
 
-  if (updateData.email) {
-    const duplicate = await userRepository.findAll(
-      { email: updateData.email },
-      { attributes: ['id'] }
-    );
-    const foundDuplicate = duplicate.rows.find((item) => String(item.id) !== String(id));
-    if (foundDuplicate) {
+  const updateData = { ...data };
+
+  if ('name' in updateData) {
+    const name = String(updateData.name || '').trim();
+    if (name.length < 2 || name.length > 120) {
+      throw new ValidationError("Campo 'name' deve ter entre 2 e 120 caracteres");
+    }
+    updateData.name = name;
+  }
+
+  if ('phone' in updateData) {
+    updateData.phone = normalizePhone(updateData.phone);
+  }
+
+  if ('email' in updateData) {
+    const email = String(updateData.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new ValidationError('E-mail inválido');
+    }
+    const duplicate = await userRepository.findAll({ email }, { attributes: ['id'] });
+    if (duplicate.rows.some((item) => String(item.id) !== String(id))) {
       throw new AppError('E-mail já está em uso', 409);
     }
+    updateData.email = email;
   }
 
   await userRepository.update(id, updateData);
-  return findById(id);
+  return findById(id, currentUser);
+};
+
+const changeRole = async (id, role, currentUser) => {
+  if (!isAdmin(currentUser)) {
+    throw new ForbiddenError('Acesso restrito a administradores');
+  }
+  if (!ROLES.includes(role)) {
+    throw new ValidationError(`Papel inválido. Use: ${ROLES.join(', ')}`);
+  }
+  if (isSelf(currentUser, id) && role !== 'admin') {
+    throw new ValidationError('Um administrador não pode remover o próprio acesso de admin');
+  }
+  const user = await userRepository.findById(id);
+  if (!user) {
+    throw new NotFoundError('Usuário não encontrado');
+  }
+  await userRepository.update(id, { role });
+  return sanitizeUser(await userRepository.findById(id));
 };
 
 const remove = async (id) => {
@@ -99,5 +137,7 @@ module.exports = {
   findAll,
   findById,
   update,
+  changeRole,
   remove,
+  SELF_EDITABLE_FIELDS,
 };

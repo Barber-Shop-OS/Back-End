@@ -95,7 +95,10 @@ router.get('/:id', authMiddleware, userController.getUserById);
  * @swagger
  * /user/{id}:
  *   put:
- *     summary: Atualizar dados de um usuário
+ *     summary: Atualizar dados do próprio usuário (ou qualquer usuário, se admin)
+ *     description: >
+ *       O próprio usuário altera apenas `name` e `phone`. Admin também altera `email`.
+ *       `role` e `password` não são aceitos aqui (400) — papel em PATCH /admin/users/{id}/role.
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
@@ -116,15 +119,13 @@ router.get('/:id', authMiddleware, userController.getUserById);
  *               name:
  *                 type: string
  *                 example: Carlos Souza
+ *               phone:
+ *                 type: string
+ *                 example: "(11) 99999-9999"
  *               email:
  *                 type: string
+ *                 description: Somente admin
  *                 example: carlos.souza@barber.com
- *               password:
- *                 type: string
- *                 example: novaSenha123
- *               role:
- *                 type: string
- *                 example: cliente
  *     responses:
  *       200:
  *         description: Usuário atualizado com sucesso
@@ -157,6 +158,7 @@ router.get('/:id', authMiddleware, userController.getUserById);
  *               message: Usuário não encontrado
  */
 router.put('/:id', authMiddleware, userController.updateUser);
+router.patch('/:id', authMiddleware, userController.updateUser);
 
 /**
  * @swagger
