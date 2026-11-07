@@ -19,7 +19,7 @@ describe('loadEnv (BE-02)', () => {
   });
 
   it('falha sem JWT_SECRET', () => {
-    const { JWT_SECRET, ...env } = base;
+    const { JWT_SECRET: _omit, ...env } = base;
     expect(() => loadEnv(env)).toThrow('JWT_SECRET é obrigatório');
   });
 
@@ -32,12 +32,12 @@ describe('loadEnv (BE-02)', () => {
   });
 
   it('falha em produção sem CORS_ORIGINS', () => {
-    const { CORS_ORIGINS, ...env } = base;
+    const { CORS_ORIGINS: _omit, ...env } = base;
     expect(() => loadEnv(env)).toThrow('CORS_ORIGINS');
   });
 
   it('falha fora de teste sem dados do banco', () => {
-    const { DB_HOST, ...env } = base;
+    const { DB_HOST: _omit, ...env } = base;
     expect(() => loadEnv(env)).toThrow('DB_HOST');
   });
 

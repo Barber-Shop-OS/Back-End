@@ -1,7 +1,7 @@
 # Ambiente local. Exige um .env (ver .env.example) — não há senhas/segredos padrão (SEC-05, SEC-14).
 services:
   db:
-    image: mysql:5.7
+    image: mysql:8.0
     container_name: barberos-db
     restart: unless-stopped
     environment:

@@ -1,5 +1,4 @@
 // Service service with barbershop filtering and CRUD validation.
-const { Op } = require('sequelize');
 const { parsePagination, likeContains } = require('../../shared/query');
 const { Barbershop } = require('../../models');
 const serviceRepository = require('./serviceRepository');

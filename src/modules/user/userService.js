@@ -1,5 +1,4 @@
 // User service: listagem (admin), leitura/edição do próprio perfil e troca de papel (admin).
-const { Op } = require('sequelize');
 const { parsePagination, likeContains } = require('../../shared/query');
 const userRepository = require('./userRepository');
 const { normalizePhone } = require('../../shared/phone');

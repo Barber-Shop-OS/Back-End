@@ -19,7 +19,7 @@ const authMiddleware = async (req, res, next) => {
   let payload;
   try {
     payload = verifyAccessToken(match[1]);
-  } catch (error) {
+  } catch {
     return next(new UnauthorizedError('Token inválido ou expirado'));
   }
 

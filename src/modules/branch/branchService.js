@@ -1,5 +1,4 @@
 // Branch service: filiais e seus endereços, sempre dentro do tenant do usuário (BE-03).
-const { Op } = require('sequelize');
 const { parsePagination, likeContains } = require('../../shared/query');
 const { sequelize, Address, Barber } = require('../../models');
 const branchRepository = require('./branchRepository');

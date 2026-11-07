@@ -123,7 +123,7 @@
 - **Fazer:** `POST /api/payment` só staff do tenant (owner/barbeiro da filial); `amount` default = `price_snapshot` do agendamento; marcar `PAID` direto (registro presencial) ou `PENDING`; `PUT /:id/status` com tenant check; `GET /api/payment?branch_id&from&to&status&method` paginado (FE-16) com totais; cliente vê o pagamento do próprio agendamento.
 - **Aceite:** barbeiro de outra barbearia recebe 403; cliente não cria pagamento; totais batem com a soma.
 
-### [ ] BE-08 — Higiene do código, migrations confiáveis e dependências
+### [x] BE-08 — Higiene do código, migrations confiáveis e dependências
 - **Depende de:** —
 - **Fazer:**
   - Remover código morto listado no "Estado atual" (confirmar com `grep -rn "require(" src`).

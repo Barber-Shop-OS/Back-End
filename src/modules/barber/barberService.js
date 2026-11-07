@@ -1,5 +1,4 @@
 // Barber service with branch filtering and per-user role downgrade support.
-const { Op } = require('sequelize');
 const { parsePagination, likeContains } = require('../../shared/query');
 const { User, Barber } = require('../../models');
 const barberRepository = require('./barberRepository');

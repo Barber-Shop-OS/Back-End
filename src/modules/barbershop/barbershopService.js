@@ -1,5 +1,4 @@
 // Barbershop service responsible for search, ownership checks, and CRUD.
-const { Op } = require('sequelize');
 const { parsePagination, likeContains } = require('../../shared/query');
 const { AppError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 const { Barbershop, Branch, Address, User } = require('../../models');

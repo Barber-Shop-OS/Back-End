@@ -1,6 +1,6 @@
 // Branch controller responsible for combined branch and address operations.
 const branchService = require('./branchService');
-const { success, created, noContent } = require('../../utils/responseHandler');
+const { success, created } = require('../../utils/responseHandler');
 
 const splitPayload = (body) => {
   const { cep, number, complement, city, state, ...branchData } = body;

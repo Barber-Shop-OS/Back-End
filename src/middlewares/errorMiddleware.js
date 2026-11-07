@@ -3,7 +3,6 @@
 const { toErrorResponse } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
-// eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
