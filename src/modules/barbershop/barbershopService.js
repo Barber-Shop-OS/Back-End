@@ -1,10 +1,15 @@
 // Barbershop service responsible for search, ownership checks, and CRUD.
 const { parsePagination, likeContains } = require('../../shared/query');
 const { AppError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
-const { Barbershop, Branch, Address, User } = require('../../models');
+const { Barbershop, Branch, Address } = require('../../models');
 const barbershopRepository = require('./barbershopRepository');
 const { assertCanManageBarbershop } = require('../../shared/authz');
 const { pickFields } = require('../../shared/pickFields');
+const { normalizePhone } = require('../../shared/phone');
+const { isValidSlug } = require('../../shared/slug');
+const { ValidationError } = require('../../utils/errorHandler');
+
+const PROFILE_FIELDS = ['slug', 'description', 'phone', 'whatsapp', 'instagram', 'logo_url', 'cover_url'];
 
 const findAll = async (query = {}) => {
   const { page, pageSize, offset } = parsePagination(query);
@@ -23,10 +28,9 @@ const findAll = async (query = {}) => {
     where.id = [...new Set(branches.map((branch) => branch.barbershop_id))];
   }
 
-  const include = [
-    { model: User, as: 'owner', attributes: ['id', 'name', 'email'] },
-    { model: Branch, include: [{ model: Address }] },
-  ];
+  // SEC-06: nada de owner/e-mail em rota pública; só barbearias e filiais ativas.
+  where.status = 'active';
+  const include = [{ model: Branch, where: { active: true }, required: false, include: [{ model: Address }] }];
 
   const allowedSortFields = ['name', 'created_at'];
   const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'created_at';
@@ -49,10 +53,52 @@ const findAll = async (query = {}) => {
 };
 
 const findById = async (id) => {
-  return barbershopRepository.findById(id, [
-    { model: Branch, include: [Address] },
-    { model: User, as: 'owner', attributes: ['id', 'name', 'email'] },
+  const barbershop = await barbershopRepository.findById(id, [
+    { model: Branch, where: { active: true }, required: false, include: [Address] },
   ]);
+  if (!barbershop || barbershop.status !== 'active') return null;
+  return barbershop;
+};
+
+const INSTAGRAM_RE = /^[a-zA-Z0-9._]{1,30}$/;
+const httpsUrl = (value, field) => {
+  if (value === null || value === '') return null;
+  let url;
+  try {
+    url = new URL(String(value));
+  } catch {
+    throw new ValidationError(`Campo '${field}' deve ser uma URL https`);
+  }
+  if (url.protocol !== 'https:') throw new ValidationError(`Campo '${field}' deve ser uma URL https`);
+  return url.toString();
+};
+
+/** Normaliza e valida os campos de perfil público (BE-18). */
+const normalizeProfile = async (data, currentId) => {
+  const out = { ...data };
+  if ('slug' in out) {
+    const slug = String(out.slug || '').trim().toLowerCase();
+    if (!isValidSlug(slug)) {
+      throw new ValidationError('Slug inválido: use 3 a 60 letras minúsculas, números e hífen (palavras reservadas não)', undefined, CODES.INVALID_SLUG);
+    }
+    const taken = await Barbershop.findOne({ where: { slug } });
+    if (taken && String(taken.id) !== String(currentId)) {
+      throw new ConflictError('Este endereço já está em uso por outra barbearia', CODES.SLUG_TAKEN);
+    }
+    out.slug = slug;
+  }
+  if ('description' in out) out.description = out.description ? String(out.description).trim() : null;
+  if ('phone' in out) out.phone = normalizePhone(out.phone);
+  if ('whatsapp' in out) out.whatsapp = normalizePhone(out.whatsapp);
+  if ('instagram' in out) {
+    const handle = out.instagram ? String(out.instagram).trim().replace(/^@/, '') : null;
+    if (handle && !INSTAGRAM_RE.test(handle)) throw new ValidationError('Instagram inválido');
+    out.instagram = handle;
+  }
+  for (const field of ['logo_url', 'cover_url']) {
+    if (field in out) out[field] = httpsUrl(out[field], field);
+  }
+  return out;
 };
 
 const create = async (data) => {
@@ -71,11 +117,12 @@ const create = async (data) => {
     throw new ConflictError('Barbearia com este nome já existe', CODES.BARBERSHOP_NAME_TAKEN);
   }
 
-  return barbershopRepository.create(data);
+  const profile = await normalizeProfile(pickFields(data, ['name', 'owner_id', ...PROFILE_FIELDS]));
+  return barbershopRepository.create({ ...profile, name: String(data.name).trim(), owner_id: Number(data.owner_id) });
 };
 
-// Campos editáveis pelo dono. owner_id nunca vem do body (SEC-03); BE-18 amplia a lista.
-const UPDATABLE_FIELDS = ['name'];
+// Campos editáveis pelo dono. owner_id e status nunca vêm do body (SEC-03).
+const UPDATABLE_FIELDS = ['name', ...PROFILE_FIELDS];
 
 const update = async (id, data, currentUser) => {
   const barbershop = await assertCanManageBarbershop(currentUser, id);
@@ -91,7 +138,7 @@ const update = async (id, data, currentUser) => {
     updateData.name = name;
   }
 
-  return barbershopRepository.update(id, updateData);
+  return barbershopRepository.update(id, await normalizeProfile(updateData, id));
 };
 
 const remove = async (id) => {

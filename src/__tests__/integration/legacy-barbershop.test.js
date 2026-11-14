@@ -93,7 +93,7 @@ describe('Barbershop integration', () => {
   });
 
   describe('GET /api/barbershop/:id', () => {
-    it('deve retornar barbearia com branches e owner', async () => {
+    it('deve retornar barbearia com branches e sem dados do dono (SEC-06)', async () => {
       const created = await request(app)
         .post('/api/barbershop')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -101,7 +101,7 @@ describe('Barbershop integration', () => {
 
       const response = await request(app).get(`/api/barbershop/${created.body.barbershop.id}`);
       expect(response.status).toBe(200);
-      expect(response.body.owner).toBeDefined();
+      expect(response.body).not.toHaveProperty('owner');
       expect(response.body.Branches).toBeDefined();
     });
 

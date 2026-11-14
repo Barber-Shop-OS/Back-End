@@ -43,6 +43,7 @@ const MATRIX = {
   'DELETE /api/appointment/:id': ['admin'],
 
   'GET /api/barbershop': 'public',
+  'GET /api/barbershop/slug/:slug': 'public',
   'GET /api/barbershop/:id': 'public',
   'POST /api/barbershop': ['admin', 'owner'],
   'PUT /api/barbershop/:id': ['admin', 'owner'],

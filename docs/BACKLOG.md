@@ -200,7 +200,7 @@
 - **Fazer:** migration em `addresses`: `street`, `neighborhood`, `latitude DECIMAL(9,6)`, `longitude DECIMAL(9,6)`; validar CEP `^\d{5}-?\d{3}$`, UF da lista de 27. `GET /api/address/:id` só staff do tenant (público vê endereço embutido na filial). Geocodificação opcional (Nominatim) via job.
 - **Aceite:** CEP inválido → 400; dono de B não lê endereço de A pelo id.
 
-### [ ] BE-18 — Perfil público da barbearia (slug) `[SEC-06]`
+### [x] BE-18 — Perfil público da barbearia (slug) `[SEC-06]`
 - **Depende de:** BE-03
 - **Fazer:** colunas `slug` (unique, `[a-z0-9-]{3,60}`, gerado do nome, palavras reservadas bloqueadas: `admin`, `api`, `login`...), `description`, `phone`, `whatsapp`, `instagram`, `logo_url`, `cover_url`, `status ENUM(active, suspended, deleted)`. `GET /api/barbershop/slug/:slug` público com DTO: barbearia + filiais ativas (endereço, horários, "aberta agora" calculado no fuso) + serviços ativos + barbeiros ativos. **Não retornar `owner` nem e-mails** (hoje `GET /api/barbershop` público inclui `owner.email`). Barbearia sem assinatura ativa (BE-35) → 404 público.
 - **Aceite:** listagem/detalhe público não contém e-mail; slug duplicado → 409 `SLUG_TAKEN`.

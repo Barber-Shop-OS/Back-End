@@ -24,12 +24,20 @@ const getById = async (req, res, next) => {
   }
 };
 
+const barbershopPublicService = require('./barbershopPublicService');
+
+/** GET /api/barbershop/slug/:slug — perfil público (BE-18). */
+const getBySlug = async (req, res, next) => {
+  try {
+    return success(res, await barbershopPublicService.getBySlug(req.params.slug));
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const create = async (req, res, next) => {
   try {
-    const barbershop = await barbershopService.create({
-      name: req.body.name,
-      owner_id: req.user.id,
-    });
+    const barbershop = await barbershopService.create({ ...req.body, owner_id: req.user.id });
     return created(res, { message: 'Barbearia criada com sucesso', barbershop });
   } catch (error) {
     return next(error);
@@ -55,6 +63,7 @@ const remove = async (req, res, next) => {
 };
 
 module.exports = {
+  getBySlug,
   getAll,
   getById,
   create,

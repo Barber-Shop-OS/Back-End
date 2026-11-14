@@ -72,6 +72,22 @@ router.get('/', schemas.list, barbershopController.getAll);
  *             example:
  *               message: Barbearia não encontrada
  */
+/**
+ * @swagger
+ * /barbershop/slug/{slug}:
+ *   get:
+ *     summary: Perfil público da barbearia
+ *     description: Barbearia + filiais ativas (endereço, horário, open_now no fuso da filial) + serviços e barbeiros ativos. Sem dados do dono nem e-mails.
+ *     tags: [Barbershop]
+ *     security: []
+ *     parameters:
+ *       - { in: path, name: slug, required: true, schema: { type: string, example: navalha-de-ouro } }
+ *     responses:
+ *       200: { description: Perfil público }
+ *       404: { description: Inexistente, suspensa ou sem assinatura ativa }
+ */
+router.get('/slug/:slug', schemas.bySlug, barbershopController.getBySlug);
+
 router.get('/:id', schemas.byId, barbershopController.getById);
 
 /**

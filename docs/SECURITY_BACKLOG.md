@@ -59,7 +59,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** validação de env no boot, secret ≥ 32 bytes aleatórios, `algorithms:['HS256']`, `iss/aud`, `token_version` para revogação.
 - **Teste:** token assinado com `your_jwt_secret` → 401 em produção; boot falha sem secret.
 
-### [ ] SEC-06 — Exposição de dados pessoais em rotas públicas — **Alto** → BE-05, BE-18
+### [x] SEC-06 — Exposição de dados pessoais em rotas públicas — **Alto** → BE-05, BE-18
 - **Onde:** `GET /api/barbershop` e `/:id` (públicos) incluem `owner: {id, name, email}`; `GET /api/barber` (público) inclui `User` inteiro sem senha (e-mail, role, created_at); listagens devolvem models crus.
 - **Ataque:** coletar e-mails de todos os donos e barbeiros (spam/phishing/engenharia social).
 - **Correção:** DTOs públicos explícitos (allowlist de campos) em `src/modules/*/dto.js`; nunca `res.json(model)` em rota pública.
