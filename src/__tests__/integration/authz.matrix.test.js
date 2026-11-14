@@ -23,6 +23,11 @@ const MATRIX = {
   'POST /api/barber': ['admin', 'owner'],
   'PUT /api/barber/:id': ['admin', 'owner'],
   'DELETE /api/barber/:id': ['admin', 'owner'],
+  'GET /api/barber/:id/working-hours': 'public',
+  'PUT /api/barber/:id/working-hours': ['admin', 'owner'],
+  'GET /api/barber/:id/time-off': ['admin', 'owner', 'barbeiro'],
+  'POST /api/barber/:id/time-off': ['admin', 'owner', 'barbeiro'],
+  'DELETE /api/barber/:id/time-off/:timeOffId': ['admin', 'owner', 'barbeiro'],
 
   'GET /api/services': 'public',
   'GET /api/services/:id': 'public',

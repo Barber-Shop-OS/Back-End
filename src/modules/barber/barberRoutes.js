@@ -4,6 +4,7 @@ const barberController = require('./barberController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 const schemas = require('./barberSchemas');
+const barberScheduleRoutes = require('../barberSchedule/barberScheduleRoutes');
 
 const router = express.Router();
 
@@ -203,5 +204,8 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  *         description: Barbeiro não encontrado
  */
 router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.remove, barberController.remove);
+
+// BE-11: /:id/working-hours e /:id/time-off
+barberScheduleRoutes.register(router);
 
 module.exports = router;

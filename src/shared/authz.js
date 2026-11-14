@@ -49,6 +49,22 @@ const assertCanManageBarber = async (user, barberId) => {
   return barber;
 };
 
+/**
+ * Agenda do barbeiro (bloqueios): o dono da barbearia ou o próprio barbeiro. BE-11.
+ * Jornada semanal continua só com o dono (assertCanManageBarber).
+ */
+const assertCanManageBarberAgenda = async (user, barberId) => {
+  const barber = await Barber.findByPk(barberId, {
+    include: [{ model: Branch, include: [{ model: Barbershop }] }],
+  });
+  if (!barber) throw new NotFoundError('Barbeiro não encontrado');
+  const isSelfBarber = sameId(barber.user_id, user && user.id);
+  if (!isSelfBarber && !(barber.Branch && ownsBarbershop(user, barber.Branch.Barbershop))) {
+    throw new ForbiddenError('Sem permissão para gerenciar a agenda deste barbeiro');
+  }
+  return barber;
+};
+
 /** Serviço de uma barbearia que o usuário gerencia. */
 const assertCanManageService = async (user, serviceId) => {
   const service = await Service.findByPk(serviceId, { include: [{ model: Barbershop }] });
@@ -123,6 +139,7 @@ module.exports = {
   assertCanManageBarbershop,
   assertCanManageBranch,
   assertCanManageBarber,
+  assertCanManageBarberAgenda,
   assertCanManageService,
   assertCanAccessAddress,
   assertCanViewAppointment,

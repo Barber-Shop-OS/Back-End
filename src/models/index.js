@@ -10,6 +10,8 @@ const Branch = require('./branch');
 const Payment = require('./payment');
 const BranchOpeningHour = require('./branchOpeningHour');
 const BranchClosure = require('./branchClosure');
+const BarberWorkingHour = require('./barberWorkingHour');
+const BarberTimeOff = require('./barberTimeOff');
 
 // ============================================
 // User associations
@@ -124,8 +126,18 @@ BranchOpeningHour.belongsTo(Branch, { foreignKey: 'branch_id' });
 Branch.hasMany(BranchClosure, { foreignKey: 'branch_id', as: 'closures', onDelete: 'CASCADE' });
 BranchClosure.belongsTo(Branch, { foreignKey: 'branch_id' });
 
+// ============================================
+// Barber → jornada e bloqueios (BE-11)
+// ============================================
+Barber.hasMany(BarberWorkingHour, { foreignKey: 'barber_id', as: 'working_hours', onDelete: 'CASCADE' });
+BarberWorkingHour.belongsTo(Barber, { foreignKey: 'barber_id' });
+Barber.hasMany(BarberTimeOff, { foreignKey: 'barber_id', as: 'time_off', onDelete: 'CASCADE' });
+BarberTimeOff.belongsTo(Barber, { foreignKey: 'barber_id' });
+
 module.exports = {
   sequelize,
+  BarberWorkingHour,
+  BarberTimeOff,
   BranchOpeningHour,
   BranchClosure,
   User,

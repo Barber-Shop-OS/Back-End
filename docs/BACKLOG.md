@@ -154,7 +154,7 @@
 - **Fazer:** tabelas `branch_opening_hours (branch_id, weekday 0-6, opens_at TIME, closes_at TIME)` (múltiplos intervalos/dia) e `branch_closures (branch_id, date, reason, all_day, start/end opcional)`. `GET/PUT /api/branch/:id/opening-hours` (PUT substitui a semana em transação; valida sobreposição e `opens<closes`). CRUD `/api/branch/:id/closures`. Coluna `branches.timezone`, `branches.phone`, `branches.whatsapp`, `branches.active`.
 - **Aceite:** intervalos sobrepostos → 400; leitura pública do horário funciona sem login.
 
-### [ ] BE-11 — Jornada e bloqueios do barbeiro
+### [x] BE-11 — Jornada e bloqueios do barbeiro
 - **Depende de:** BE-05, BE-10
 - **Fazer:** `barber_working_hours (barber_id, weekday, start, end)` (default = horário da filial se vazio) e `barber_time_off (barber_id, start_at, end_at, reason)`. Owner gerencia de todos do tenant; barbeiro gerencia os próprios bloqueios. Criar bloqueio sobre agendamento existente → 409 com lista de conflitos.
 - **Aceite:** jornada fora do horário da filial → 400; barbeiro não edita jornada de colega.
