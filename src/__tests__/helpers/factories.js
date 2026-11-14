@@ -11,6 +11,7 @@ const {
   Barber,
   Service,
   Appointment,
+  BarberService,
 } = require('../../models');
 
 const DEFAULT_PASSWORD = 'Tesoura#Navalha9';
@@ -60,6 +61,7 @@ const createTenant = async ({ name } = {}) => {
     duration: 30,
     barbershop_id: barbershop.id,
   });
+  await BarberService.create({ barber_id: barber.id, service_id: service.id });
   return { owner, barbershop, address, branch, barberUser, barber, service };
 };
 

@@ -68,3 +68,13 @@ const createInBranch = async (req, res, next) => {
 };
 
 module.exports.createInBranch = createInBranch;
+
+/** PUT /api/barber/:id/services */
+module.exports.setServices = async (req, res, next) => {
+  try {
+    const barber = await barberService.setServices(req.params.id, req.body.service_ids, req.user);
+    return success(res, { message: 'Serviços do barbeiro atualizados', barber });
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -205,6 +205,29 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  */
 router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.remove, barberController.remove);
 
+/**
+ * @swagger
+ * /barber/{id}/services:
+ *   put:
+ *     summary: Definir os serviços que o barbeiro executa
+ *     description: Substitui a lista. Serviço de outra barbearia → 400. Barbeiro novo executa todos os serviços ativos.
+ *     tags: [Barber]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: integer } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example: { service_ids: [1, 2] }
+ *     responses:
+ *       200: { description: Barbeiro com a lista nova }
+ *       400: { description: Serviço inexistente ou de outra barbearia }
+ *       403: { description: Barbeiro de outro tenant }
+ */
+router.put('/:id/services', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.setServices, barberController.setServices);
+
 // BE-11: /:id/working-hours e /:id/time-off
 barberScheduleRoutes.register(router);
 

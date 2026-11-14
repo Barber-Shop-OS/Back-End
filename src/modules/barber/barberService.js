@@ -1,6 +1,6 @@
 // Barber service (BE-05): posse por tenant, vínculo com usuário e DTO público sem dados pessoais.
 const { parsePagination, likeContains } = require('../../shared/query');
-const { sequelize, User } = require('../../models');
+const { sequelize, User, Service, Branch } = require('../../models');
 const barberRepository = require('./barberRepository');
 const { assertCanManageBranch, assertCanManageBarber } = require('../../shared/authz');
 const { pickFields } = require('../../shared/pickFields');
@@ -28,6 +28,7 @@ const findAll = async (query = {}) => {
   const where = { active: true };
 
   if (query.branch_id) where.branch_id = Number(query.branch_id);
+  if (query.service_id) where.id = await barberRepository.barberIdsForService(Number(query.service_id));
   if (query.bio) where.bio = likeContains(query.bio);
 
   const allowedSortFields = ['created_at', 'bio', 'display_name'];
@@ -87,6 +88,14 @@ const attachUser = async ({ user, branchId, bio, display_name, photo_url }) => {
       barber = await existing.update({ ...data, active: true }, { transaction });
     } else {
       barber = await barberRepository.create({ user_id: user.id, branch_id: Number(branchId), ...data }, { transaction });
+      // BE-19: por padrão o barbeiro novo executa todos os serviços ativos da barbearia.
+      const branch = await Branch.findByPk(branchId, { transaction });
+      const services = await Service.findAll({
+        where: { barbershop_id: branch.barbershop_id, active: true },
+        attributes: ['id'],
+        transaction,
+      });
+      await barberRepository.replaceServices(barber.id, services.map((service) => service.id), { transaction });
     }
     await promoteToBarber(user, transaction);
     return barber.id;
@@ -189,7 +198,27 @@ const remove = async (id, currentUser, { force } = {}) => {
   return { cancelled_appointments: future.map((appt) => appt.id) };
 };
 
+/**
+ * PUT /api/barber/:id/services — substitui os serviços que o barbeiro executa (BE-19).
+ * Todos precisam ser serviços (não excluídos) da mesma barbearia; senão 400.
+ */
+const setServices = async (id, serviceIds, currentUser) => {
+  const barber = await assertCanManageBarber(currentUser, id);
+  const ids = [...new Set(serviceIds.map(Number))];
+  const services = ids.length ? await Service.findAll({ where: { id: ids }, attributes: ['id', 'barbershop_id'] }) : [];
+  const valid = services.filter((service) => String(service.barbershop_id) === String(barber.Branch.barbershop_id));
+  if (valid.length !== ids.length) {
+    const validIds = valid.map((service) => service.id);
+    throw new ValidationError('Serviço inexistente ou de outra barbearia', [
+      { field: 'service_ids', message: `inválidos: ${ids.filter((x) => !validIds.includes(x)).join(', ')}` },
+    ]);
+  }
+  await sequelize.transaction((transaction) => barberRepository.replaceServices(barber.id, ids, { transaction }));
+  return toPublicBarber(await barberRepository.findById(id));
+};
+
 module.exports = {
+  setServices,
   findAll,
   findById,
   create,

@@ -12,6 +12,7 @@ const BranchOpeningHour = require('./branchOpeningHour');
 const BranchClosure = require('./branchClosure');
 const BarberWorkingHour = require('./barberWorkingHour');
 const BarberTimeOff = require('./barberTimeOff');
+const BarberService = require('./barberService');
 
 // ============================================
 // User associations
@@ -134,8 +135,15 @@ BarberWorkingHour.belongsTo(Barber, { foreignKey: 'barber_id' });
 Barber.hasMany(BarberTimeOff, { foreignKey: 'barber_id', as: 'time_off', onDelete: 'CASCADE' });
 BarberTimeOff.belongsTo(Barber, { foreignKey: 'barber_id' });
 
+// ============================================
+// Barber × Service — quem executa o quê (BE-19)
+// ============================================
+Barber.belongsToMany(Service, { through: BarberService, foreignKey: 'barber_id', otherKey: 'service_id' });
+Service.belongsToMany(Barber, { through: BarberService, foreignKey: 'service_id', otherKey: 'barber_id' });
+
 module.exports = {
   sequelize,
+  BarberService,
   BarberWorkingHour,
   BarberTimeOff,
   BranchOpeningHour,

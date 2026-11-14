@@ -205,7 +205,7 @@
 - **Fazer:** colunas `slug` (unique, `[a-z0-9-]{3,60}`, gerado do nome, palavras reservadas bloqueadas: `admin`, `api`, `login`...), `description`, `phone`, `whatsapp`, `instagram`, `logo_url`, `cover_url`, `status ENUM(active, suspended, deleted)`. `GET /api/barbershop/slug/:slug` público com DTO: barbearia + filiais ativas (endereço, horários, "aberta agora" calculado no fuso) + serviços ativos + barbeiros ativos. **Não retornar `owner` nem e-mails** (hoje `GET /api/barbershop` público inclui `owner.email`). Barbearia sem assinatura ativa (BE-35) → 404 público.
 - **Aceite:** listagem/detalhe público não contém e-mail; slug duplicado → 409 `SLUG_TAKEN`.
 
-### [ ] BE-19 — Serviços executados por barbeiro
+### [x] BE-19 — Serviços executados por barbeiro
 - **Depende de:** BE-05, BE-06
 - **Fazer:** tabela `barber_services (barber_id, service_id)` unique; `PUT /api/barber/:id/services {service_ids[]}` (mesmo tenant). Default ao criar barbeiro: todos os serviços ativos. `GET /api/barber?branch_id&service_id` filtra.
 - **Aceite:** serviço de outra barbearia → 400.

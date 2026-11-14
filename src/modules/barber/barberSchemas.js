@@ -24,5 +24,9 @@ module.exports = {
     params: idParams,
     body: Joi.object({ branch_id: id(), bio: text(500).min(1), display_name: profile.display_name, photo_url: profile.photo_url }).min(1),
   }),
+  setServices: validate({
+    params: idParams,
+    body: Joi.object({ service_ids: Joi.array().items(id()).max(200).required() }),
+  }),
   remove: validate({ params: idParams, query: Joi.object({ force: Joi.string().valid('cancel') }) }),
 };

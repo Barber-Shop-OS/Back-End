@@ -13,6 +13,7 @@ const {
   Barber,
   Service,
   Appointment,
+  BarberService,
 } = require('../../models');
 
 const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -65,6 +66,7 @@ describe('Appointment integration', () => {
       duration: 30,
       barbershop_id: barbershop.id,
     });
+    await BarberService.create({ barber_id: barber.id, service_id: service.id });
   });
 
   afterAll(async () => {

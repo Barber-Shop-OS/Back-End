@@ -1,6 +1,6 @@
 // Service service (BE-06): serviços por barbearia, dinheiro em centavos/DECIMAL, ativação e soft delete.
 const { parsePagination, likeContains } = require('../../shared/query');
-const { Barbershop } = require('../../models');
+const { sequelize, Barbershop, Barber, Branch, BarberService } = require('../../models');
 const serviceRepository = require('./serviceRepository');
 const { assertCanManageBarbershop, assertCanManageService, ownsBarbershop } = require('../../shared/authz');
 const { pickFields } = require('../../shared/pickFields');
@@ -111,10 +111,25 @@ const create = async (data, currentUser) => {
 
   await assertCanManageBarbershop(currentUser, barbershopId);
 
-  const service = await serviceRepository.create({
-    ...normalized,
-    active: data.active === undefined ? true : Boolean(data.active),
-    barbershop_id: barbershopId,
+  const service = await sequelize.transaction(async (transaction) => {
+    const created = await serviceRepository.create(
+      { ...normalized, active: data.active === undefined ? true : Boolean(data.active), barbershop_id: barbershopId },
+      { transaction }
+    );
+    // BE-19: serviço novo já sai executável por todos os barbeiros ativos da barbearia.
+    const barbers = await Barber.findAll({
+      where: { active: true },
+      include: [{ model: Branch, where: { barbershop_id: barbershopId }, attributes: [] }],
+      attributes: ['id'],
+      transaction,
+    });
+    if (barbers.length) {
+      await BarberService.bulkCreate(
+        barbers.map((barber) => ({ barber_id: barber.id, service_id: created.id })),
+        { transaction }
+      );
+    }
+    return created;
   });
 
   return serviceRepository.findById(service.id);

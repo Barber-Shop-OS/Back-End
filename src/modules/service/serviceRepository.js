@@ -16,7 +16,7 @@ const findById = async (id, includeOptions = []) => {
   });
 };
 
-const create = async (data) => Service.create(data);
+const create = async (data, options = {}) => Service.create(data, options);
 
 const update = async (id, data) => {
   const service = await Service.findByPk(id);

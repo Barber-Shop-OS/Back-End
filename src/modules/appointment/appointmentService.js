@@ -10,6 +10,7 @@ const { parsePagination } = require('../../shared/query');
 const { User, Barber, Service, Branch, Barbershop, Appointment } = require('../../models');
 const { addMinutes } = require('../../shared/time');
 const appointmentRepository = require('./appointmentRepository');
+const { performsService } = require('../barber/barberRepository');
 const {
   isAdmin,
   ownsBarbershop,
@@ -134,6 +135,9 @@ const create = async (payload = {}, currentUser) => {
   if (!service.active) throw new ValidationError('Este serviço não está disponível para agendamento');
   if (String(service.barbershop_id) !== String(branch.barbershop_id)) {
     throw new ValidationError('Este serviço não pertence à barbearia da filial selecionada');
+  }
+  if (!(await performsService(barber.id, service.id))) {
+    throw new ValidationError('Este barbeiro não realiza o serviço selecionado');
   }
 
   const actsAsStaff =
