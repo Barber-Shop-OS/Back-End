@@ -104,7 +104,7 @@
   - Validar que `service.barbershop_id === branch.barbershop_id`.
 - **Aceite:** cliente não cria agendamento em nome de outro; não lê/edita agendamento alheio; serviço de outra barbearia → 400.
 
-### [ ] BE-05 — Barbeiros: posse, vínculo com usuário e dados expostos
+### [x] BE-05 — Barbeiros: posse, vínculo com usuário e dados expostos
 - **Depende de:** BE-03
 - **Arquivos:** `src/modules/barber/*`, migration `barbers` (unique `user_id+branch_id`, `active`, `photo_url`, `display_name`).
 - **Fazer:** `create/update/remove` checam tenant da filial; `branch_id` só pode mudar para filial do mesmo tenant; ao criar, promove `role` para `barbeiro` se for `cliente` (nunca rebaixar owner/admin); `remove` = desativar se houver agendamentos futuros (409 `BARBER_HAS_FUTURE_APPOINTMENTS` com opção `?force=cancel` que cancela e notifica). Listagem pública retorna DTO (`id`, `display_name`, `bio`, `photo_url`, `branch_id`, serviços) — **sem e-mail**. Rotas aninhadas `POST /api/branch/:id/barbers` (usado por FE-11; aceita e-mail → se usuário não existe, cria convite BE-22).

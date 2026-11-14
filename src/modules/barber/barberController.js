@@ -40,7 +40,7 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    await barberService.remove(req.params.id, req.user);
+    await barberService.remove(req.params.id, req.user, { force: req.query.force });
     return noContent(res);
   } catch (error) {
     return next(error);
@@ -54,3 +54,17 @@ module.exports = {
   update,
   remove,
 };
+/** POST /api/branch/:id/barbers */
+const createInBranch = async (req, res, next) => {
+  try {
+    const result = await barberService.createInBranch(req.params.id, req.body, req.user);
+    if (result.invitation) {
+      return res.status(202).json({ message: 'Convite enviado', invitation: result.invitation });
+    }
+    return created(res, { message: 'Barbeiro criado com sucesso', barber: result.barber });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports.createInBranch = createInBranch;

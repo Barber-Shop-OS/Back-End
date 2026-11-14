@@ -63,7 +63,7 @@ describe('BE-09 — CRUD e listagens', () => {
     it('remover o último perfil de barbeiro rebaixa o usuário para cliente', async () => {
       const res = await request(app).delete(`/api/barber/${tenant.barber.id}`).set(bearer(ownerToken));
       expect(res.status).toBe(204);
-      expect(await Barber.findByPk(tenant.barber.id)).toBeNull();
+      expect((await Barber.findByPk(tenant.barber.id)).active).toBe(false);
       expect((await User.findByPk(tenant.barberUser.id)).role).toBe('cliente');
     });
 

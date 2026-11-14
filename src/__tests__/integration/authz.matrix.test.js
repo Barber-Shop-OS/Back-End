@@ -47,6 +47,7 @@ const MATRIX = {
   'POST /api/branch': ['admin', 'owner'],
   'PUT /api/branch/:id': ['admin', 'owner'],
   'DELETE /api/branch/:id': ['admin', 'owner'],
+  'POST /api/branch/:id/barbers': ['admin', 'owner'],
 
   'POST /api/address': ['admin', 'owner'],
   'GET /api/address/:id': 'auth',

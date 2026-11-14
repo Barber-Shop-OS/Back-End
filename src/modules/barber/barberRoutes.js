@@ -84,8 +84,13 @@ router.get('/:id', schemas.byId, barberController.getById);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [user_id, branch_id, bio]
+ *             required: [user_id, branch_id]
  *             properties:
+ *               display_name:
+ *                 type: string
+ *               photo_url:
+ *                 type: string
+ *                 format: uri
  *               user_id:
  *                 type: integer
  *                 example: 2
@@ -167,7 +172,8 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  * @swagger
  * /barber/{id}:
  *   delete:
- *     summary: Remover um barbeiro por ID
+ *     summary: Desativar um barbeiro (histórico preservado)
+ *     description: Com agendamentos futuros retorna 409 BARBER_HAS_FUTURE_APPOINTMENTS, a menos que force=cancel.
  *     tags: [Barber]
  *     security:
  *       - bearerAuth: []
@@ -178,9 +184,17 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  *         schema:
  *           type: integer
  *         description: ID do barbeiro
+ *       - in: query
+ *         name: force
+ *         schema:
+ *           type: string
+ *           enum: [cancel]
+ *         description: Cancela os agendamentos futuros antes de desativar
  *     responses:
  *       204:
- *         description: Barbeiro removido com sucesso
+ *         description: Barbeiro desativado
+ *       409:
+ *         description: Barbeiro com agendamentos futuros
  *       401:
  *         description: Usuário não autenticado
  *       403:
@@ -188,6 +202,6 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  *       404:
  *         description: Barbeiro não encontrado
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.byId, barberController.remove);
+router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.remove, barberController.remove);
 
 module.exports = router;

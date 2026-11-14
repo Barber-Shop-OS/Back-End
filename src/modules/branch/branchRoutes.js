@@ -5,6 +5,8 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
 const schemas = require('./branchSchemas');
+const barberController = require('../barber/barberController');
+const barberSchemas = require('../barber/barberSchemas');
 
 const router = express.Router();
 
@@ -183,5 +185,39 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.u
  *         description: Filial não encontrada
  */
 router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schemas.byId, branchController.remove);
+
+/**
+ * @swagger
+ * /branch/{id}/barbers:
+ *   post:
+ *     summary: Adicionar barbeiro à filial (por user_id ou e-mail)
+ *     description: Se o e-mail não tiver conta, um convite é criado (202). Usuário cliente é promovido a barbeiro.
+ *     tags: [Branch]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id: { type: integer }
+ *               email: { type: string, format: email }
+ *               display_name: { type: string }
+ *               bio: { type: string }
+ *     responses:
+ *       201: { description: Barbeiro criado }
+ *       202: { description: Convite enviado }
+ *       403: { description: Filial de outro tenant }
+ *       404: { description: Filial ou usuário não encontrado }
+ *       409: { description: Usuário já é barbeiro desta filial (BARBER_ALREADY_EXISTS) }
+ */
+router.post('/:id/barbers', authMiddleware, roleMiddleware(['admin', 'owner']), barberSchemas.createInBranch, barberController.createInBranch);
 
 module.exports = router;

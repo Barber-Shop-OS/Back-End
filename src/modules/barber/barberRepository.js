@@ -1,46 +1,52 @@
 // Barber repository with CRUD and filtered listing.
-const { Barber, User, Branch, Address } = require('../../models');
+const { Op } = require('sequelize');
+const { Barber, User, Appointment } = require('../../models');
 
-const findAll = async (where = {}, options = {}) => {
-  return Barber.findAndCountAll({
+// Nunca incluir e-mail/senha do usuário: o barbeiro é exibido em páginas públicas (SEC-06).
+const publicInclude = () => [{ model: User, attributes: ['id', 'name'] }];
+
+const findAll = async (where = {}, options = {}) =>
+  Barber.findAndCountAll({
     where,
     ...options,
-    include: options.include || [
-      { model: User, attributes: { exclude: ['password'] } },
-      { model: Branch, include: [Address] },
-    ],
+    include: options.include || publicInclude(),
     distinct: true,
   });
-};
 
-const findById = async (id, includeOptions = []) => {
-  return Barber.findByPk(id, {
-    include: includeOptions.length ? includeOptions : [
-      { model: User, attributes: { exclude: ['password'] } },
-      { model: Branch, include: [Address] },
-    ],
-  });
-};
+const findById = async (id, options = {}) =>
+  Barber.findByPk(id, { include: options.include || publicInclude(), transaction: options.transaction });
 
-const create = async (data) => Barber.create(data);
+const findByUserAndBranch = async (userId, branchId, options = {}) =>
+  Barber.findOne({ where: { user_id: userId, branch_id: branchId }, ...options });
 
-const update = async (id, data) => {
-  const barber = await Barber.findByPk(id);
+const create = async (data, options = {}) => Barber.create(data, options);
+
+const update = async (id, data, options = {}) => {
+  const barber = await Barber.findByPk(id, options);
   if (!barber) return null;
-  return barber.update(data);
+  return barber.update(data, options);
 };
 
-const remove = async (id) => {
-  const barber = await Barber.findByPk(id);
-  if (!barber) return false;
-  await barber.destroy();
-  return true;
-};
+const countActiveProfiles = async (userId, options = {}) =>
+  Barber.count({ where: { user_id: userId, active: true }, ...options });
+
+/** Agendamentos ainda por acontecer (confirmados) do barbeiro. */
+const findFutureAppointments = async (barberId, options = {}) =>
+  Appointment.findAll({
+    where: {
+      barber_id: barberId,
+      status: { [Op.in]: ['pendente', 'confirmado'] },
+      appointment_date: { [Op.gt]: new Date() },
+    },
+    ...options,
+  });
 
 module.exports = {
   findAll,
   findById,
+  findByUserAndBranch,
   create,
   update,
-  delete: remove,
+  countActiveProfiles,
+  findFutureAppointments,
 };

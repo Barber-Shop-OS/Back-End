@@ -27,6 +27,20 @@ const Barber = sequelize.define('barbers', {
   bio: {
     type: DataTypes.STRING,
     allowNull: false,
+    defaultValue: '',
+  },
+  display_name: {
+    type: DataTypes.STRING(120),
+    allowNull: true,
+  },
+  photo_url: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
+  active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
   },
   created_at: {
     type: DataTypes.DATE,
@@ -34,7 +48,8 @@ const Barber = sequelize.define('barbers', {
     defaultValue: DataTypes.NOW,
   },
 }, {
-  timestamps: false, 
+  timestamps: false,
+  indexes: [{ name: 'barbers_user_branch_unique', unique: true, fields: ['user_id', 'branch_id'] }],
 });
 
 module.exports = Barber;
