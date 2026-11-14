@@ -4,7 +4,7 @@ const { Plan, Subscription, SubscriptionEvent, Branch, Barber } = require('../..
 const { assertCanManageBarbershop } = require('../../shared/authz');
 const { TRIAL_DAYS, TRIAL_PLAN_CODE } = require('../../shared/plans');
 const entitlements = require('../../shared/entitlements');
-const { NotFoundError } = require('../../utils/errorHandler');
+const { NotFoundError, AppError, CODES } = require('../../utils/errorHandler');
 
 const serializePlan = (plan) => ({
   code: plan.code,
@@ -79,4 +79,18 @@ const getForBarbershop = async (barbershopId, currentUser) => {
   };
 };
 
-module.exports = { listPlans, startTrial, findByBarbershop, recordEvent, usage, getForBarbershop, serializePlan };
+/**
+ * Lança 402 PLAN_LIMIT_REACHED se a barbearia já usa o máximo do recurso no plano.
+ * details: { resource, limit, used, upgrade_to }. Regras de inadimplência em BE-35.
+ */
+const assertWithinLimit = async (barbershopId, resource) => {
+  const subscription = await findByBarbershop(barbershopId);
+  const used = (await usage(barbershopId))[resource];
+  const check = entitlements.checkLimit(subscription, resource, used);
+  if (!check.allowed) {
+    throw new AppError('Limite do plano atingido', 402, CODES.PLAN_LIMIT_REACHED, { resource, ...check });
+  }
+  return check;
+};
+
+module.exports = { assertWithinLimit, listPlans, startTrial, findByBarbershop, recordEvent, usage, getForBarbershop, serializePlan };

@@ -104,15 +104,18 @@ describe('BE-05 — barbeiros', () => {
       expect(await Barber.count({ where: { user_id: tenant.barberUser.id } })).toBe(1);
     });
 
-    it('user_id e email juntos ou nenhum → 400; e-mail desconhecido → 404 USER_NOT_FOUND', async () => {
+    it('user_id e email juntos ou nenhum → 400; e-mail desconhecido → convite; user_id inexistente → 404', async () => {
       const url = `/api/branch/${tenant.branch.id}/barbers`;
       expect((await request(app).post(url).set(bearer(ownerToken)).send({})).status).toBe(400);
       expect(
         (await request(app).post(url).set(bearer(ownerToken)).send({ user_id: 1, email: 'a@b.com' })).status
       ).toBe(400);
+      // BE-22: e-mail sem conta vira convite.
       const unknown = await request(app).post(url).set(bearer(ownerToken)).send({ email: 'ninguem@test.com' });
-      expect(unknown.status).toBe(404);
-      expect(unknown.body.code).toBe('USER_NOT_FOUND');
+      expect(unknown.status).toBe(202);
+      expect(unknown.body.invitation).toMatchObject({ email: 'ninguem@test.com', status: 'pending' });
+      const missing = await request(app).post(url).set(bearer(ownerToken)).send({ user_id: 999999 });
+      expect(missing.body.code).toBe('USER_NOT_FOUND');
     });
 
     it('sem login → 401; cliente → 403', async () => {

@@ -217,7 +217,11 @@ const setServices = async (id, serviceIds, currentUser) => {
   return toPublicBarber(await barberRepository.findById(id));
 };
 
+/** Vínculo já autorizado por outro fluxo (aceite de convite — BE-22). Retorna o DTO público. */
+const attachUserToBranch = async (args) => toPublicBarber(await attachUser(args));
+
 module.exports = {
+  attachUserToBranch,
   setServices,
   findAll,
   findById,

@@ -221,7 +221,7 @@
 - **Fazer:** `POST /api/auth/register-owner {name, email, password, phone, barbershop:{name}, plan_code?}` em transação: cria `user(role=owner)`, `barbershop(slug)`, `subscription(status=trialing, trial_ends_at=+14d)` (BE-31), devolve token. Filial é criada no passo seguinte do wizard (`POST /api/branch`). Envia e-mail de boas-vindas + verificação (BE-27). `POST /api/auth/register` continua criando só `cliente`.
 - **Aceite:** falha em qualquer etapa não deixa usuário órfão; e-mail duplicado → 409.
 
-### [ ] BE-22 — Convite de barbeiro
+### [x] BE-22 — Convite de barbeiro
 - **Depende de:** BE-05, BE-16
 - **Fazer:** tabela `invitations (barbershop_id, branch_id, email, role='barbeiro', token_hash, expires_at 7d, accepted_at, invited_by)`. `POST /api/branch/:id/invitations` (owner), `GET /api/invitations/:token` (público: nome da barbearia/filial), `POST /api/invitations/:token/accept` (logado com mesmo e-mail, ou cria conta com nome+senha). Token aleatório 32 bytes, guardado como SHA-256 `[SEC-26]`. Reenviar/revogar. Respeita limite de barbeiros do plano (BE-35).
 - **Aceite:** token usado/expirado → 410; e-mail diferente do convite → 403.

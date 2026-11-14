@@ -14,6 +14,7 @@ const mounts = [
   ['/api/address', require('../modules/address/addressRoutes')],
   ['/api/payment', require('../modules/payment/paymentRoutes')],
   ['/api/admin', require('../modules/admin/adminRoutes')],
+  ['/api/invitations', require('../modules/invitation/invitationRoutes')],
   ['/api/plans', require('../modules/subscription/subscriptionRoutes').plansRouter],
 ];
 

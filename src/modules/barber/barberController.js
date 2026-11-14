@@ -57,7 +57,11 @@ module.exports = {
 /** POST /api/branch/:id/barbers */
 const createInBranch = async (req, res, next) => {
   try {
-    const result = await barberService.createInBranch(req.params.id, req.body, req.user);
+    // E-mail sem conta → convite (BE-22).
+    const { create: invite } = require('../invitation/invitationService');
+    const result = await barberService.createInBranch(req.params.id, req.body, req.user, {
+      onUnknownEmail: (branchId, data, user) => invite(branchId, { email: data.email, display_name: data.display_name }, user),
+    });
     if (result.invitation) {
       return res.status(202).json({ message: 'Convite enviado', invitation: result.invitation });
     }

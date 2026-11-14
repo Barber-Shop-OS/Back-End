@@ -224,5 +224,7 @@ router.post('/:id/barbers', authMiddleware, roleMiddleware(['admin', 'owner']), 
 
 // BE-10: /:id/opening-hours e /:id/closures
 branchScheduleRoutes.register(router);
+// BE-22: /:id/invitations
+require('../invitation/invitationRoutes').registerBranchRoutes(router);
 
 module.exports = router;

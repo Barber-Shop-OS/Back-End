@@ -16,6 +16,7 @@ const BarberService = require('./barberService');
 const Plan = require('./plan');
 const Subscription = require('./subscription');
 const SubscriptionEvent = require('./subscriptionEvent');
+const Invitation = require('./invitation');
 
 // ============================================
 // User associations
@@ -152,8 +153,16 @@ Subscription.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
 Subscription.hasMany(SubscriptionEvent, { foreignKey: 'subscription_id', as: 'events', onDelete: 'CASCADE' });
 SubscriptionEvent.belongsTo(Subscription, { foreignKey: 'subscription_id' });
 
+// ============================================
+// Convites de barbeiro (BE-22)
+// ============================================
+Invitation.belongsTo(Branch, { foreignKey: 'branch_id' });
+Invitation.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
+Branch.hasMany(Invitation, { foreignKey: 'branch_id', onDelete: 'CASCADE' });
+
 module.exports = {
   sequelize,
+  Invitation,
   Plan,
   Subscription,
   SubscriptionEvent,
