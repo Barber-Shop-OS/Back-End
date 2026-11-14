@@ -9,6 +9,7 @@ const { listRoutes } = require('../../routes/indexRoutes');
 
 const MATRIX = {
   'POST /api/auth/register': 'public',
+  'POST /api/auth/register-owner': 'public',
   'POST /api/auth/login': 'public',
   'GET /api/auth/me': 'auth',
 

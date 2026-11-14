@@ -60,6 +60,32 @@ router.post('/register', authLimiter, schemas.register, authController.register)
 
 /**
  * @swagger
+ * /auth/register-owner:
+ *   post:
+ *     summary: Cadastro do dono — cria usuário owner, barbearia (slug) e assinatura em trial de 14 dias
+ *     description: Tudo em uma transação. A filial é criada no passo seguinte do wizard (POST /branch).
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             name: Carlos Silva
+ *             email: carlos@navalha.com
+ *             password: Tesoura#Navalha9
+ *             phone: '(11) 99999-0000'
+ *             barbershop: { name: Navalha de Ouro }
+ *             plan_code: profissional
+ *     responses:
+ *       201: { description: 'Conta criada: token, user, barbershop, subscription' }
+ *       400: { description: Dados inválidos ou senha fraca }
+ *       409: { description: E-mail (EMAIL_IN_USE) ou slug (SLUG_TAKEN) em uso }
+ */
+router.post('/register-owner', authLimiter, schemas.registerOwner, authController.registerOwner);
+
+/**
+ * @swagger
  * /auth/login:
  *   post:
  *     summary: Autenticar usuário e obter token JWT

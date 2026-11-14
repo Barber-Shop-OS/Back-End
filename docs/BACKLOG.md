@@ -216,7 +216,7 @@
 - **Fazer:** `GET /api/me` (perfil + papéis + `barbershops[]` que gerencia + `barber_profiles[]`), `GET /api/me/barbershops`, `GET /api/me/appointments?scope=upcoming|past&page`, `PATCH /api/me` (mesma whitelist do BE-01). Manter `/api/auth/me` como alias.
 - **Aceite:** cada usuário só vê os próprios dados; paginação limitada (BE-38).
 
-### [ ] BE-21 — Cadastro do dono (`register-owner`) com trial
+### [x] BE-21 — Cadastro do dono (`register-owner`) com trial
 - **Depende de:** BE-02, BE-18, BE-31
 - **Fazer:** `POST /api/auth/register-owner {name, email, password, phone, barbershop:{name}, plan_code?}` em transação: cria `user(role=owner)`, `barbershop(slug)`, `subscription(status=trialing, trial_ends_at=+14d)` (BE-31), devolve token. Filial é criada no passo seguinte do wizard (`POST /api/branch`). Envia e-mail de boas-vindas + verificação (BE-27). `POST /api/auth/register` continua criando só `cliente`.
 - **Aceite:** falha em qualquer etapa não deixa usuário órfão; e-mail duplicado → 409.

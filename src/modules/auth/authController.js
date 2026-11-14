@@ -11,6 +11,15 @@ const register = async (req, res, next) => {
   }
 };
 
+const registerOwner = async (req, res, next) => {
+  try {
+    const result = await require('./registerOwnerService').registerOwner(req.body);
+    return created(res, { message: 'Conta criada com 14 dias de teste', ...result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -36,6 +45,7 @@ const getMe = async (req, res, next) => {
 
 module.exports = {
   register,
+  registerOwner,
   login,
   getMe,
 };
