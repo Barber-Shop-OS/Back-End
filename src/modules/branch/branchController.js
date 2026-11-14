@@ -2,11 +2,20 @@
 const branchService = require('./branchService');
 const { success, created } = require('../../utils/responseHandler');
 
+const { ADDRESS_FIELDS } = require('../address/addressService');
+
+/** Separa os campos de endereço (BE-17) dos campos da filial no mesmo corpo. */
 const splitPayload = (body) => {
-  const { cep, number, complement, city, state, ...branchData } = body;
-  const addressData = { cep, number, complement, city, state };
-  const hasAddressData = Object.values(addressData).some((value) => value !== undefined);
-  return { branchData, addressData: hasAddressData ? addressData : null };
+  const branchData = {};
+  const addressData = {};
+  Object.entries(body).forEach(([key, value]) => {
+    if (ADDRESS_FIELDS.includes(key)) {
+      if (value !== undefined) addressData[key] = value;
+    } else {
+      branchData[key] = value;
+    }
+  });
+  return { branchData, addressData: Object.keys(addressData).length ? addressData : null };
 };
 
 const getAll = async (req, res, next) => {

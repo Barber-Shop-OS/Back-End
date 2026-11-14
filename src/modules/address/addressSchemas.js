@@ -9,7 +9,11 @@ const addressFields = {
     .trim()
     .pattern(/^\d{5}-?\d{3}$/)
     .messages({ 'string.pattern.base': 'CEP inválido. Use 00000-000' }),
+  street: text(160).allow('', null),
   number: Joi.number().integer().positive().max(999999),
+  neighborhood: text(100).allow('', null),
+  latitude: Joi.number().min(-90).max(90).allow(null),
+  longitude: Joi.number().min(-180).max(180).allow(null),
   complement: text(120).allow('', null),
   city: text(100).min(2),
   state: Joi.string().trim().uppercase().valid(...UFS).messages({ 'any.only': 'Estado (UF) inválido' }),
@@ -17,7 +21,11 @@ const addressFields = {
 
 const requiredAddress = {
   cep: addressFields.cep.required(),
+  street: addressFields.street,
   number: addressFields.number.required(),
+  neighborhood: addressFields.neighborhood,
+  latitude: addressFields.latitude,
+  longitude: addressFields.longitude,
   complement: addressFields.complement,
   city: addressFields.city.required(),
   state: addressFields.state.required(),

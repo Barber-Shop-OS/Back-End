@@ -195,7 +195,7 @@
   - Anexo `.ics` na confirmação.
 - **Aceite:** com `MAIL_DRIVER=log` os e-mails são logados em teste; cancelar remove os lembretes pendentes.
 
-### [ ] BE-17 — Endereço v2
+### [x] BE-17 — Endereço v2
 - **Depende de:** BE-03
 - **Fazer:** migration em `addresses`: `street`, `neighborhood`, `latitude DECIMAL(9,6)`, `longitude DECIMAL(9,6)`; validar CEP `^\d{5}-?\d{3}$`, UF da lista de 27. `GET /api/address/:id` só staff do tenant (público vê endereço embutido na filial). Geocodificação opcional (Nominatim) via job.
 - **Aceite:** CEP inválido → 400; dono de B não lê endereço de A pelo id.

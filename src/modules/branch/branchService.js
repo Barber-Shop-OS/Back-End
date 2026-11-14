@@ -26,7 +26,7 @@ const normalizeBranchExtras = (data) => {
   if ('active' in data) out.active = Boolean(data.active);
   return out;
 };
-const ADDRESS_FIELDS = ['cep', 'number', 'complement', 'city', 'state'];
+const { ADDRESS_FIELDS } = addressService;
 
 const isEmpty = (value) => value === undefined || value === null || String(value).trim() === '';
 
