@@ -63,15 +63,23 @@ const createTenant = async ({ name } = {}) => {
   return { owner, barbershop, address, branch, barberUser, barber, service };
 };
 
-const createAppointment = async ({ tenant, client, date, status = 'confirmado' }) =>
-  Appointment.create({
+const createAppointment = async ({ tenant, client, date, status = 'confirmado', barber, service, ...extra }) => {
+  const start = date ? new Date(date) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+  const svc = service || tenant.service;
+  return Appointment.create({
     user_id: client.id,
-    barber_id: tenant.barber.id,
-    service_id: tenant.service.id,
+    barber_id: (barber || tenant.barber).id,
+    service_id: svc.id,
     branch_id: tenant.branch.id,
-    appointment_date: date || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    start_at: start,
+    end_at: new Date(start.getTime() + svc.duration * 60000),
+    duration_min: svc.duration,
+    price_snapshot: svc.price,
+    service_name_snapshot: svc.name,
     status,
+    ...extra,
   });
+};
 
 module.exports = {
   app,

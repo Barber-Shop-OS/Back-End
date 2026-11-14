@@ -118,17 +118,21 @@ describe('Appointment integration', () => {
         barber_id: barber.id,
         service_id: service.id,
         branch_id: branch.id,
-        appointment_date: FUTURE_DATE,
-        status: 'pendente',
+        start_at: FUTURE_DATE,
+        end_at: new Date(new Date(FUTURE_DATE).getTime() + 30 * 60000),
+        duration_min: 30,
+        price_snapshot: 50,
+        service_name_snapshot: 'Corte',
+        status: 'confirmado',
       });
 
       const response = await request(app)
         .put(`/api/appointment/${appointment.id}`)
         .set('Authorization', `Bearer ${clientToken}`)
-        .send({ status: 'confirmado' });
+        .send({ status: 'cancelado' });
 
       expect(response.status).toBe(200);
-      expect(response.body.appointment.status).toBe('confirmado');
+      expect(response.body.appointment.status).toBe('cancelado');
     });
 
     it('deve retornar 404 para agendamento inexistente', async () => {

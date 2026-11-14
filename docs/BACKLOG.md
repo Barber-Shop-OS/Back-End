@@ -159,7 +159,7 @@
 - **Fazer:** `barber_working_hours (barber_id, weekday, start, end)` (default = horário da filial se vazio) e `barber_time_off (barber_id, start_at, end_at, reason)`. Owner gerencia de todos do tenant; barbeiro gerencia os próprios bloqueios. Criar bloqueio sobre agendamento existente → 409 com lista de conflitos.
 - **Aceite:** jornada fora do horário da filial → 400; barbeiro não edita jornada de colega.
 
-### [ ] BE-12 — Modelo de agendamento v2 (intervalo, snapshots, status completos)
+### [x] BE-12 — Modelo de agendamento v2 (intervalo, snapshots, status completos)
 - **Depende de:** BE-04
 - **Fazer:** migration: `start_at`, `end_at` (UTC; migrar `appointment_date` → `start_at`, `end_at = start + service.duration`), `duration_min`, `price_snapshot DECIMAL`, `service_name_snapshot`, `notes` (≤ 500), `status ENUM(confirmado, concluido, cancelado, nao_compareceu)` (migrar `pendente`→`confirmado`), `cancelled_at`, `cancelled_by`, `cancel_reason`, `source ENUM(web, mobile, balcao)`, `updated_at`. Utilitário `src/shared/time.js` (dayjs + plugins utc/timezone — lib usual) para converter horário local da filial ↔ UTC.
 - **Aceite:** migration reversível; agendamentos antigos preservados; respostas incluem `start_at`, `end_at` ISO UTC.

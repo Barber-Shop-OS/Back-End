@@ -187,13 +187,19 @@ const options = {
             branch_id: {
               type: 'integer',
             },
-            appointment_date: {
-              type: 'string',
-              format: 'date-time',
-            },
+            start_at: { type: 'string', format: 'date-time', description: 'Início (UTC)' },
+            end_at: { type: 'string', format: 'date-time', description: 'Fim (UTC)' },
+            duration_min: { type: 'integer' },
+            price_snapshot: { type: 'string', example: '50.00' },
+            service_name_snapshot: { type: 'string' },
+            notes: { type: 'string', nullable: true },
+            source: { type: 'string', enum: ['web', 'mobile', 'balcao'] },
+            cancelled_at: { type: 'string', format: 'date-time', nullable: true },
+            cancelled_by: { type: 'integer', nullable: true },
+            cancel_reason: { type: 'string', nullable: true },
             status: {
               type: 'string',
-              enum: ['pendente', 'confirmado', 'cancelado'],
+              enum: ['confirmado', 'concluido', 'cancelado', 'nao_compareceu'],
             },
             createdAt: {
               type: 'string',

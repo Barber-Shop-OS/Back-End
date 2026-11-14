@@ -55,7 +55,7 @@ jobs:
           cache: npm
       - run: npm ci
       # Valida no MySQL real o que o SQLite não pega (ENUM, DECIMAL, índices, ordem das FKs).
-      - run: npx cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit src/__tests__/integration/migrations.test.js
+      - run: npx cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit src/__tests__/integration/migrations.test.js src/__tests__/integration/appointment/appointments-v2-migration.test.js
 
   secrets:
     name: Varredura de segredos

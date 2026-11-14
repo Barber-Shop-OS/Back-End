@@ -28,12 +28,10 @@ const findById = async (id, includeOptions = []) =>
 
 const create = async (data) => Appointment.create(data);
 
-const updateStatus = async (id, status) => {
-  const appointment = await Appointment.findByPk(id);
+const update = async (id, data, options = {}) => {
+  const appointment = await Appointment.findByPk(id, options);
   if (!appointment) return null;
-  appointment.status = status;
-  await appointment.save();
-  return appointment;
+  return appointment.update(data, options);
 };
 
 const remove = async (id) => {
@@ -47,6 +45,6 @@ module.exports = {
   findAll,
   findById,
   create,
-  updateStatus,
+  update,
   delete: remove,
 };

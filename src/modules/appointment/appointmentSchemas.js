@@ -1,14 +1,13 @@
-// BE-38: schemas de agendamento.
+// BE-38 / BE-12: schemas de agendamento.
 const validate = require('../../middlewares/validate');
-const { Joi, id, isoDate, idParams, pagination } = require('../../shared/schemas');
-
-const STATUS = ['pendente', 'confirmado', 'cancelado'];
+const { Joi, id, text, isoDate, idParams, pagination } = require('../../shared/schemas');
+const { STATUSES, SOURCES } = require('../../models/appointment');
 
 module.exports = {
   list: validate({
     query: Joi.object({
       ...pagination,
-      status: Joi.string().valid(...STATUS),
+      status: Joi.string().valid(...STATUSES),
       user_id: id(),
       barber_id: id(),
       service_id: id(),
@@ -23,13 +22,17 @@ module.exports = {
       barber_id: id().required(),
       service_id: id().required(),
       branch_id: id().required(),
-      appointment_date: isoDate().required(),
+      start_at: isoDate(),
+      // Nome antigo de start_at, aceito por uma release.
+      appointment_date: isoDate(),
+      notes: text(500).allow(''),
+      source: Joi.string().valid(...SOURCES),
       // Só usado quando a barbearia agenda para um cliente (ver appointmentService).
       user_id: id(),
-    }),
+    }).or('start_at', 'appointment_date'),
   }),
   updateStatus: validate({
     params: idParams,
-    body: Joi.object({ status: Joi.string().valid(...STATUS).required() }),
+    body: Joi.object({ status: Joi.string().valid(...STATUSES).required() }),
   }),
 };

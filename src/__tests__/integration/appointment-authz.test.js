@@ -195,7 +195,7 @@ describe('BE-04 — agendamentos', () => {
       const byOwner = await request(app)
         .put(`/api/appointment/${aliceAppt.id}`)
         .set(bearer(ownerA))
-        .send({ status: 'pendente' });
+        .send({ status: 'concluido' });
       const byBarber = await request(app)
         .put(`/api/appointment/${aliceAppt.id}`)
         .set(bearer(barberA))

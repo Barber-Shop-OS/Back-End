@@ -201,23 +201,23 @@ describe('SEC-23 — mass assignment', () => {
 
   it('PUT /api/appointment/:id: só status muda; barbeiro, filial, cliente e data ficam', async () => {
     const appointment = await createAppointment({ tenant, client });
-    const originalDate = new Date(appointment.appointment_date).getTime();
+    const originalDate = new Date(appointment.start_at).getTime();
     const res = await request(app)
       .put(`/api/appointment/${appointment.id}`)
       .set(bearer(ownerToken))
       .send({
-        status: 'pendente',
+        status: 'concluido',
         user_id: other.owner.id,
         barber_id: other.barber.id,
         branch_id: other.branch.id,
-        appointment_date: inDays(30),
+        start_at: inDays(30),
       });
     expectSafe(res);
     const fresh = await Appointment.findByPk(appointment.id);
     expect(fresh.user_id).toBe(client.id);
     expect(fresh.barber_id).toBe(tenant.barber.id);
     expect(fresh.branch_id).toBe(tenant.branch.id);
-    expect(new Date(fresh.appointment_date).getTime()).toBe(originalDate);
+    expect(new Date(fresh.start_at).getTime()).toBe(originalDate);
   });
 
   it('POST /api/payment: status, paid_at e transaction_id do body são ignorados', async () => {

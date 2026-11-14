@@ -69,8 +69,12 @@ describe('Payment integration', () => {
       barber_id: barber.id,
       service_id: service.id,
       branch_id: branch.id,
-      appointment_date: '2026-06-10T11:00:00.000Z',
-      status: 'pendente',
+      start_at: '2026-06-10T11:00:00.000Z',
+      end_at: '2026-06-10T11:25:00.000Z',
+      duration_min: 25,
+      price_snapshot: 35,
+      service_name_snapshot: 'Barba',
+      status: 'confirmado',
     });
   });
 

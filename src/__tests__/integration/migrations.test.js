@@ -1,5 +1,8 @@
 // BE-08: as migrations criam do zero um schema igual ao dos models e são reversíveis.
 // Roda em SQLite; o job de CI com MySQL 8 (BE-09) executa as mesmas migrations no banco real.
+// Migrations no MySQL real levam mais que o timeout padrão de 5 s.
+jest.setTimeout(120000);
+
 const { migrator, verifySchema } = require('../../config/migrator');
 const { sequelize } = require('../../models');
 
@@ -30,8 +33,10 @@ describe('BE-08 — migrations', () => {
     const qi = sequelize.getQueryInterface();
     const appointmentIndexes = (await qi.showIndex('appointments')).map((index) => index.name);
     expect(appointmentIndexes).toEqual(
-      expect.arrayContaining(['appointments_barber_date_idx', 'appointments_branch_date_idx', 'appointments_user_idx'])
+      expect.arrayContaining(['appointments_barber_start_idx', 'appointments_branch_start_idx', 'appointments_user_idx'])
     );
+    const serviceIndexes = (await qi.showIndex('services')).map((index) => index.name);
+    expect(serviceIndexes).toContain('services_barbershop_idx');
     const paymentIndex = (await qi.showIndex('payments')).find((index) => index.name === 'payments_appointment_unique');
     expect(paymentIndex).toBeDefined();
     expect(paymentIndex.unique).toBe(true);

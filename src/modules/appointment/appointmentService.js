@@ -7,7 +7,8 @@
 // O status inicial é sempre `confirmado` (decisão de produto de 2026-10-23).
 const { Op } = require('sequelize');
 const { parsePagination } = require('../../shared/query');
-const { User, Barber, Service, Branch, Barbershop } = require('../../models');
+const { User, Barber, Service, Branch, Barbershop, Appointment } = require('../../models');
+const { addMinutes } = require('../../shared/time');
 const appointmentRepository = require('./appointmentRepository');
 const {
   isAdmin,
@@ -17,8 +18,9 @@ const {
 } = require('../../shared/authz');
 const { ValidationError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
 
-const allowedStatus = ['pendente', 'confirmado', 'cancelado'];
-const INITIAL_STATUS = 'confirmado';
+const { STATUS, STATUSES } = Appointment;
+const allowedStatus = STATUSES;
+const INITIAL_STATUS = STATUS.CONFIRMED;
 // Cliente só pode cancelar o próprio agendamento (regras de prazo em BE-15).
 const CLIENT_ALLOWED_STATUS = ['cancelado'];
 
@@ -61,16 +63,16 @@ const findAll = async (query = {}, currentUser) => {
   if (query.branch_id) filters.branch_id = Number(query.branch_id);
 
   if (query.from || query.to) {
-    filters.appointment_date = {};
-    if (query.from) filters.appointment_date[Op.gte] = new Date(query.from);
-    if (query.to) filters.appointment_date[Op.lte] = new Date(query.to);
+    filters.start_at = {};
+    if (query.from) filters.start_at[Op.gte] = new Date(query.from);
+    if (query.to) filters.start_at[Op.lte] = new Date(query.to);
   }
 
   const scope = await buildVisibilityScope(currentUser);
   const where = scope ? { [Op.and]: [filters, scope] } : filters;
 
-  const allowedSortFields = ['appointment_date', 'status', 'created_at'];
-  const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'appointment_date';
+  const allowedSortFields = ['start_at', 'status', 'created_at'];
+  const sortBy = allowedSortFields.includes(String(query.sortBy)) ? String(query.sortBy) : 'start_at';
   const sortDir = String(query.sortDir).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
   const result = await appointmentRepository.findAll(where, {
@@ -100,7 +102,7 @@ const findById = async (id, currentUser) => {
 const parseFutureDate = (value) => {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) {
-    throw new ValidationError("Campo 'appointment_date' deve ser uma data válida (ISO 8601)");
+    throw new ValidationError("Campo 'start_at' deve ser uma data válida (ISO 8601)");
   }
   if (date.getTime() <= Date.now()) {
     throw new ValidationError('Não é possível agendar para uma data no passado');
@@ -109,12 +111,14 @@ const parseFutureDate = (value) => {
 };
 
 const create = async (payload = {}, currentUser) => {
-  const { barber_id, service_id, branch_id, appointment_date } = payload;
+  const { barber_id, service_id, branch_id } = payload;
+  // `appointment_date` é o nome antigo de `start_at` (aceito por uma release).
+  const startInput = payload.start_at !== undefined ? payload.start_at : payload.appointment_date;
 
   if (!isPositiveInt(barber_id)) throw new ValidationError("Campo 'barber_id' é obrigatório e deve ser um inteiro positivo");
   if (!isPositiveInt(service_id)) throw new ValidationError("Campo 'service_id' é obrigatório e deve ser um inteiro positivo");
   if (!isPositiveInt(branch_id)) throw new ValidationError("Campo 'branch_id' é obrigatório e deve ser um inteiro positivo");
-  const date = parseFutureDate(appointment_date);
+  const start = parseFutureDate(startInput);
 
   const branch = await Branch.findByPk(branch_id, { include: [{ model: Barbershop }] });
   if (!branch) throw new NotFoundError('Filial não encontrada');
@@ -154,7 +158,13 @@ const create = async (payload = {}, currentUser) => {
     barber_id: Number(barber_id),
     service_id: Number(service_id),
     branch_id: Number(branch_id),
-    appointment_date: date,
+    start_at: start,
+    end_at: addMinutes(start, service.duration),
+    duration_min: service.duration,
+    price_snapshot: service.price,
+    service_name_snapshot: service.name,
+    notes: payload.notes ? String(payload.notes).trim() : null,
+    source: payload.source || 'web',
     status: INITIAL_STATUS,
   });
 
@@ -171,7 +181,12 @@ const updateStatus = async (id, status, currentUser) => {
     throw new ForbiddenError('O cliente só pode cancelar o próprio agendamento');
   }
 
-  await appointmentRepository.updateStatus(id, status);
+  const changes = { status };
+  if (status === STATUS.CANCELLED) {
+    changes.cancelled_at = new Date();
+    changes.cancelled_by = currentUser.id;
+  }
+  await appointmentRepository.update(id, changes);
   return appointmentRepository.findById(id);
 };
 

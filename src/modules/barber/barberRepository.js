@@ -35,8 +35,8 @@ const findFutureAppointments = async (barberId, options = {}) =>
   Appointment.findAll({
     where: {
       barber_id: barberId,
-      status: { [Op.in]: ['pendente', 'confirmado'] },
-      appointment_date: { [Op.gt]: new Date() },
+      status: 'confirmado',
+      start_at: { [Op.gt]: new Date() },
     },
     ...options,
   });

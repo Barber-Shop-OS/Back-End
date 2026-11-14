@@ -85,7 +85,7 @@ router.get('/:id', authMiddleware, schemas.byId, appointmentController.getAppoin
  *         application/json:
  *           schema:
  *             type: object
- *             required: [barber_id, service_id, branch_id, appointment_date]
+ *             required: [barber_id, service_id, branch_id, start_at]
  *             properties:
  *               user_id:
  *                 type: integer
@@ -100,10 +100,22 @@ router.get('/:id', authMiddleware, schemas.byId, appointmentController.getAppoin
  *               branch_id:
  *                 type: integer
  *                 example: 1
+ *               start_at:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Início em UTC; o fim é calculado pela duração do serviço
+ *                 example: 2026-12-10T14:00:00.000Z
  *               appointment_date:
  *                 type: string
  *                 format: date-time
- *                 example: 2026-12-10T14:00:00.000Z
+ *                 deprecated: true
+ *                 description: Nome antigo de start_at
+ *               notes:
+ *                 type: string
+ *                 maxLength: 500
+ *               source:
+ *                 type: string
+ *                 enum: [web, mobile, balcao]
  *     responses:
  *       201:
  *         description: Agendamento criado com sucesso
@@ -141,7 +153,7 @@ router.post('/', authMiddleware, schemas.create, appointmentController.createApp
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [pendente, confirmado, cancelado]
+ *                 enum: [confirmado, concluido, cancelado, nao_compareceu]
  *                 example: confirmado
  *     responses:
  *       200:
