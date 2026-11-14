@@ -127,6 +127,7 @@ const create = async (payload = {}, currentUser) => {
 
   const service = await Service.findByPk(service_id);
   if (!service) throw new NotFoundError('Serviço não encontrado');
+  if (!service.active) throw new ValidationError('Este serviço não está disponível para agendamento');
   if (String(service.barbershop_id) !== String(branch.barbershop_id)) {
     throw new ValidationError('Este serviço não pertence à barbearia da filial selecionada');
   }

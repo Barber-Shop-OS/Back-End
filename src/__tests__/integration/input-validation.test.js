@@ -167,7 +167,7 @@ describe('BE-38 — validação de entrada', () => {
     it.each([
       ['duração menor que 5 min', { duration: 2 }],
       ['duração maior que 8 h', { duration: 600 }],
-      ['preço zero', { price: 0 }],
+      ['preço negativo', { price: -1 }],
     ])('%s → 400', async (_label, override) => {
       const tenant = await createTenant();
       const token = await loginAs(tenant.owner);

@@ -8,7 +8,8 @@ const defaultInclude = () => [
     attributes: ['id', 'user_id', 'branch_id', 'bio'],
     include: [{ model: User, attributes: ['id', 'name'] }],
   },
-  { model: Service, attributes: ['id', 'name', 'price', 'duration', 'barbershop_id'] },
+  // paranoid: false → serviço excluído (soft delete) continua visível no histórico (BE-06).
+  { model: Service, attributes: ['id', 'name', 'price', 'duration', 'barbershop_id'], paranoid: false },
   { model: Branch, attributes: ['id', 'name', 'barbershop_id'] },
 ];
 

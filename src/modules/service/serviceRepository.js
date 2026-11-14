@@ -5,14 +5,14 @@ const findAll = async (where = {}, options = {}) => {
   return Service.findAndCountAll({
     where,
     ...options,
-    include: options.include || [Barbershop],
+    include: options.include || [{ model: Barbershop, attributes: ['id', 'name'] }],
     distinct: true,
   });
 };
 
 const findById = async (id, includeOptions = []) => {
   return Service.findByPk(id, {
-    include: includeOptions.length ? includeOptions : [Barbershop],
+    include: includeOptions.length ? includeOptions : [{ model: Barbershop, attributes: ['id', 'name'] }],
   });
 };
 

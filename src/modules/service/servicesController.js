@@ -13,7 +13,7 @@ const createService = async (req, res, next) => {
 
 const getAllServices = async (req, res, next) => {
   try {
-    const services = await serviceService.findAll(req.query);
+    const services = await serviceService.findAll(req.query, req.user);
     return success(res, services);
   } catch (error) {
     return next(error);

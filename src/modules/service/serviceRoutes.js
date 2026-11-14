@@ -4,6 +4,7 @@ const servicesController = require('./servicesController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 const schemas = require('./serviceSchemas');
+const optionalAuthMiddleware = require('../../middlewares/optionalAuthMiddleware');
 
 const router = express.Router();
 
@@ -11,9 +12,19 @@ const router = express.Router();
  * @swagger
  * /services:
  *   get:
- *     summary: Listar serviços com filtros e paginação
+ *     summary: Listar serviços ativos de uma barbearia
+ *     description: barbershop_id é obrigatório. Quem gerencia a barbearia pode pedir include_inactive=true.
  *     tags: [Service]
  *     parameters:
+ *       - in: query
+ *         name: barbershop_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: include_inactive
+ *         schema:
+ *           type: boolean
  *       - in: query
  *         name: page
  *         schema:
@@ -28,7 +39,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de serviços retornada com sucesso
  */
-router.get('/', schemas.list, servicesController.getAllServices);
+router.get('/', optionalAuthMiddleware, schemas.list, servicesController.getAllServices);
 
 /**
  * @swagger
