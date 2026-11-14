@@ -4,6 +4,7 @@ const express = require('express');
 
 const mounts = [
   ['/api/auth', require('../modules/auth/authRoutes')],
+  ['/api/me', require('../modules/me/meRoutes')],
   ['/api/user', require('../modules/user/userRoutes')],
   ['/api/barber', require('../modules/barber/barberRoutes')],
   ['/api/services', require('../modules/service/serviceRoutes')],

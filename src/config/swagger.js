@@ -333,6 +333,10 @@ const options = {
         description: 'Autenticação e autorização de usuários',
       },
       {
+        name: 'Me',
+        description: 'Dados do usuário logado',
+      },
+      {
         name: 'User',
         description: 'Gestão de usuários',
       },

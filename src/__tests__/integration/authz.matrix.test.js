@@ -12,6 +12,10 @@ const MATRIX = {
   'POST /api/auth/login': 'public',
   'GET /api/auth/me': 'auth',
 
+  'GET /api/me': 'auth',
+  'PATCH /api/me': 'auth',
+  'GET /api/me/barbershops': 'auth',
+  'GET /api/me/appointments': 'auth',
   'GET /api/user': ['admin'],
   'GET /api/user/:id': 'auth',
   'PUT /api/user/:id': 'auth',

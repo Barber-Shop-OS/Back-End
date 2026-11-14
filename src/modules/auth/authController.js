@@ -26,7 +26,8 @@ const login = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await authService.getMe(req.user.id);
+    // BE-20: alias de GET /api/me.
+    const user = await require('../me/meService').getMe(req.user.id);
     return success(res, user);
   } catch (error) {
     return next(error);

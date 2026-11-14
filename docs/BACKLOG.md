@@ -210,7 +210,7 @@
 - **Fazer:** tabela `barber_services (barber_id, service_id)` unique; `PUT /api/barber/:id/services {service_ids[]}` (mesmo tenant). Default ao criar barbeiro: todos os serviços ativos. `GET /api/barber?branch_id&service_id` filtra.
 - **Aceite:** serviço de outra barbearia → 400.
 
-### [ ] BE-20 — Endpoints `/api/me/*`
+### [x] BE-20 — Endpoints `/api/me/*`
 - **Depende de:** BE-04
 - **Fazer:** `GET /api/me` (perfil + papéis + `barbershops[]` que gerencia + `barber_profiles[]`), `GET /api/me/barbershops`, `GET /api/me/appointments?scope=upcoming|past&page`, `PATCH /api/me` (mesma whitelist do BE-01). Manter `/api/auth/me` como alias.
 - **Aceite:** cada usuário só vê os próprios dados; paginação limitada (BE-38).
