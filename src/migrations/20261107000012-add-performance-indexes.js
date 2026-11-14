@@ -31,9 +31,16 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    for (const { table, name } of [...INDEXES].reverse()) {
+    for (const { table, fields, name } of [...INDEXES].reverse()) {
       const names = await existingIndexNames(queryInterface, table);
-      if (names.has(name)) {
+      if (!names.has(name)) continue;
+      try {
+        await queryInterface.removeIndex(table, name);
+      } catch (error) {
+        // MySQL descarta o índice automático da FK quando criamos um índice que a cobre; para
+        // remover o nosso é preciso devolver à FK um índice simples na mesma coluna.
+        if (!/foreign key constraint/i.test(String(error.message))) throw error;
+        await queryInterface.addIndex(table, [fields[0]], { name: `${table}_${fields[0]}_fk_idx` });
         await queryInterface.removeIndex(table, name);
       }
     }
