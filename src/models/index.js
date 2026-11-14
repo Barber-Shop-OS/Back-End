@@ -13,6 +13,9 @@ const BranchClosure = require('./branchClosure');
 const BarberWorkingHour = require('./barberWorkingHour');
 const BarberTimeOff = require('./barberTimeOff');
 const BarberService = require('./barberService');
+const Plan = require('./plan');
+const Subscription = require('./subscription');
+const SubscriptionEvent = require('./subscriptionEvent');
 
 // ============================================
 // User associations
@@ -141,8 +144,19 @@ BarberTimeOff.belongsTo(Barber, { foreignKey: 'barber_id' });
 Barber.belongsToMany(Service, { through: BarberService, foreignKey: 'barber_id', otherKey: 'service_id' });
 Service.belongsToMany(Barber, { through: BarberService, foreignKey: 'service_id', otherKey: 'barber_id' });
 
+// ============================================
+// Assinatura SaaS (BE-31)
+// ============================================
+Barbershop.hasOne(Subscription, { foreignKey: 'barbershop_id', onDelete: 'CASCADE' });
+Subscription.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
+Subscription.hasMany(SubscriptionEvent, { foreignKey: 'subscription_id', as: 'events', onDelete: 'CASCADE' });
+SubscriptionEvent.belongsTo(Subscription, { foreignKey: 'subscription_id' });
+
 module.exports = {
   sequelize,
+  Plan,
+  Subscription,
+  SubscriptionEvent,
   BarberService,
   BarberWorkingHour,
   BarberTimeOff,

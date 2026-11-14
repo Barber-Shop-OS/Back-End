@@ -48,6 +48,7 @@ const MATRIX = {
 
   'GET /api/barbershop': 'public',
   'GET /api/barbershop/slug/:slug': 'public',
+  'GET /api/barbershop/:id/subscription': ['admin', 'owner'],
   'GET /api/barbershop/:id': 'public',
   'POST /api/barbershop': ['admin', 'owner'],
   'PUT /api/barbershop/:id': ['admin', 'owner'],
@@ -76,6 +77,7 @@ const MATRIX = {
   'PUT /api/payment/:id/status': ['admin', 'owner', 'barbeiro'],
 
   'PATCH /api/admin/users/:id/role': ['admin'],
+  'GET /api/plans': 'public',
 };
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];

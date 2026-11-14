@@ -25,6 +25,7 @@
 | 2026-10-23 | Sem app iOS no curto prazo (iPhone usa o web). App mobile ver `Mobile/docs/BACKLOG.md`. |
 | 2026-11-07 | **3 planos mensais: R$ 99, R$ 199, R$ 399.** Gateway: **AbacatePay (API v2)**. Ver BE-31…BE-35. |
 | 2026-11-07 | Tenant = **Barbershop** (rede). Filiais = **Branch**. Assinatura pertence à Barbershop. |
+| 2026-11-14 | Recomendações aprovadas: limites 1/3, 3/10 e 15 (fair use)/ilimitado; trial 14 d sem cartão com recursos do `profissional` (BE-31); cliente rápido sem conta (BE-23); owner não verificado usa o trial mas não publica a página (BE-27); cancelamento marcado no banco e enviado à AbacatePay no fim do período via job (BE-32); gerente via `barbershop_members` (BE-47). BE-46 (WhatsApp) adiado. |
 
 ### Estado atual confirmado (2026-11-07)
 - Stack: Express 4.21, Sequelize 6 (MySQL; testes em SQLite `:memory:`), JWT (`jsonwebtoken`, 8 h), bcryptjs, helmet, express-rate-limit (memória), winston, swagger-jsdoc (desligado em produção), umzug (migrations no boot em `server.js`).
@@ -270,7 +271,7 @@
 - **Fazer:** access token 15 min + refresh token opaco (32 bytes, hash no banco, `refresh_tokens (user_id, token_hash, expires_at 30d, revoked_at, replaced_by, user_agent, ip)`), **rotação** a cada uso e detecção de reuso (reuso → revoga a família). Web: refresh em cookie `httpOnly; Secure; SameSite=Strict; Path=/api/auth`; mobile: no corpo, guardado em secure storage. `POST /api/auth/refresh`, `POST /api/auth/logout`, `POST /api/auth/logout-all`. Se cookie, proteção CSRF (checar `Origin` + header custom `X-Requested-With`).
 - **Aceite:** refresh reutilizado revoga todos; logout invalida o refresh.
 
-### [ ] BE-31 — Planos e assinaturas (modelo de domínio)
+### [x] BE-31 — Planos e assinaturas (modelo de domínio)
 - **Depende de:** BE-03
 - **Planos (decididos 2026-11-07; limites = [DECISÃO PENDENTE], recomendação abaixo):**
 

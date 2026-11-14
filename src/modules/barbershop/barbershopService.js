@@ -118,7 +118,17 @@ const create = async (data) => {
   }
 
   const profile = await normalizeProfile(pickFields(data, ['name', 'owner_id', ...PROFILE_FIELDS]));
-  return barbershopRepository.create({ ...profile, name: String(data.name).trim(), owner_id: Number(data.owner_id) });
+  const { sequelize } = require('../../models');
+  const { startTrial } = require('../subscription/subscriptionService');
+  return sequelize.transaction(async (transaction) => {
+    const barbershop = await Barbershop.create(
+      { ...profile, name: String(data.name).trim(), owner_id: Number(data.owner_id) },
+      { transaction }
+    );
+    // BE-31: toda barbearia nasce com assinatura em trial.
+    await startTrial(barbershop.id, { planCode: data.plan_code, transaction });
+    return barbershop;
+  });
 };
 
 // Campos editáveis pelo dono. owner_id e status nunca vêm do body (SEC-03).

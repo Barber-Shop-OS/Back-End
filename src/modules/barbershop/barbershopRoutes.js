@@ -88,6 +88,9 @@ router.get('/', schemas.list, barbershopController.getAll);
  */
 router.get('/slug/:slug', schemas.bySlug, barbershopController.getBySlug);
 
+// BE-31: /:id/subscription
+require('../subscription/subscriptionRoutes').registerBarbershopRoutes(router);
+
 router.get('/:id', schemas.byId, barbershopController.getById);
 
 /**

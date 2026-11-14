@@ -333,6 +333,10 @@ const options = {
         description: 'Autenticação e autorização de usuários',
       },
       {
+        name: 'Billing',
+        description: 'Planos e assinatura SaaS',
+      },
+      {
         name: 'Me',
         description: 'Dados do usuário logado',
       },

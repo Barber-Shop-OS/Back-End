@@ -12,6 +12,7 @@ const {
   Service,
   Appointment,
   BarberService,
+  Subscription,
 } = require('../../models');
 
 const DEFAULT_PASSWORD = 'Tesoura#Navalha9';
@@ -21,7 +22,13 @@ const next = () => {
   return sequence;
 };
 
-const resetDatabase = () => sequelize.sync({ force: true });
+// Recria o schema e semeia os planos (a migration faz isso em produção — BE-31).
+const resetDatabase = async () => {
+  await sequelize.sync({ force: true });
+  const { Plan } = require('../../models');
+  const { PLANS } = require('../../shared/plans');
+  await Plan.bulkCreate(PLANS.map((plan) => ({ ...plan })));
+};
 
 const createUser = async ({ role = 'cliente', name, email, password = DEFAULT_PASSWORD } = {}) => {
   const n = next();
@@ -46,10 +53,17 @@ const bearer = (token) => ({ Authorization: `Bearer ${token}` });
 /**
  * Cria um tenant completo: owner, barbearia, endereço, filial, barbeiro e serviço.
  */
-const createTenant = async ({ name } = {}) => {
+const createTenant = async ({ name, subscription = {} } = {}) => {
   const n = next();
   const owner = await createUser({ role: 'owner', name: `Owner ${n}` });
   const barbershop = await Barbershop.create({ name: name || `Barbearia ${n}`, owner_id: owner.id });
+  await Subscription.create({
+    barbershop_id: barbershop.id,
+    plan_code: subscription.plan_code || 'profissional',
+    status: subscription.status || 'trialing',
+    trial_ends_at: subscription.trial_ends_at || new Date(Date.now() + 14 * 86400000),
+    ...subscription,
+  });
   const address = await Address.create({ cep: '01001-000', number: 100, city: 'São Paulo', state: 'SP' });
   const branch = await Branch.create({ name: `Filial ${n}`, barbershop_id: barbershop.id, address_id: address.id });
   const barberUser = await createUser({ role: 'barbeiro', name: `Barbeiro ${n}` });
