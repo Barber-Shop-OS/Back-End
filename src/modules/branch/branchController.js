@@ -11,7 +11,7 @@ const splitPayload = (body) => {
 
 const getAll = async (req, res, next) => {
   try {
-    const result = await branchService.findAll(req.query);
+    const result = await branchService.findAll(req.query, req.user);
     return success(res, result);
   } catch (error) {
     return next(error);

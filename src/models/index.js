@@ -8,6 +8,8 @@ const Address = require('./address');
 const Barbershop = require('./barbershop');
 const Branch = require('./branch');
 const Payment = require('./payment');
+const BranchOpeningHour = require('./branchOpeningHour');
+const BranchClosure = require('./branchClosure');
 
 // ============================================
 // User associations
@@ -114,8 +116,18 @@ Payment.belongsTo(Appointment, {
   foreignKey: 'appointment_id' 
 });
 
+// ============================================
+// Branch → horário de funcionamento e fechamentos (BE-10)
+// ============================================
+Branch.hasMany(BranchOpeningHour, { foreignKey: 'branch_id', as: 'opening_hours', onDelete: 'CASCADE' });
+BranchOpeningHour.belongsTo(Branch, { foreignKey: 'branch_id' });
+Branch.hasMany(BranchClosure, { foreignKey: 'branch_id', as: 'closures', onDelete: 'CASCADE' });
+BranchClosure.belongsTo(Branch, { foreignKey: 'branch_id' });
+
 module.exports = {
   sequelize,
+  BranchOpeningHour,
+  BranchClosure,
   User,
   Barber,
   Service,

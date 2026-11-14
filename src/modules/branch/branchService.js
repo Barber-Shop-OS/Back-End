@@ -5,19 +5,43 @@ const branchRepository = require('./branchRepository');
 const addressService = require('../address/addressService');
 const { assertCanManageBarbershop, assertCanManageBranch } = require('../../shared/authz');
 const { pickFields } = require('../../shared/pickFields');
+const { normalizePhone } = require('../../shared/phone');
+const { isValidTimezone, DEFAULT_TIMEZONE } = require('../../shared/time');
+const { ownsBarbershop } = require('../../shared/authz');
+const { Barbershop } = require('../../models');
 const { AppError, NotFoundError } = require('../../utils/errorHandler');
 
 // barbershop_id e address_id nunca mudam via update (SEC-03).
-const BRANCH_UPDATABLE_FIELDS = ['name'];
+const BRANCH_UPDATABLE_FIELDS = ['name', 'timezone', 'phone', 'whatsapp', 'active'];
+
+/** Normaliza campos de contato/fuso (BE-10). */
+const normalizeBranchExtras = (data) => {
+  const out = {};
+  if ('timezone' in data) {
+    if (!isValidTimezone(data.timezone)) throw new AppError('Fuso horário inválido (use IANA, ex.: America/Sao_Paulo)', 400);
+    out.timezone = data.timezone;
+  }
+  if ('phone' in data) out.phone = normalizePhone(data.phone);
+  if ('whatsapp' in data) out.whatsapp = normalizePhone(data.whatsapp);
+  if ('active' in data) out.active = Boolean(data.active);
+  return out;
+};
 const ADDRESS_FIELDS = ['cep', 'number', 'complement', 'city', 'state'];
 
 const isEmpty = (value) => value === undefined || value === null || String(value).trim() === '';
 
-const findAll = async (query = {}) => {
+const findAll = async (query = {}, currentUser) => {
   const { page, pageSize, offset } = parsePagination(query);
   const where = {};
 
   if (query.barbershop_id) where.barbershop_id = Number(query.barbershop_id);
+  // Filiais inativas só aparecem para quem gerencia a barbearia (include_inactive=true).
+  let includeInactive = false;
+  if (query.include_inactive && currentUser && query.barbershop_id) {
+    const barbershop = await Barbershop.findByPk(where.barbershop_id);
+    includeInactive = Boolean(barbershop && ownsBarbershop(currentUser, barbershop));
+  }
+  if (!includeInactive) where.active = true;
   if (query.name) where.name = likeContains(query.name);
 
   const allowedSortFields = ['name', 'created_at'];
@@ -66,6 +90,8 @@ const create = async (branchData, addressData, currentUser) => {
         name: String(branchData.name).trim(),
         barbershop_id: Number(branchData.barbershop_id),
         address_id: address.id,
+        timezone: DEFAULT_TIMEZONE,
+        ...normalizeBranchExtras(branchData),
       },
       { transaction }
     );
@@ -84,6 +110,7 @@ const update = async (id, branchData, addressData, currentUser) => {
     if (isEmpty(updateData.name)) throw new AppError("Campo 'name' é obrigatório", 400);
     updateData.name = String(updateData.name).trim();
   }
+  Object.assign(updateData, normalizeBranchExtras(updateData));
 
   await sequelize.transaction(async (transaction) => {
     if (Object.keys(addressUpdate).length) {

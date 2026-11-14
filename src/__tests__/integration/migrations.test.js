@@ -24,9 +24,14 @@ describe('BE-08 — migrations', () => {
     expect(executed.length).toBeGreaterThan(0);
     expect(await migrator.pending()).toHaveLength(0);
     await expect(verifySchema()).resolves.toBeUndefined();
-    expect(await tableNames()).toEqual(
-      ['addresses', 'appointments', 'barbers', 'barbershops', 'branches', 'payments', 'services', 'users'].sort()
-    );
+    // Toda tabela de model existe e nenhuma tabela sobra sem model.
+    const modelTables = Object.values(sequelize.models)
+      .map((model) => model.getTableName())
+      .map((table) => (typeof table === 'string' ? table : table.tableName))
+      .filter((name) => name !== 'SequelizeMeta')
+      .sort();
+    expect(await tableNames()).toEqual(modelTables);
+    expect(modelTables).toEqual(expect.arrayContaining(['appointments', 'branch_opening_hours', 'branch_closures']));
   });
 
   it('criam os índices de desempenho e o único de pagamento', async () => {

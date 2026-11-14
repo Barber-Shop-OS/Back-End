@@ -149,7 +149,7 @@
 
 ## Fase P1 — Dono configura a operação
 
-### [ ] BE-10 — Horário de funcionamento e fechamentos da filial
+### [x] BE-10 — Horário de funcionamento e fechamentos da filial
 - **Depende de:** BE-03, BE-12 (timezone)
 - **Fazer:** tabelas `branch_opening_hours (branch_id, weekday 0-6, opens_at TIME, closes_at TIME)` (múltiplos intervalos/dia) e `branch_closures (branch_id, date, reason, all_day, start/end opcional)`. `GET/PUT /api/branch/:id/opening-hours` (PUT substitui a semana em transação; valida sobreposição e `opens<closes`). CRUD `/api/branch/:id/closures`. Coluna `branches.timezone`, `branches.phone`, `branches.whatsapp`, `branches.active`.
 - **Aceite:** intervalos sobrepostos → 400; leitura pública do horário funciona sem login.

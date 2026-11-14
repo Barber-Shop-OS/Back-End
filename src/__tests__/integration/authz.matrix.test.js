@@ -48,6 +48,12 @@ const MATRIX = {
   'PUT /api/branch/:id': ['admin', 'owner'],
   'DELETE /api/branch/:id': ['admin', 'owner'],
   'POST /api/branch/:id/barbers': ['admin', 'owner'],
+  'GET /api/branch/:id/opening-hours': 'public',
+  'PUT /api/branch/:id/opening-hours': ['admin', 'owner'],
+  'GET /api/branch/:id/closures': 'public',
+  'POST /api/branch/:id/closures': ['admin', 'owner'],
+  'PUT /api/branch/:id/closures/:closureId': ['admin', 'owner'],
+  'DELETE /api/branch/:id/closures/:closureId': ['admin', 'owner'],
 
   'POST /api/address': ['admin', 'owner'],
   'GET /api/address/:id': 'auth',

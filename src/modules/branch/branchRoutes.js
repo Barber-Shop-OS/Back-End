@@ -5,8 +5,10 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 const roleMiddleware = require('../../middlewares/roleMiddleware');
 
 const schemas = require('./branchSchemas');
+const optionalAuthMiddleware = require('../../middlewares/optionalAuthMiddleware');
 const barberController = require('../barber/barberController');
 const barberSchemas = require('../barber/barberSchemas');
+const branchScheduleRoutes = require('../branchSchedule/branchScheduleRoutes');
 
 const router = express.Router();
 
@@ -36,7 +38,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de filiais retornada com sucesso
  */
-router.get('/', schemas.list, branchController.getAll);
+router.get('/', optionalAuthMiddleware, schemas.list, branchController.getAll);
 
 /**
  * @swagger
@@ -219,5 +221,8 @@ router.delete('/:id', authMiddleware, roleMiddleware(['admin', 'owner']), schema
  *       409: { description: Usuário já é barbeiro desta filial (BARBER_ALREADY_EXISTS) }
  */
 router.post('/:id/barbers', authMiddleware, roleMiddleware(['admin', 'owner']), barberSchemas.createInBranch, barberController.createInBranch);
+
+// BE-10: /:id/opening-hours e /:id/closures
+branchScheduleRoutes.register(router);
 
 module.exports = router;

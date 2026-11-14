@@ -28,6 +28,24 @@ const Branch = sequelize.define('Branch', {
       key: 'id',
     },
   },
+  timezone: {
+    type: DataTypes.STRING(64),
+    allowNull: false,
+    defaultValue: 'America/Sao_Paulo',
+  },
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
+  whatsapp: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
+  active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
