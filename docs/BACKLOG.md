@@ -165,7 +165,7 @@
 - **Fazer:** migration: `start_at`, `end_at` (UTC; migrar `appointment_date` → `start_at`, `end_at = start + service.duration`), `duration_min`, `price_snapshot DECIMAL`, `service_name_snapshot`, `notes` (≤ 500), `status ENUM(confirmado, concluido, cancelado, nao_compareceu)` (migrar `pendente`→`confirmado`), `cancelled_at`, `cancelled_by`, `cancel_reason`, `source ENUM(web, mobile, balcao)`, `updated_at`. Utilitário `src/shared/time.js` (dayjs + plugins utc/timezone — lib usual) para converter horário local da filial ↔ UTC.
 - **Aceite:** migration reversível; agendamentos antigos preservados; respostas incluem `start_at`, `end_at` ISO UTC.
 
-### [ ] BE-13 — Motor de disponibilidade
+### [x] BE-13 — Motor de disponibilidade
 - **Depende de:** BE-10, BE-11, BE-12, BE-19
 - **Fazer:** `GET /api/availability?branch_id&service_id&date=YYYY-MM-DD[&barber_id]` público → `[{ start_at, end_at, barber_ids[] }]`. Regras: horário da filial ∩ jornada do barbeiro − fechamentos − bloqueios − agendamentos `confirmado` (cancelados liberam) − passado; antecedência mínima 30 min; horizonte 30 dias; grade de 15 min; barbeiro precisa executar o serviço (BE-19); "sem preferência" = união. Função pura `computeSlots(input)` em `availabilityService.js` (testável sem banco).
 - **Testes:** unitários de `computeSlots` cobrindo: dia fechado, feriado, almoço, serviço de 45 min no fim do expediente, troca de horário de verão inexistente no Brasil mas timezone diferente (ex.: `America/Manaus`), slot no passado.

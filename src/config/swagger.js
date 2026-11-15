@@ -357,6 +357,10 @@ const options = {
         description: 'Gestão de agendamentos',
       },
       {
+        name: 'Availability',
+        description: 'Horários livres para agendamento (público)',
+      },
+      {
         name: 'Payment',
         description: 'Gestão de pagamentos',
       },

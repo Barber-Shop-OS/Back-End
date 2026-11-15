@@ -9,6 +9,7 @@ const mounts = [
   ['/api/barber', require('../modules/barber/barberRoutes')],
   ['/api/services', require('../modules/service/serviceRoutes')],
   ['/api/appointment', require('../modules/appointment/appointmentRoutes')],
+  ['/api/availability', require('../modules/availability/availabilityRoutes')],
   ['/api/barbershop', require('../modules/barbershop/barbershopRoutes')],
   ['/api/branch', require('../modules/branch/branchRoutes')],
   ['/api/address', require('../modules/address/addressRoutes')],
