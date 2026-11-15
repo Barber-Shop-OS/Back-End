@@ -238,7 +238,7 @@
 - **Fazer:** `GET /api/dashboard/summary?barbershop_id&branch_id?&from&to` → receita (pagamentos `PAID`), nº agendamentos por status, ticket médio, taxa de ocupação (minutos agendados / minutos disponíveis), top serviços, receita por dia, receita por filial e por barbeiro. `GET /api/dashboard/barber?from&to` (barbeiro logado). Consultas agregadas no repository com índices de BE-08. Respeitar fuso da filial no agrupamento por dia.
 - **Aceite:** testes com fixture conhecida conferem cada número.
 
-### [ ] BE-25 — Busca pública de filiais
+### [x] BE-25 — Busca pública de filiais
 - **Depende de:** BE-17, BE-18
 - **Fazer:** `GET /api/search/branches?q&city&service&lat&lng&page` → filiais ativas de barbearias com assinatura ativa; `q` busca nome da barbearia/filial/serviço; ordenação por distância quando lat/lng (Haversine em SQL). Escapar `%`/`_` no LIKE `[SEC-09]`.
 - **Aceite:** barbearia suspensa não aparece; `pageSize` máximo 50.

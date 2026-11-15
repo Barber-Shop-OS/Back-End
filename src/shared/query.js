@@ -19,6 +19,16 @@ const escapeLike = (value) => String(value).replace(/[\\%_]/g, (char) => `\\${ch
 /** Condição `LIKE %termo%` com escape. Termos acima de 100 caracteres são cortados. */
 const likeContains = (value) => ({ [Op.like]: `%${escapeLike(String(value).slice(0, 100))}%` });
 
+/**
+ * `coluna LIKE %termo% ESCAPE '!'` com escape explícito — igual em MySQL e SQLite (o SQLite não tem
+ * caractere de escape padrão). `column` é 'Modelo.coluna' como aparece na consulta.
+ */
+const likeMatch = (column, value) => {
+  const sequelize = require('../config/sequelize');
+  const term = String(value).slice(0, 100).replace(/[!%_]/g, (char) => `!${char}`);
+  return sequelize.where(sequelize.col(column), Op.like, sequelize.literal(`${sequelize.escape(`%${term}%`)} ESCAPE '!'`));
+};
+
 const paginated = (result, { page, pageSize }) => ({
   items: result.rows,
   page,
@@ -27,4 +37,4 @@ const paginated = (result, { page, pageSize }) => ({
   totalPages: Math.ceil(result.count / pageSize),
 });
 
-module.exports = { parsePagination, escapeLike, likeContains, paginated, DEFAULT_PAGE_SIZE };
+module.exports = { parsePagination, escapeLike, likeContains, likeMatch, paginated, DEFAULT_PAGE_SIZE };

@@ -41,4 +41,14 @@ const checkLimit = (subscription, resource, used, catalog) => {
   return { allowed, limit: max, used, upgrade_to: allowed ? null : upgradeFor(resource, used + 1, catalog) };
 };
 
-module.exports = { findPlan, effectivePlan, can, limit, checkLimit, upgradeFor };
+/**
+ * Assinatura que mantém a barbearia visível ao público (busca — BE-25): ativa, em atraso (carência
+ * definida no BE-35) ou trial ainda não vencido.
+ */
+const isPubliclyVisible = (subscription, now = new Date()) => {
+  if (!subscription) return false;
+  if (['active', 'past_due'].includes(subscription.status)) return true;
+  return subscription.status === 'trialing' && Boolean(subscription.trial_ends_at) && new Date(subscription.trial_ends_at) > now;
+};
+
+module.exports = { findPlan, effectivePlan, can, limit, checkLimit, upgradeFor, isPubliclyVisible };

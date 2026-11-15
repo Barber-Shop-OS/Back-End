@@ -361,6 +361,10 @@ const options = {
         description: 'Horários livres para agendamento (público)',
       },
       {
+        name: 'Search',
+        description: 'Busca pública de filiais',
+      },
+      {
         name: 'Payment',
         description: 'Gestão de pagamentos',
       },

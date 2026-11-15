@@ -111,4 +111,4 @@ const getBySlug = async (slug, now = new Date()) => {
   };
 };
 
-module.exports = { getBySlug, setVisibilityCheck };
+module.exports = { getBySlug, setVisibilityCheck, publicAddress };
