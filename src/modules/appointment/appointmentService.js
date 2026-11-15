@@ -10,18 +10,13 @@ const { parsePagination } = require('../../shared/query');
 const { Barber, Branch, Barbershop, Appointment } = require('../../models');
 const appointmentRepository = require('./appointmentRepository');
 const bookingService = require('./bookingService');
-const {
-  isAdmin,
-  assertCanViewAppointment,
-  isAppointmentStaff,
-} = require('../../shared/authz');
-const { ValidationError, NotFoundError, ForbiddenError } = require('../../utils/errorHandler');
+const lifecycle = require('./appointmentLifecycleService');
+const { present } = require('./appointmentPresenter');
+const { isAdmin, assertCanViewAppointment } = require('../../shared/authz');
+const { ValidationError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 const { STATUS, STATUSES } = Appointment;
-const allowedStatus = STATUSES;
 const INITIAL_STATUS = STATUS.CONFIRMED;
-// Cliente só pode cancelar o próprio agendamento (regras de prazo em BE-15).
-const CLIENT_ALLOWED_STATUS = ['cancelado'];
 
 /** Condições que limitam a listagem ao que o usuário pode ver. Admin vê tudo. */
 const buildVisibilityScope = async (currentUser) => {
@@ -78,8 +73,9 @@ const findAll = async (query = {}, currentUser) => {
     order: [[sortBy, sortDir]],
   });
 
+  const now = new Date();
   return {
-    items: result.rows,
+    items: result.rows.map((row) => present(row, currentUser, now)),
     page,
     pageSize,
     total: result.count,
@@ -93,29 +89,29 @@ const findById = async (id, currentUser) => {
   if (!appointment) {
     throw new NotFoundError('Agendamento não encontrado');
   }
-  return appointment;
+  return present(appointment, currentUser);
 };
 
 /** BE-14: criação com lock, revalidação do horário e Idempotency-Key (ver bookingService). */
 const create = (payload, currentUser, options) => bookingService.create(payload, currentUser, options);
 
+// PUT /api/appointment/:id {status} — mantido por compatibilidade; usa a máquina de estados do BE-15.
+const ACTION_BY_STATUS = {
+  [STATUS.CANCELLED]: lifecycle.cancel,
+  [STATUS.COMPLETED]: (id, input, user) => lifecycle.complete(id, user),
+  [STATUS.NO_SHOW]: (id, input, user) => lifecycle.noShow(id, user),
+};
+
 const updateStatus = async (id, status, currentUser) => {
-  if (!allowedStatus.includes(status)) {
+  if (!STATUSES.includes(status)) {
     throw new ValidationError('Status inválido');
   }
-
-  const appointment = await assertCanViewAppointment(currentUser, id);
-  if (!isAppointmentStaff(currentUser, appointment) && !CLIENT_ALLOWED_STATUS.includes(status)) {
-    throw new ForbiddenError('O cliente só pode cancelar o próprio agendamento');
+  if (status === STATUS.CONFIRMED) {
+    const appointment = await findById(id, currentUser);
+    if (appointment.status === STATUS.CONFIRMED) return appointment;
+    throw new ConflictError('Agendamento finalizado não volta a ser confirmado', CODES.INVALID_STATUS_TRANSITION);
   }
-
-  const changes = { status };
-  if (status === STATUS.CANCELLED) {
-    changes.cancelled_at = new Date();
-    changes.cancelled_by = currentUser.id;
-  }
-  await appointmentRepository.update(id, changes);
-  return appointmentRepository.findById(id);
+  return ACTION_BY_STATUS[status](id, {}, currentUser);
 };
 
 // Exclusão física apenas para admin (suporte). Os demais usam status `cancelado`.
@@ -132,6 +128,11 @@ module.exports = {
   findById,
   create,
   updateStatus,
+  cancel: lifecycle.cancel,
+  reschedule: lifecycle.reschedule,
+  complete: lifecycle.complete,
+  noShow: lifecycle.noShow,
+  listEvents: lifecycle.listEvents,
   remove,
   INITIAL_STATUS,
 };

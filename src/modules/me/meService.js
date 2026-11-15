@@ -5,6 +5,7 @@ const userService = require('../user/userService');
 const { parsePagination, paginated } = require('../../shared/query');
 const { PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
 const { NotFoundError } = require('../../utils/errorHandler');
+const { present } = require('../appointment/appointmentPresenter');
 
 // Extensões de /api/me registradas por outros módulos (ex.: billing_banner — BE-35).
 const profileExtensions = [];
@@ -53,15 +54,19 @@ const getMe = async (userId) => {
 const updateMe = (userId, data, currentUser) => userService.update(userId, data, currentUser);
 
 /** Agendamentos do próprio usuário como cliente. upcoming = start_at ≥ agora (ASC); past = antes (DESC). */
-const listAppointments = async (userId, query = {}) => {
+const listAppointments = async (userId, query = {}, currentUser = { id: userId }) => {
   const pagination = parsePagination(query);
   const now = new Date();
   const upcoming = query.scope !== 'past';
   const result = await Appointment.findAndCountAll({
     where: { user_id: userId, start_at: upcoming ? { [Op.gte]: now } : { [Op.lt]: now } },
     include: [
-      { model: Branch, attributes: ['id', 'name', 'timezone', 'barbershop_id'] },
-      { model: Barber, attributes: ['id', 'display_name'] },
+      {
+        model: Branch,
+        attributes: ['id', 'name', 'timezone', 'barbershop_id'],
+        include: [{ model: Barbershop, attributes: ['id', 'owner_id'] }],
+      },
+      { model: Barber, attributes: ['id', 'display_name', 'user_id'] },
       { model: Service, attributes: ['id', 'name'], paranoid: false },
     ],
     order: [['start_at', upcoming ? 'ASC' : 'DESC']],
@@ -69,7 +74,9 @@ const listAppointments = async (userId, query = {}) => {
     offset: pagination.offset,
     distinct: true,
   });
-  return paginated(result, pagination);
+  // BE-15: can_cancel_until e allowed_actions também na lista do cliente.
+  const page = paginated(result, pagination);
+  return { ...page, items: page.items.map((row) => present(row, currentUser, now)) };
 };
 
 module.exports = { getMe, updateMe, listBarbershops, listAppointments, addProfileExtension };

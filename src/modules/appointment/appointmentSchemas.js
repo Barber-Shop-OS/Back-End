@@ -32,6 +32,14 @@ module.exports = {
       user_id: id(),
     }).or('start_at', 'appointment_date'),
   }),
+  cancel: validate({
+    params: idParams,
+    body: Joi.object({ reason: text(255).allow('', null) }),
+  }),
+  reschedule: validate({
+    params: idParams,
+    body: Joi.object({ start_at: isoDate().required(), barber_id: id() }),
+  }),
   updateStatus: validate({
     params: idParams,
     body: Joi.object({ status: Joi.string().valid(...STATUSES).required() }),

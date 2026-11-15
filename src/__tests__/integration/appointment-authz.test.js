@@ -186,18 +186,27 @@ describe('BE-04 — agendamentos', () => {
       expect(cancel.body.appointment.status).toBe('cancelado');
     });
 
-    it('cliente não muda status para algo diferente de cancelado (403)', async () => {
+    it('cliente não conclui nem marca falta (403); agendamento finalizado não reabre (409 — BE-15)', async () => {
+      const past = await createAppointment({ tenant: a, client: alice, date: new Date(Date.now() - 3600000) });
+      const complete = await request(app)
+        .put(`/api/appointment/${past.id}`)
+        .set(bearer(aliceToken))
+        .send({ status: 'concluido' });
+      expect(complete.status).toBe(403);
+
       const cancelled = await createAppointment({ tenant: a, client: alice, status: 'cancelado' });
-      const res = await request(app)
+      const reopen = await request(app)
         .put(`/api/appointment/${cancelled.id}`)
         .set(bearer(aliceToken))
         .send({ status: 'confirmado' });
-      expect(res.status).toBe(403);
+      expect(reopen.status).toBe(409);
+      expect(reopen.body.code).toBe('INVALID_STATUS_TRANSITION');
     });
 
     it('dono e barbeiro da barbearia alteram o status', async () => {
+      const started = await createAppointment({ tenant: a, client: alice, date: new Date(Date.now() - 3600000) });
       const byOwner = await request(app)
-        .put(`/api/appointment/${aliceAppt.id}`)
+        .put(`/api/appointment/${started.id}`)
         .set(bearer(ownerA))
         .send({ status: 'concluido' });
       const byBarber = await request(app)
@@ -205,6 +214,7 @@ describe('BE-04 — agendamentos', () => {
         .set(bearer(barberA))
         .send({ status: 'confirmado' });
       expect(byOwner.status).toBe(200);
+      expect(byOwner.body.appointment.status).toBe('concluido');
       expect(byBarber.status).toBe(200);
     });
 

@@ -47,6 +47,35 @@ const updateAppointmentStatus = async (req, res, next) => {
   }
 };
 
+// BE-15: ações do ciclo de vida. Resposta: { message, appointment } com allowed_actions atualizado.
+const action = (run, message) => async (req, res, next) => {
+  try {
+    const appointment = await run(req);
+    return success(res, { message, appointment });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const cancelAppointment = action(
+  (req) => appointmentService.cancel(req.params.id, req.body, req.user),
+  'Agendamento cancelado'
+);
+const rescheduleAppointment = action(
+  (req) => appointmentService.reschedule(req.params.id, req.body, req.user),
+  'Agendamento reagendado'
+);
+const completeAppointment = action((req) => appointmentService.complete(req.params.id, req.user), 'Atendimento concluído');
+const noShowAppointment = action((req) => appointmentService.noShow(req.params.id, req.user), 'Falta registrada');
+
+const listAppointmentEvents = async (req, res, next) => {
+  try {
+    return success(res, await appointmentService.listEvents(req.params.id, req.user));
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const deleteAppointment = async (req, res, next) => {
   try {
     await appointmentService.remove(req.params.id);
@@ -61,5 +90,10 @@ module.exports = {
   getAppointmentById,
   createAppointment,
   updateAppointmentStatus,
+  cancelAppointment,
+  rescheduleAppointment,
+  completeAppointment,
+  noShowAppointment,
+  listAppointmentEvents,
   deleteAppointment,
 };

@@ -203,7 +203,8 @@ describe('SEC-23 — mass assignment', () => {
   });
 
   it('PUT /api/appointment/:id: só status muda; barbeiro, filial, cliente e data ficam', async () => {
-    const appointment = await createAppointment({ tenant, client });
+    // Já começou: concluir só é permitido depois do início (BE-15).
+    const appointment = await createAppointment({ tenant, client, date: new Date(Date.now() - 3600000) });
     const originalDate = new Date(appointment.start_at).getTime();
     const res = await request(app)
       .put(`/api/appointment/${appointment.id}`)

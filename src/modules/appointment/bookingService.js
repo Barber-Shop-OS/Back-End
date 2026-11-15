@@ -10,10 +10,11 @@
 // SQLite (testes) serializa escritas sozinho e ignora FOR UPDATE.
 const crypto = require('crypto');
 const { Op, Transaction } = require('sequelize');
-const { sequelize, User, Barber, Branch, Appointment, IdempotencyKey } = require('../../models');
+const { sequelize, User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey } = require('../../models');
 const availability = require('../availability/availabilityService');
 const { performsService } = require('../barber/barberRepository');
 const { ownsBarbershop } = require('../../shared/authz');
+const { present } = require('./appointmentPresenter');
 const time = require('../../shared/time');
 const { ValidationError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 
@@ -22,6 +23,10 @@ const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 const IDEMPOTENCY_SCOPE = 'appointment.create';
 // A equipe agenda no balcão: sem antecedência mínima, grade de 5 min e horizonte maior.
 const STAFF_POLICY = Object.freeze({ minNoticeMin: 0, stepMin: 5, horizonDays: 365 });
+
+// Ganchos executados dentro da transação após criar (BE-16: e-mail de confirmação e lembretes).
+const createHooks = [];
+const onCreate = (fn) => createHooks.push(fn);
 
 const isPositiveInt = (value) => Number.isInteger(Number(value)) && Number(value) > 0;
 
@@ -248,11 +253,25 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
       { transaction }
     );
 
+    // BE-15: histórico começa na criação.
+    await AppointmentEvent.create(
+      {
+        appointment_id: created.id,
+        actor_user_id: currentUser.id,
+        actor_role: actsAsStaff ? 'staff' : 'client',
+        type: 'created',
+        to_status: created.status,
+        payload: { start_at: start.toISOString(), barber_id: barberId, source: created.source },
+      },
+      { transaction }
+    );
+    for (const hook of createHooks) await hook({ appointment: created, actor: currentUser, transaction });
     if (afterCreate) await afterCreate(created, { transaction, actor: currentUser });
 
     const appointmentRepository = require('./appointmentRepository');
     const full = await appointmentRepository.findById(created.id, [], { transaction });
-    const body = JSON.parse(JSON.stringify(full));
+    // Resposta guardada no Idempotency-Key já no formato final (com allowed_actions).
+    const body = JSON.parse(JSON.stringify(present(full, currentUser, now)));
 
     if (idempotencyKey) {
       await IdempotencyKey.create(
@@ -279,6 +298,8 @@ const purgeExpiredIdempotencyKeys = (now = new Date()) =>
 
 module.exports = {
   create,
+  onCreate,
+  parseFutureDate,
   lockingTransaction,
   lockBarbers,
   freeBarbersAt,

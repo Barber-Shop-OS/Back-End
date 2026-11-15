@@ -71,7 +71,7 @@ router.get('/barbershops', handle(async (req, res) => success(res, { items: awai
 router.get(
   '/appointments',
   schemas.appointments,
-  handle(async (req, res) => success(res, await meService.listAppointments(req.user.id, req.query)))
+  handle(async (req, res) => success(res, await meService.listAppointments(req.user.id, req.query, req.user)))
 );
 
 module.exports = router;

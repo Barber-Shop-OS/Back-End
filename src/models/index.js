@@ -18,6 +18,7 @@ const Subscription = require('./subscription');
 const SubscriptionEvent = require('./subscriptionEvent');
 const Invitation = require('./invitation');
 const IdempotencyKey = require('./idempotencyKey');
+const AppointmentEvent = require('./appointmentEvent');
 
 // ============================================
 // User associations
@@ -114,6 +115,10 @@ Branch.hasMany(Appointment, {
   foreignKey: 'branch_id' 
 });
 
+// Histórico do agendamento (BE-15)
+Appointment.hasMany(AppointmentEvent, { foreignKey: 'appointment_id', as: 'events', onDelete: 'CASCADE' });
+AppointmentEvent.belongsTo(Appointment, { foreignKey: 'appointment_id' });
+
 // ============================================
 // Payment associations
 // ============================================
@@ -163,6 +168,7 @@ Branch.hasMany(Invitation, { foreignKey: 'branch_id', onDelete: 'CASCADE' });
 
 module.exports = {
   sequelize,
+  AppointmentEvent,
   IdempotencyKey,
   Invitation,
   Plan,

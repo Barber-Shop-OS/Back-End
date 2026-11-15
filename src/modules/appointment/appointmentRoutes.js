@@ -149,9 +149,112 @@ router.post('/', authMiddleware, bookingLimiter, schemas.create, appointmentCont
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     AppointmentActionResponse:
+ *       type: object
+ *       properties:
+ *         message: { type: string }
+ *         appointment:
+ *           type: object
+ *           description: >
+ *             Agendamento completo. `can_cancel_until` (início − 24 h) e `allowed_actions`
+ *             (subconjunto de cancel, reschedule, complete, no_show para quem chamou) vêm em toda
+ *             resposta de agendamento; o front só exibe o que vier em allowed_actions.
+ *           properties:
+ *             status: { type: string, enum: [confirmado, concluido, cancelado, nao_compareceu] }
+ *             can_cancel_until: { type: string, format: date-time }
+ *             allowed_actions: { type: array, items: { type: string, enum: [cancel, reschedule, complete, no_show] } }
+ * /appointment/{id}/cancel:
+ *   post:
+ *     summary: Cancelar agendamento
+ *     description: >
+ *       Cliente até 24 h antes do início (depois → 409 CANCELLATION_WINDOW_CLOSED); equipe a qualquer
+ *       momento enquanto estiver confirmado. Estados finais → 409 INVALID_STATUS_TRANSITION.
+ *     tags: [Appointment]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema: { type: object, properties: { reason: { type: string, maxLength: 255 } } }
+ *     responses:
+ *       200: { description: Cancelado, content: { application/json: { schema: { $ref: '#/components/schemas/AppointmentActionResponse' } } } }
+ *       401: { description: Não autenticado }
+ *       404: { description: Agendamento não encontrado (ou de outra pessoa) }
+ *       409: { description: CANCELLATION_WINDOW_CLOSED ou INVALID_STATUS_TRANSITION }
+ * /appointment/{id}/reschedule:
+ *   post:
+ *     summary: Reagendar (novo horário e, opcionalmente, outro barbeiro da mesma filial)
+ *     description: >
+ *       Mesmo prazo do cancelamento. O novo horário é validado como na criação (400 SLOT_UNAVAILABLE,
+ *       409 SLOT_TAKEN); a duração é a do serviço no momento da reserva.
+ *     tags: [Appointment]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [start_at]
+ *             properties:
+ *               start_at: { type: string, format: date-time }
+ *               barber_id: { type: integer }
+ *     responses:
+ *       200: { description: Reagendado, content: { application/json: { schema: { $ref: '#/components/schemas/AppointmentActionResponse' } } } }
+ *       400: { description: Dados inválidos ou SLOT_UNAVAILABLE }
+ *       401: { description: Não autenticado }
+ *       404: { description: Agendamento não encontrado }
+ *       409: { description: CANCELLATION_WINDOW_CLOSED, SLOT_TAKEN ou INVALID_STATUS_TRANSITION }
+ * /appointment/{id}/complete:
+ *   post:
+ *     summary: Concluir atendimento (equipe, depois do início)
+ *     tags: [Appointment]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+ *     responses:
+ *       200: { description: Concluído, content: { application/json: { schema: { $ref: '#/components/schemas/AppointmentActionResponse' } } } }
+ *       403: { description: Cliente não pode concluir }
+ *       404: { description: Agendamento não encontrado }
+ *       409: { description: Antes do início ou estado final (INVALID_STATUS_TRANSITION) }
+ * /appointment/{id}/no-show:
+ *   post:
+ *     summary: Marcar falta do cliente (equipe, depois do início)
+ *     tags: [Appointment]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+ *     responses:
+ *       200: { description: Falta registrada, content: { application/json: { schema: { $ref: '#/components/schemas/AppointmentActionResponse' } } } }
+ *       403: { description: Cliente não pode marcar falta }
+ *       404: { description: Agendamento não encontrado }
+ *       409: { description: Antes do início ou estado final (INVALID_STATUS_TRANSITION) }
+ * /appointment/{id}/events:
+ *   get:
+ *     summary: Histórico do agendamento (quem, quando, de → para)
+ *     tags: [Appointment]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+ *     responses:
+ *       200: { description: Lista de eventos (created, cancelled, rescheduled, completed, no_show) }
+ *       404: { description: Agendamento não encontrado }
+ */
+router.post('/:id/cancel', authMiddleware, schemas.cancel, appointmentController.cancelAppointment);
+router.post('/:id/reschedule', authMiddleware, schemas.reschedule, appointmentController.rescheduleAppointment);
+router.post('/:id/complete', authMiddleware, schemas.byId, appointmentController.completeAppointment);
+router.post('/:id/no-show', authMiddleware, schemas.byId, appointmentController.noShowAppointment);
+router.get('/:id/events', authMiddleware, schemas.byId, appointmentController.listAppointmentEvents);
+
+/**
+ * @swagger
  * /appointment/{id}:
  *   put:
- *     summary: Atualizar status de um agendamento
+ *     summary: Atualizar status de um agendamento (legado)
+ *     deprecated: true
+ *     description: >
+ *       Mantido por compatibilidade. Usa a mesma máquina de estados de /cancel, /complete e /no-show
+ *       (BE-15). Preferir as rotas de ação.
  *     tags: [Appointment]
  *     security:
  *       - bearerAuth: []

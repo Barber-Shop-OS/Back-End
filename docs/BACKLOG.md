@@ -177,7 +177,7 @@
 - **Testes:** integração com MySQL disparando 10 requisições simultâneas no mesmo slot → exatamente 1 sucesso.
 - **Aceite:** teste de concorrência verde no CI (job MySQL).
 
-### [ ] BE-15 — Ciclo de vida: cancelar, reagendar, concluir, falta
+### [x] BE-15 — Ciclo de vida: cancelar, reagendar, concluir, falta
 - **Depende de:** BE-14
 - **Fazer:** `POST /api/appointment/:id/cancel {reason}`, `POST /:id/reschedule {start_at, barber_id?}`, `POST /:id/complete`, `POST /:id/no-show`. Máquina de estados em `appointmentStateMachine.js`:
   - cliente: cancel/reschedule só se `now <= start_at - 24h` → senão `409 CANCELLATION_WINDOW_CLOSED`;

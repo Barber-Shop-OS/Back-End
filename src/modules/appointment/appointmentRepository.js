@@ -1,5 +1,5 @@
 // Appointment repository. Includes com allowlist de atributos: nunca expõe senha/token_version.
-const { Appointment, User, Barber, Service, Branch } = require('../../models');
+const { Appointment, User, Barber, Service, Branch, Barbershop } = require('../../models');
 
 const defaultInclude = () => [
   { model: User, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
@@ -10,7 +10,12 @@ const defaultInclude = () => [
   },
   // paranoid: false → serviço excluído (soft delete) continua visível no histórico (BE-06).
   { model: Service, attributes: ['id', 'name', 'price', 'duration', 'barbershop_id'], paranoid: false },
-  { model: Branch, attributes: ['id', 'name', 'barbershop_id'] },
+  // Barbershop.owner_id só para calcular allowed_actions (BE-15); o presenter remove da resposta.
+  {
+    model: Branch,
+    attributes: ['id', 'name', 'barbershop_id', 'timezone'],
+    include: [{ model: Barbershop, attributes: ['id', 'owner_id'] }],
+  },
 ];
 
 const findAll = async (where = {}, options = {}) =>

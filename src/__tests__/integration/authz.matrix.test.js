@@ -45,6 +45,11 @@ const MATRIX = {
   'GET /api/appointment/:id': 'auth',
   'POST /api/appointment': 'auth',
   'PUT /api/appointment/:id': 'auth',
+  'POST /api/appointment/:id/cancel': 'auth',
+  'POST /api/appointment/:id/reschedule': 'auth',
+  'POST /api/appointment/:id/complete': 'auth',
+  'POST /api/appointment/:id/no-show': 'auth',
+  'GET /api/appointment/:id/events': 'auth',
   'DELETE /api/appointment/:id': ['admin'],
 
   'GET /api/availability': 'public',
