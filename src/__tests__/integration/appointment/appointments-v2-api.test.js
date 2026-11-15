@@ -5,6 +5,8 @@ const {
   resetDatabase,
   createUser,
   createTenant,
+  openAllWeek,
+  slotAt,
   loginAs,
   bearer,
   sequelize,
@@ -17,11 +19,12 @@ describe('BE-12 — agendamento v2 na API', () => {
   let tenant;
   let client;
   let clientToken;
-  const start = '2030-05-10T13:00:00.000Z';
+  const start = slotAt(5, '10:00');
 
   beforeEach(async () => {
     await resetDatabase();
     tenant = await createTenant();
+    await openAllWeek(tenant.branch);
     client = await createUser();
     clientToken = await loginAs(client);
   });
@@ -45,7 +48,7 @@ describe('BE-12 — agendamento v2 na API', () => {
     expect(res.status).toBe(201);
     const appt = res.body.appointment;
     expect(appt.start_at).toBe(start);
-    expect(appt.end_at).toBe('2030-05-10T13:30:00.000Z');
+    expect(appt.end_at).toBe(new Date(new Date(start).getTime() + 30 * 60000).toISOString());
     expect(appt.start_at).toMatch(ISO_UTC);
     expect(appt).toMatchObject({
       duration_min: 30,
@@ -100,10 +103,10 @@ describe('BE-12 — agendamento v2 na API', () => {
   it('filtro from/to usa start_at', async () => {
     await book();
     const inRange = await request(app)
-      .get('/api/appointment?from=2030-05-10T00:00:00.000Z&to=2030-05-11T00:00:00.000Z')
+      .get(`/api/appointment?from=${new Date(new Date(start).getTime() - 3600000).toISOString()}&to=${new Date(new Date(start).getTime() + 3600000).toISOString()}`)
       .set(bearer(clientToken));
     const outOfRange = await request(app)
-      .get('/api/appointment?from=2030-06-01T00:00:00.000Z')
+      .get(`/api/appointment?from=${new Date(new Date(start).getTime() + 86400000).toISOString()}`)
       .set(bearer(clientToken));
     expect(inRange.body.total).toBe(1);
     expect(outOfRange.body.total).toBe(0);

@@ -162,6 +162,8 @@ const loadDayInput = async ({ branch, date, barberIds, excludeAppointmentId, tra
       id: Number(id),
       workingHours: byBarber(workingHours, id),
       busy: [...byBarber(timeOff, id), ...byBarber(appointments, id)],
+      // Usado pelo "sem preferência" do BE-14 (barbeiro com menos agendamentos no dia).
+      appointmentCount: byBarber(appointments, id).length,
     })),
   };
 };
@@ -173,8 +175,9 @@ const loadBookingContext = async ({ branchId, serviceId, transaction }) => {
     throw new NotFoundError('Filial não encontrada');
   }
   const service = await Service.findByPk(serviceId, { transaction });
-  if (!service || String(service.barbershop_id) !== String(branch.barbershop_id)) {
-    throw new NotFoundError('Serviço não encontrado');
+  if (!service) throw new NotFoundError('Serviço não encontrado');
+  if (String(service.barbershop_id) !== String(branch.barbershop_id)) {
+    throw new ValidationError('Este serviço não pertence à barbearia da filial selecionada');
   }
   if (!service.active) throw new ValidationError('Este serviço não está disponível para agendamento');
   return { branch, service };

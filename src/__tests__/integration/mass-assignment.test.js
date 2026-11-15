@@ -7,6 +7,8 @@ const {
   resetDatabase,
   createUser,
   createTenant,
+  openAllWeek,
+  slotAt,
   createAppointment,
   loginAs,
   bearer,
@@ -29,6 +31,7 @@ describe('SEC-23 — mass assignment', () => {
     await resetDatabase();
     tenant = await createTenant();
     other = await createTenant();
+    await openAllWeek(tenant.branch);
     ownerToken = await loginAs(tenant.owner);
     client = await createUser();
     clientToken = await loginAs(client);
@@ -186,7 +189,7 @@ describe('SEC-23 — mass assignment', () => {
         barber_id: tenant.barber.id,
         service_id: tenant.service.id,
         branch_id: tenant.branch.id,
-        appointment_date: inDays(2),
+        appointment_date: slotAt(2),
         user_id: tenant.owner.id,
         status: 'cancelado',
         created_at: LONG_AGO,

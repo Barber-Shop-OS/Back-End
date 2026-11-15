@@ -7,13 +7,11 @@
 // O status inicial é sempre `confirmado` (decisão de produto de 2026-10-23).
 const { Op } = require('sequelize');
 const { parsePagination } = require('../../shared/query');
-const { User, Barber, Service, Branch, Barbershop, Appointment } = require('../../models');
-const { addMinutes } = require('../../shared/time');
+const { Barber, Branch, Barbershop, Appointment } = require('../../models');
 const appointmentRepository = require('./appointmentRepository');
-const { performsService } = require('../barber/barberRepository');
+const bookingService = require('./bookingService');
 const {
   isAdmin,
-  ownsBarbershop,
   assertCanViewAppointment,
   isAppointmentStaff,
 } = require('../../shared/authz');
@@ -24,8 +22,6 @@ const allowedStatus = STATUSES;
 const INITIAL_STATUS = STATUS.CONFIRMED;
 // Cliente só pode cancelar o próprio agendamento (regras de prazo em BE-15).
 const CLIENT_ALLOWED_STATUS = ['cancelado'];
-
-const isPositiveInt = (value) => Number.isInteger(Number(value)) && Number(value) > 0;
 
 /** Condições que limitam a listagem ao que o usuário pode ver. Admin vê tudo. */
 const buildVisibilityScope = async (currentUser) => {
@@ -100,80 +96,8 @@ const findById = async (id, currentUser) => {
   return appointment;
 };
 
-const parseFutureDate = (value) => {
-  const date = new Date(value);
-  if (!value || Number.isNaN(date.getTime())) {
-    throw new ValidationError("Campo 'start_at' deve ser uma data válida (ISO 8601)");
-  }
-  if (date.getTime() <= Date.now()) {
-    throw new ValidationError('Não é possível agendar para uma data no passado');
-  }
-  return date;
-};
-
-const create = async (payload = {}, currentUser) => {
-  const { barber_id, service_id, branch_id } = payload;
-  // `appointment_date` é o nome antigo de `start_at` (aceito por uma release).
-  const startInput = payload.start_at !== undefined ? payload.start_at : payload.appointment_date;
-
-  if (!isPositiveInt(barber_id)) throw new ValidationError("Campo 'barber_id' é obrigatório e deve ser um inteiro positivo");
-  if (!isPositiveInt(service_id)) throw new ValidationError("Campo 'service_id' é obrigatório e deve ser um inteiro positivo");
-  if (!isPositiveInt(branch_id)) throw new ValidationError("Campo 'branch_id' é obrigatório e deve ser um inteiro positivo");
-  const start = parseFutureDate(startInput);
-
-  const branch = await Branch.findByPk(branch_id, { include: [{ model: Barbershop }] });
-  if (!branch) throw new NotFoundError('Filial não encontrada');
-
-  const barber = await Barber.findByPk(barber_id);
-  if (!barber) throw new NotFoundError('Barbeiro não encontrado');
-  if (String(barber.branch_id) !== String(branch_id)) {
-    throw new ValidationError('Este barbeiro não pertence à filial selecionada');
-  }
-
-  const service = await Service.findByPk(service_id);
-  if (!service) throw new NotFoundError('Serviço não encontrado');
-  if (!service.active) throw new ValidationError('Este serviço não está disponível para agendamento');
-  if (String(service.barbershop_id) !== String(branch.barbershop_id)) {
-    throw new ValidationError('Este serviço não pertence à barbearia da filial selecionada');
-  }
-  if (!(await performsService(barber.id, service.id))) {
-    throw new ValidationError('Este barbeiro não realiza o serviço selecionado');
-  }
-
-  const actsAsStaff =
-    ownsBarbershop(currentUser, branch.Barbershop) || String(barber.user_id) === String(currentUser.id);
-
-  let clientId;
-  if (actsAsStaff) {
-    if (!isPositiveInt(payload.user_id)) {
-      throw new ValidationError("Campo 'user_id' (cliente) é obrigatório ao agendar pela barbearia");
-    }
-    clientId = Number(payload.user_id);
-  } else {
-    // Modo cliente: a identidade vem do token, nunca do body (SEC-04).
-    clientId = currentUser.id;
-  }
-
-  const client = await User.findByPk(clientId, { attributes: ['id'] });
-  if (!client) throw new NotFoundError('Cliente não encontrado');
-
-  const appointment = await appointmentRepository.create({
-    user_id: clientId,
-    barber_id: Number(barber_id),
-    service_id: Number(service_id),
-    branch_id: Number(branch_id),
-    start_at: start,
-    end_at: addMinutes(start, service.duration),
-    duration_min: service.duration,
-    price_snapshot: service.price,
-    service_name_snapshot: service.name,
-    notes: payload.notes ? String(payload.notes).trim() : null,
-    source: payload.source || 'web',
-    status: INITIAL_STATUS,
-  });
-
-  return appointmentRepository.findById(appointment.id);
-};
+/** BE-14: criação com lock, revalidação do horário e Idempotency-Key (ver bookingService). */
+const create = (payload, currentUser, options) => bookingService.create(payload, currentUser, options);
 
 const updateStatus = async (id, status, currentUser) => {
   if (!allowedStatus.includes(status)) {

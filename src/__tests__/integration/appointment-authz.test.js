@@ -6,6 +6,8 @@ const {
   createUser,
   createTenant,
   createAppointment,
+  openAllWeek,
+  slotAt,
   loginAs,
   bearer,
   sequelize,
@@ -30,7 +32,7 @@ describe('BE-04 — agendamentos', () => {
     barber_id: tenant.barber.id,
     service_id: tenant.service.id,
     branch_id: tenant.branch.id,
-    appointment_date: inDays(3),
+    appointment_date: slotAt(3),
     ...extra,
   });
 
@@ -38,6 +40,8 @@ describe('BE-04 — agendamentos', () => {
     await resetDatabase();
     a = await createTenant({ name: 'A' });
     b = await createTenant({ name: 'B' });
+    await openAllWeek(a.branch);
+    await openAllWeek(b.branch);
     alice = await createUser({ name: 'Alice' });
     bob = await createUser({ name: 'Bob' });
     aliceToken = await loginAs(alice);

@@ -13,7 +13,9 @@ const {
   Appointment,
   BarberService,
   Subscription,
+  BranchOpeningHour,
 } = require('../../models');
+const time = require('../../shared/time');
 
 const DEFAULT_PASSWORD = 'Tesoura#Navalha9';
 let sequence = 0;
@@ -97,7 +99,19 @@ const createAppointment = async ({ tenant, client, date, status = 'confirmado', 
   });
 };
 
+/** BE-13/14: abre a filial todos os dias (horário local). Sem isso não há horários livres. */
+const openAllWeek = (branch, opens = '08:00', closes = '20:00') =>
+  BranchOpeningHour.bulkCreate(
+    [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, opens_at: opens, closes_at: closes, branch_id: branch.id }))
+  );
+
+/** Início de horário válido (grade de 15 min) daqui a N dias, no fuso da filial. ISO UTC. */
+const slotAt = (daysAhead = 3, hhmm = '10:00', tz = time.DEFAULT_TIMEZONE) =>
+  time.localToUtc(time.addDays(time.todayIn(tz), daysAhead), time.timeToMinutes(hhmm), tz).toISOString();
+
 module.exports = {
+  openAllWeek,
+  slotAt,
   app,
   request,
   DEFAULT_PASSWORD,

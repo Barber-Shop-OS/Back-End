@@ -19,7 +19,8 @@ module.exports = {
   byId: validate({ params: idParams }),
   create: validate({
     body: Joi.object({
-      barber_id: id().required(),
+      // Ausente = "sem preferência" (BE-14): o servidor escolhe o barbeiro livre.
+      barber_id: id(),
       service_id: id().required(),
       branch_id: id().required(),
       start_at: isoDate(),

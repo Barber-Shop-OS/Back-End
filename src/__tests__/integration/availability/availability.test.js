@@ -105,10 +105,11 @@ describe('BE-13 — GET /api/availability', () => {
     expect((await request(app).get('/api/availability').query({ date: targetDate })).status).toBe(400);
   });
 
-  it('filial/serviço inexistentes ou de outra barbearia → 404; serviço inativo → 400', async () => {
+  it('filial/serviço inexistentes → 404; serviço de outra barbearia ou inativo → 400', async () => {
     expect((await query({ branch_id: 9999 })).status).toBe(404);
+    expect((await query({ service_id: 9999 })).status).toBe(404);
     const otherTenant = await createTenant();
-    expect((await query({ service_id: otherTenant.service.id })).status).toBe(404);
+    expect((await query({ service_id: otherTenant.service.id })).status).toBe(400);
     await Service.update({ active: false }, { where: { id: tenant.service.id } });
     expect((await query()).status).toBe(400);
   });

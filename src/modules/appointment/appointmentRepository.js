@@ -21,8 +21,9 @@ const findAll = async (where = {}, options = {}) =>
     distinct: true,
   });
 
-const findById = async (id, includeOptions = []) =>
+const findById = async (id, includeOptions = [], options = {}) =>
   Appointment.findByPk(id, {
+    ...options,
     include: includeOptions.length ? includeOptions : defaultInclude(),
   });
 

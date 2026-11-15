@@ -38,7 +38,22 @@ const paymentLimiter = rateLimit({
   skip: () => isTestEnv,
 });
 
+// SEC-21: cliente cria no máximo 10 agendamentos por hora (por conta). Equipe não tem limite.
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => `user:${req.user.id}`,
+  message: {
+    code: 'RATE_LIMITED',
+    message: 'Muitos agendamentos em pouco tempo. Tente novamente mais tarde.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => isTestEnv || !req.user || req.user.role !== 'cliente',
+});
+
 module.exports = {
+  bookingLimiter,
   authLimiter,
   apiLimiter,
   paymentLimiter,

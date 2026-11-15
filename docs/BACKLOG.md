@@ -171,7 +171,7 @@
 - **Testes:** unitários de `computeSlots` cobrindo: dia fechado, feriado, almoço, serviço de 45 min no fim do expediente, troca de horário de verão inexistente no Brasil mas timezone diferente (ex.: `America/Manaus`), slot no passado.
 - **Aceite:** slots nunca se sobrepõem a agendamentos/bloqueios; resposta < 300 ms para 1 filial/10 barbeiros.
 
-### [ ] BE-14 — Criação de agendamento à prova de concorrência
+### [x] BE-14 — Criação de agendamento à prova de concorrência
 - **Depende de:** BE-13
 - **Fazer:** `POST /api/appointment` dentro de transação: `SELECT ... FOR UPDATE` na linha do barbeiro, revalida o slot com o mesmo `computeSlots`, checa sobreposição (`start_at < :end AND end_at > :start AND status='confirmado'`), cria. Conflito → `409 SLOT_TAKEN`. Header `Idempotency-Key` opcional (tabela `idempotency_keys`, TTL 24 h) para evitar duplo clique/retry do mobile. Limite anti-abuso: cliente com no máximo 3 agendamentos futuros por barbearia (`409 TOO_MANY_ACTIVE_APPOINTMENTS`) `[SEC-21]`. "Sem preferência" escolhe o barbeiro livre com menos agendamentos no dia.
 - **Testes:** integração com MySQL disparando 10 requisições simultâneas no mesmo slot → exatamente 1 sucesso.

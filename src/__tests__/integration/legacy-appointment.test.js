@@ -16,7 +16,9 @@ const {
   BarberService,
 } = require('../../models');
 
-const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+const { openAllWeek, slotAt } = require('../helpers/factories');
+
+const FUTURE_DATE = slotAt(7);
 
 describe('Appointment integration', () => {
   let clientToken;
@@ -57,6 +59,8 @@ describe('Appointment integration', () => {
 
     branch = await Branch.create({ name: 'Centro', barbershop_id: barbershop.id, address_id: address.id });
     otherBranch = await Branch.create({ name: 'Zona Sul', barbershop_id: barbershop.id, address_id: address2.id });
+    await openAllWeek(branch);
+    await openAllWeek(otherBranch);
 
     barber = await Barber.create({ user_id: barberUser.id, branch_id: branch.id, bio: 'Especialista' });
     service = await Service.create({
