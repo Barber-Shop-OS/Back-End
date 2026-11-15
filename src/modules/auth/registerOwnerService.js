@@ -9,6 +9,8 @@ const { assertStrongPassword } = require('../../shared/passwordPolicy');
 const { normalizePhone } = require('../../shared/phone');
 const { isValidSlug } = require('../../shared/slug');
 const mailer = require('../../shared/mailer');
+const templates = require('../../shared/emailTemplates');
+const { TRIAL_DAYS } = require('../../shared/plans');
 const { pickFields } = require('../../shared/pickFields');
 const subscriptionService = require('../subscription/subscriptionService');
 const logger = require('../../utils/logger');
@@ -23,8 +25,12 @@ const onOwnerRegistered = (fn) => afterRegisterHooks.push(fn);
 const sendWelcome = (user, barbershop) =>
   mailer.send({
     to: user.email,
-    subject: `Bem-vindo ao BarberOS, ${user.name.split(' ')[0]}!`,
-    text: `Sua barbearia "${barbershop.name}" foi criada com 14 dias de teste grátis. Próximo passo: cadastrar sua primeira filial.`,
+    ...templates.render('welcome', {
+      first_name: user.name.split(' ')[0],
+      barbershop_name: barbershop.name,
+      trial_days: TRIAL_DAYS,
+      dashboard_url: `${process.env.APP_URL || 'http://localhost:5173'}/dashboard`,
+    }),
   });
 
 const registerOwner = async (input) => {

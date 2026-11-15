@@ -11,6 +11,7 @@ const { assertStrongPassword } = require('../../shared/passwordPolicy');
 const { signAccessToken } = require('../../shared/tokens');
 const { sanitizeUser } = require('../../shared/sanitizeUser');
 const mailer = require('../../shared/mailer');
+const templates = require('../../shared/emailTemplates');
 const subscriptionService = require('../subscription/subscriptionService');
 const config = require('../../config/config');
 const { AppError, ForbiddenError, NotFoundError, ConflictError, UnauthorizedError, CODES } = require('../../utils/errorHandler');
@@ -38,11 +39,16 @@ const serialize = (invitation) => ({
   created_at: invitation.created_at,
 });
 
+// Enviado na hora (não pela fila): o token só existe no e-mail, nunca no banco [SEC-26].
 const sendInvite = (invitation, token, branch) =>
   mailer.send({
     to: invitation.email,
-    subject: `Convite para trabalhar na ${branch.Barbershop.name}`,
-    text: `Você foi convidado para atender na filial ${branch.name} da ${branch.Barbershop.name}. Aceite em: ${appUrl()}/convite/${token} (válido por ${TTL_DAYS} dias).`,
+    ...templates.render('invitation', {
+      barbershop_name: branch.Barbershop.name,
+      branch_name: branch.name,
+      accept_url: `${appUrl()}/convite/${token}`,
+      ttl_days: TTL_DAYS,
+    }),
   });
 
 const issue = async (invitation, branch, transaction) => {

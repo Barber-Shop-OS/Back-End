@@ -1,0 +1,6 @@
+<!-- subject: Agendamento cancelado: {{service_name}} em {{date_label}} -->
+<h1 style="font-size:20px;margin:0 0 16px;">Agendamento cancelado</h1>
+<p>Olá, {{client_name}}.</p>
+<p>O agendamento de <strong>{{service_name}}</strong> com {{barber_name}} na {{barbershop_name}} em {{date_label}} às {{time_label}} foi cancelado.</p>
+{{#if reason}}<p>Motivo: {{reason}}</p>{{/if}}
+<p><a href="{{booking_url}}">Agendar outro horário</a></p>

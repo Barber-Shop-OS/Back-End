@@ -1,0 +1,7 @@
+<!-- subject: Lembrete: {{service_name}} {{when_label}} às {{time_label}} -->
+<h1 style="font-size:20px;margin:0 0 16px;">Seu horário está chegando</h1>
+<p>Olá, {{client_name}}!</p>
+<p>Lembrete do seu agendamento na <strong>{{barbershop_name}}</strong> {{when_label}}, {{date_label}} às {{time_label}}, com {{barber_name}}.</p>
+<p>Endereço: {{branch_name}} — {{address_label}}</p>
+{{#if can_still_cancel}}<p>Não vai conseguir ir? Cancele ou reagende até {{can_cancel_until_label}}.</p>{{/if}}
+<p><a href="{{manage_url}}">Ver meus agendamentos</a></p>

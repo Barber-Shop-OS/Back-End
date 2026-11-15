@@ -19,6 +19,7 @@ const SubscriptionEvent = require('./subscriptionEvent');
 const Invitation = require('./invitation');
 const IdempotencyKey = require('./idempotencyKey');
 const AppointmentEvent = require('./appointmentEvent');
+const Job = require('./job');
 
 // ============================================
 // User associations
@@ -168,6 +169,7 @@ Branch.hasMany(Invitation, { foreignKey: 'branch_id', onDelete: 'CASCADE' });
 
 module.exports = {
   sequelize,
+  Job,
   AppointmentEvent,
   IdempotencyKey,
   Invitation,

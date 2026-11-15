@@ -1,6 +1,6 @@
 // BE-14: criação de agendamento à prova de concorrência.
 //
-// Dentro de uma transação READ COMMITTED (MySQL):
+// Dentro de uma transação READ COMMITTED (MySQL — ver src/shared/transaction.js):
 //   1. trava a linha do cliente (serializa o limite de agendamentos ativos e o Idempotency-Key);
 //   2. trava as linhas dos barbeiros candidatos (ordem por id → sem deadlock);
 //   3. revalida o horário com o mesmo computeSlots do GET /availability (BE-13);
@@ -9,12 +9,13 @@
 // agendamento que outra transação acabou de gravar (em REPEATABLE READ o snapshot seria antigo).
 // SQLite (testes) serializa escritas sozinho e ignora FOR UPDATE.
 const crypto = require('crypto');
-const { Op, Transaction } = require('sequelize');
-const { sequelize, User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey } = require('../../models');
+const { Op } = require('sequelize');
+const { User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey } = require('../../models');
 const availability = require('../availability/availabilityService');
 const { performsService } = require('../barber/barberRepository');
 const { ownsBarbershop } = require('../../shared/authz');
 const { present } = require('./appointmentPresenter');
+const { lockingTransaction } = require('../../shared/transaction');
 const time = require('../../shared/time');
 const { ValidationError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 
@@ -29,20 +30,6 @@ const createHooks = [];
 const onCreate = (fn) => createHooks.push(fn);
 
 const isPositiveInt = (value) => Number.isInteger(Number(value)) && Number(value) > 0;
-
-// SQLite (só testes) tem uma única conexão e não aceita transações simultâneas: lá as transações de
-// agenda são enfileiradas em processo. No MySQL quem serializa é o FOR UPDATE.
-let sqliteQueue = Promise.resolve();
-
-/** Transação com locks de linha; READ COMMITTED no MySQL. */
-const lockingTransaction = (fn) => {
-  if (sequelize.getDialect() === 'mysql') {
-    return sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, fn);
-  }
-  const run = sqliteQueue.then(() => sequelize.transaction(fn));
-  sqliteQueue = run.catch(() => {});
-  return run;
-};
 
 const parseFutureDate = (value, now) => {
   const date = new Date(value);

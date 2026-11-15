@@ -187,7 +187,7 @@
   - Tabela `appointment_events` (histórico: quem, quando, de→para) — base de BE-36.
 - **Aceite:** testes unitários da máquina de estados para cada papel × estado; 23h59 antes → 409 para cliente.
 
-### [ ] BE-16 — Notificações por e-mail e fila de jobs
+### [x] BE-16 — Notificações por e-mail e fila de jobs
 - **Depende de:** BE-15
 - **Fazer:**
   - `src/shared/mailer.js` (nodemailer já instalado; SMTP de provedor transacional — Resend/SES/Brevo via env). Templates pt-BR em `src/templates/email/*.html` (confirmação, cancelamento, reagendamento, lembrete, boas-vindas, convite, reset, verificação, cobrança).
@@ -195,6 +195,7 @@
   - Lembretes: 24 h e 2 h antes (agendados na criação; removidos/reagendados no cancel/reschedule).
   - Anexo `.ics` na confirmação.
 - **Aceite:** com `MAIL_DRIVER=log` os e-mails são logados em teste; cancelar remove os lembretes pendentes.
+- **Nota (2026-11-15):** agendador do worker implementado com `setInterval` de 60 s (`src/jobs/worker.js#start`) em vez de `node-cron` — mesmo efeito, sem dependência nova; trocar se for preciso expressão cron. Convite e boas-vindas saem na hora (não pela fila) para o token do convite nunca ir ao banco [SEC-26].
 
 ### [x] BE-17 — Endereço v2
 - **Depende de:** BE-03

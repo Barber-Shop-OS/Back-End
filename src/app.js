@@ -11,6 +11,8 @@ const { apiLimiter } = require('./middlewares/rateLimitMiddleware');
 const { swaggerUi, specs } = require('./config/swagger');
 
 require("./models/index");
+// BE-16: e-mails de agendamento e handlers da fila de jobs.
+require("./modules/notification/appointmentNotifications").register();
 const app = express();
 
 // Middleware
