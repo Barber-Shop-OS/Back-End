@@ -11,7 +11,7 @@ module.exports = (err, req, res, next) => {
   const { status, body } = toErrorResponse(err);
   // BE-42: erro interno leva o request_id para o suporte achar o log.
   if (status >= 500 && req.id) body.request_id = req.id;
-  const context = { method: req.method, url: req.originalUrl, status, code: body.code };
+  const context = { method: req.method, url: require('./requestLoggerMiddleware').safeUrl(req.originalUrl), status, code: body.code };
 
   if (status >= 500) {
     logger.error('Erro não tratado', { ...context, error: err && err.message, stack: err && err.stack });

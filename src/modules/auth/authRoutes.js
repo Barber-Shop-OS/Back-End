@@ -2,7 +2,7 @@
 const express = require('express');
 const authController = require('./authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
-const { authLimiter, emailIpLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
+const { authLimiter, emailIpLimiter, emailTargetLimiter, loginAccountLimiter } = require('../../middlewares/rateLimitMiddleware');
 const passwordResetService = require('./passwordResetService');
 const emailVerificationService = require('./emailVerificationService');
 const googleAuthService = require('./googleAuthService');
@@ -134,7 +134,7 @@ router.post('/register-owner', authLimiter, schemas.registerOwner, authControlle
  *             example:
  *               message: Credenciais inválidas
  */
-router.post('/login', authLimiter, schemas.login, authController.login);
+router.post('/login', authLimiter, schemas.login, loginAccountLimiter, authController.login);
 
 /**
  * @swagger

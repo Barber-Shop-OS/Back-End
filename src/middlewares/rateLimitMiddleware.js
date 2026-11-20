@@ -74,7 +74,21 @@ const emailTargetLimiter = rateLimit({
   skip: () => isTestEnv,
 });
 
+// SEC-07: brute force distribuído numa mesma conta — 5 falhas de login por e-mail a cada 15 min
+// (logins com sucesso não contam). Store em memória: com várias instâncias, usar store compartilhado.
+const loginAccountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `login:${String((req.body && req.body.email) || '').trim().toLowerCase()}`,
+  message: { code: 'RATE_LIMITED', message: 'Muitas tentativas para esta conta. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv && process.env.RATE_LIMIT_IN_TESTS !== 'true',
+});
+
 module.exports = {
+  loginAccountLimiter,
   emailIpLimiter,
   emailTargetLimiter,
   bookingLimiter,

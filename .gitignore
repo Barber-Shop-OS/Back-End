@@ -1,8 +1,16 @@
 # Dependencies
 /node_modules
 
-# Environment variables
+# Environment variables (só o exemplo é versionado)
 .env
+.env.*
+!.env.example
+
+# Cópias de conflito do OneDrive
+*-my-pc.*
+
+# Cobertura de testes
+coverage/
 
 # Logs
 npm-debug.log

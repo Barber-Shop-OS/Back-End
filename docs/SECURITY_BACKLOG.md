@@ -65,7 +65,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** DTOs públicos explícitos (allowlist de campos) em `src/modules/*/dto.js`; nunca `res.json(model)` em rota pública.
 - **Teste:** snapshot das chaves da resposta pública não contém `email`, `phone`, `role`, `password`.
 
-### [ ] SEC-07 — Rate limit contornável e sem proteção por conta — **Alto** → BE-42
+### [x] SEC-07 — Rate limit contornável e sem proteção por conta — **Alto** → BE-42
+- **Fechado (2026-11-19):** `TRUST_PROXY` (BE-42); limite de falhas de login por e-mail (5/15 min, sucesso não conta) além do por IP; limites próprios em forgot-password, resend-verification, availability e criação de agendamento. Store em memória — com mais de uma instância, trocar por store compartilhado (Redis/MySQL).
 - **Onde:** `rateLimitMiddleware.js` (store em memória, por IP), `app.js` sem `trust proxy`.
 - **Ataque:** atrás de proxy (Render/Cloudflare) todos os clientes compartilham o IP do proxy (bloqueio de todos) ou o limitador usa o IP errado; com várias instâncias o limite multiplica; brute force distribuído numa mesma conta não é contido.
 - **Correção:** `app.set('trust proxy', <n de proxies>)`; store compartilhado (`rate-limit-redis` ou tabela MySQL) quando houver > 1 instância; limitador de login por **e-mail** (5 falhas/15 min → atraso progressivo) além de por IP; limites específicos para `forgot-password`, `resend-verification`, `availability`, `POST /appointment`.
@@ -96,7 +97,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Onde:** `src/config/sequelize.js` (`rejectUnauthorized: false`).
 - **Correção:** `ca` do provedor via env (`DB_SSL_CA`), `rejectUnauthorized: true`.
 
-### [ ] SEC-14 — Segredos e defaults no repositório — **Médio**
+### [x] SEC-14 — Segredos e defaults no repositório — **Médio**
+- **Fechado (2026-11-19, Back-End):** compose sem defaults sensíveis (`${VAR:?}`), app com usuário não-root, `sequelize-config` sem senha padrão, `.gitignore` com `.env.*` e `*-my-pc.*`; gitleaks no CI. Front/Mobile seguem no backlog deles.
 - **Onde:** `docker-compose.yml` (`rootpassword`, `your_jwt_secret`, app conecta como `root`); `Front-End/src/config/api.ts` com Google Client ID fixo (é público por natureza, mas acopla ambiente — FE-03); arquivos locais não versionados `*-my-pc.*` no Front-End.
 - **Correção:** compose sem defaults sensíveis (`${VAR:?obrigatório}`), usuário MySQL de aplicação; varredura `gitleaks` no histórico dos 3 repos e no CI; `.gitignore` com `*-my-pc.*`, `.env*` exceto `.env.example`.
 - **Teste:** job `gitleaks` no CI dos três repositórios.
@@ -126,7 +128,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Fazer:** arquivo `public/_headers` (ou Worker) com: `Content-Security-Policy` (`default-src 'self'; script-src 'self' https://accounts.google.com; connect-src 'self' <API_URL>; img-src 'self' data: <R2_URL>; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`), `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: geolocation=(self), camera=()`. Validar com securityheaders.com.
 - **Front:** proibir `dangerouslySetInnerHTML` (regra ESLint) e sanitizar qualquer texto vindo do dono (descrição da barbearia) — React escapa por padrão, manter assim.
 
-### [ ] SEC-18 — Cabeçalhos e superfície da API — **Médio**
+### [x] SEC-18 — Cabeçalhos e superfície da API — **Médio**
+- **Fechado (2026-11-19):** helmet (HSTS incluso), sem `X-Powered-By`, Swagger fora de produção e `GET /` sem versão — com teste (`security-hardening.test.js`). HTTPS/redirect no proxy (runbook).
 - `helmet` já ativo — manter; adicionar `app.disable('x-powered-by')` (helmet cobre, confirmar); Swagger só fora de produção (já está — adicionar teste); `GET /` não revelar versão; HTTPS obrigatório (redirect/HSTS no proxy).
 
 ### [ ] SEC-19 — Segurança do app mobile — **Alto** → MOB
@@ -139,7 +142,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Parcial (2026-11-15, Sprint C):** máximo de 3 agendamentos futuros por cliente/barbearia (`409 TOO_MANY_ACTIVE_APPOINTMENTS`), 10 criações/hora por conta de cliente, rate limit de 60/min e `Cache-Control` 30 s em `GET /availability` e `GET /search/branches`, `Idempotency-Key` na criação (BE-13, BE-14, BE-25). **Falta:** e-mail verificado ou telefone para agendar [DECISÃO PENDENTE], faltas visíveis ao dono e bloqueio de cliente (BE-23), captcha se surgir abuso.
 - Limite de agendamentos futuros por cliente/barbearia (3); limite de criação por conta/IP (ex.: 10/h); exigir e-mail verificado **ou** telefone para agendar [DECISÃO PENDENTE]; contagem de faltas (`nao_compareceu`) visível ao dono e opção de bloquear cliente na barbearia; `GET /availability` com rate limit e cache curto; captcha (Cloudflare Turnstile) no cadastro e no agendamento sem conta se surgir abuso.
 
-### [ ] SEC-22 — Uploads — **Médio** → BE-34
+### [x] SEC-22 — Uploads — **Médio** → BE-34
+- **Fechado (2026-11-19, BE-34):** magic bytes, sem SVG/HTML, ≤ 2 MB, chave do servidor, bucket próprio. **Recomendado depois:** reprocessar com `sharp` para remover EXIF.
 - Tipos permitidos por magic bytes (jpeg/png/webp), sem SVG/HTML; ≤ 2 MB; nome gerado pelo servidor; bucket sem listagem; servir de domínio separado da aplicação; remover EXIF (reprocessar com `sharp`) [recomendado].
 
 ### [x] SEC-23 — Suíte automatizada de segurança — **Alto** → BE-09
@@ -166,7 +170,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [ ] SEC-28 — Monitoramento e resposta a incidentes — **Médio** → BE-42
 - Alertas: pico de 401/403/429, falhas de assinatura de webhook, erros 5xx; `docs/security/incident-response.md` (quem acionar, como revogar tokens em massa — incrementar `token_version` global —, como rotacionar chaves, como comunicar titulares/ANPD em até 3 dias úteis quando aplicável).
 
-### [ ] SEC-29 — Logs seguros — **Baixo**
+### [x] SEC-29 — Logs seguros — **Baixo**
+- **Fechado (2026-11-19):** logs sem corpo; `authorization`, senhas, tokens, CPF/CNPJ mascarados; URL do log sem token de convite nem `token/secret` na query (`safeUrl`).
 - `requestLoggerMiddleware` já não loga corpo — manter e testar; scrubbing de `authorization`, `password`, `token`, `cpf`, `cnpj` em logs e no Sentry; não logar query string de rotas com token (`/invitations/:token`, `verify-email?token=`).
 
 ---
