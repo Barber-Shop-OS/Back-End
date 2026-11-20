@@ -19,6 +19,8 @@ const TEMPLATES = Object.freeze([
   'password-reset',
   'email-verification',
   'billing',
+  'account-notice',
+  'email-change',
 ]);
 
 const escapeHtml = (value) =>

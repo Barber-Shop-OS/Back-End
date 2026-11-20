@@ -2,7 +2,9 @@
 const express = require('express');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const validate = require('../../middlewares/validate');
-const { Joi, pagination } = require('../../shared/schemas');
+const { Joi, pagination, email, password } = require('../../shared/schemas');
+const { authLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
+const accountSecurityService = require('./accountSecurityService');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
@@ -72,6 +74,59 @@ router.get(
   '/appointments',
   schemas.appointments,
   handle(async (req, res) => success(res, await meService.listAppointments(req.user.id, req.query, req.user)))
+);
+
+/**
+ * @swagger
+ * /me/password:
+ *   post:
+ *     summary: Trocar minha senha
+ *     description: Derruba as outras sessões e devolve um token novo para esta. Conta só-Google pode definir a primeira senha sem current_password.
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [new_password]
+ *             properties: { current_password: { type: string }, new_password: { type: string, minLength: 8 } }
+ *     responses:
+ *       200: { description: "{ message, token }" }
+ *       400: { description: INVALID_CURRENT_PASSWORD / WEAK_PASSWORD }
+ * /me/email:
+ *   post:
+ *     summary: Pedir troca de e-mail (confirmação pelo novo endereço)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [new_email, password]
+ *             properties: { new_email: { type: string }, password: { type: string } }
+ *     responses:
+ *       202: { description: Link enviado ao novo e-mail; aviso ao antigo }
+ *       400: { description: INVALID_CURRENT_PASSWORD / PASSWORD_REQUIRED }
+ *       409: { description: EMAIL_IN_USE }
+ */
+router.post(
+  '/password',
+  authLimiter,
+  validate({ body: Joi.object({ current_password: Joi.string().max(72), new_password: password().required() }) }),
+  handle(async (req, res) => success(res, await accountSecurityService.changePassword(req.user.id, req.body)))
+);
+router.post(
+  '/email',
+  authLimiter,
+  emailTargetLimiter,
+  validate({ body: Joi.object({ new_email: email().required(), password: Joi.string().max(72).required() }) }),
+  handle(async (req, res) => success(res, await accountSecurityService.requestEmailChange(req.user.id, req.body), 202))
 );
 
 module.exports = router;

@@ -267,10 +267,11 @@
 - **Aceite:** token de outro `aud` → 401.
 - **Feito:** `login`/`signup-client` criam cliente se não houver conta; `signup-owner` exige `phone` e `barbershop.name` e reaproveita o cadastro do dono (trial). Conta existente com o mesmo e-mail é vinculada e marcada como verificada. Conta só-Google recebe 401 genérico no login por senha (pode definir senha via recuperação). **Pendente:** configurar `GOOGLE_CLIENT_ID` nos ambientes.
 
-### [ ] BE-29 — Trocar senha e e-mail
+### [x] BE-29 — Trocar senha e e-mail
 - **Depende de:** BE-01, BE-27
 - **Fazer:** `POST /api/me/password {current_password, new_password}` (incrementa `token_version`); `POST /api/me/email {new_email, password}` → envia verificação ao novo e-mail e aviso ao antigo; troca só após confirmação. Política de senha (BE-38): ≥ 8 caracteres, não pode ser igual ao e-mail.
 - **Aceite:** senha atual errada → 400 `INVALID_CURRENT_PASSWORD`; sessões antigas caem.
+- **Feito:** troca de senha devolve token novo para a sessão atual; conta só-Google define a primeira senha sem a atual. Confirmação da troca de e-mail em `POST /api/auth/confirm-email-change` (link `APP_URL/confirmar-email?token=`, 24 h). Avisos de segurança ao e-mail antigo (template `account-notice`).
 
 ### [ ] BE-30 — Refresh token, logout e sessões `[SEC-15]`
 - **Depende de:** BE-02

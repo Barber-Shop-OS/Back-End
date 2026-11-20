@@ -298,4 +298,30 @@ router.post('/google', authLimiter, schemas.google, async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/confirm-email-change:
+ *   post:
+ *     summary: Confirma a troca de e-mail com o token enviado ao novo endereço
+ *     description: Troca o e-mail, marca como verificado, derruba as sessões e avisa o e-mail antigo.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { type: object, required: [token], properties: { token: { type: string } } }
+ *     responses:
+ *       200: { description: E-mail alterado }
+ *       409: { description: EMAIL_IN_USE (alguém cadastrou o e-mail nesse meio-tempo) }
+ *       410: { description: TOKEN_INVALID_OR_EXPIRED }
+ */
+router.post('/confirm-email-change', authLimiter, schemas.verifyEmail, async (req, res, next) => {
+  try {
+    return res.status(200).json(await require('../me/accountSecurityService').confirmEmailChange(req.body.token));
+  } catch (error) {
+    return next(error);
+  }
+});
+
 module.exports = router;

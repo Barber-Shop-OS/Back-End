@@ -15,6 +15,7 @@ const MATRIX = {
   'POST /api/auth/reset-password': 'public',
   'POST /api/auth/verify-email': 'public',
   'POST /api/auth/google': 'public',
+  'POST /api/auth/confirm-email-change': 'public',
   'POST /api/auth/resend-verification': 'auth',
   'GET /api/auth/me': 'auth',
 
@@ -22,6 +23,8 @@ const MATRIX = {
   'PATCH /api/me': 'auth',
   'GET /api/me/barbershops': 'auth',
   'GET /api/me/appointments': 'auth',
+  'POST /api/me/password': 'auth',
+  'POST /api/me/email': 'auth',
   'GET /api/user': ['admin'],
   'GET /api/user/:id': 'auth',
   'PUT /api/user/:id': 'auth',

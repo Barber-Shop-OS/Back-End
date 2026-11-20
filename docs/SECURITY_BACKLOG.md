@@ -153,8 +153,9 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [ ] SEC-25 — Banco e infraestrutura — **Médio** → BE-44
 - Usuário de aplicação com `SELECT/INSERT/UPDATE/DELETE` apenas; migrations com usuário separado; banco sem acesso público (allowlist de IP/VPC); backups criptografados com teste de restore trimestral; rotação de segredos documentada (JWT, DB, AbacatePay, SMTP); segredos só no gerenciador do provedor.
 
-### [ ] SEC-26 — Tokens de uso único (reset, verificação, convite) — **Alto** → BE-22, BE-26, BE-27
+### [x] SEC-26 — Tokens de uso único (reset, verificação, convite) — **Alto** → BE-22, BE-26, BE-27
 - 32 bytes de `crypto.randomBytes`, armazenados como SHA-256, expiração curta, uso único, invalidação ao trocar senha/e-mail; links nunca com o e-mail em texto; troca de senha derruba todas as sessões (`token_version`); aviso por e-mail em troca de senha/e-mail.
+- **Fechado (2026-11-19):** `user_tokens` (BE-26/27/29) + convites (BE-22): SHA-256, expiração, uso único com consumo atômico, link anterior invalidado, `token_version` derrubando sessões e avisos de segurança por e-mail.
 
 ### [ ] SEC-27 — Contas privilegiadas — **Médio** → BE-41
 - Admin criado só por script CLI; 2FA (TOTP) obrigatório para admin e opcional para owner [DECISÃO PENDENTE para owner]; log de auditoria de toda ação admin (BE-36); alerta por e-mail ao owner quando um novo barbeiro/gerente é adicionado.

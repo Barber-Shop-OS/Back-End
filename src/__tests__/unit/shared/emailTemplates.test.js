@@ -31,6 +31,8 @@ const SAMPLES = {
   'appointment-reminder': appointmentData,
   welcome: { first_name: 'Carlos', barbershop_name: 'Navalha', trial_days: 14, dashboard_url: 'https://app.test/dashboard' },
   invitation: { barbershop_name: 'Navalha', branch_name: 'Centro', accept_url: 'https://app.test/convite/abc', ttl_days: 7 },
+  'account-notice': { first_name: 'Ana', title: 'Sua senha foi alterada', message: 'A senha da sua conta foi alterada.', app_url: 'https://app.test' },
+  'email-change': { first_name: 'Ana', confirm_url: 'https://app.test/confirmar-email?token=x', ttl_hours: 24 },
   'password-reset': { first_name: 'Ana', reset_url: 'https://app.test/reset/xyz', ttl_minutes: 30 },
   'email-verification': { first_name: 'Ana', verify_url: 'https://app.test/verify/xyz', ttl_hours: 24 },
   billing: { title: 'Pagamento recusado', barbershop_name: 'Navalha', first_name: 'Carlos', message: 'Atualize o cartão.', amount_label: '199,00', due_date_label: '', billing_url: 'https://app.test/dashboard' },
@@ -38,7 +40,7 @@ const SAMPLES = {
 
 describe('BE-16 — templates de e-mail', () => {
   it('existem os 9 templates do backlog e todos renderizam assunto, HTML e texto', () => {
-    expect(templates.TEMPLATES).toHaveLength(9);
+    expect(templates.TEMPLATES).toHaveLength(11);
     for (const name of templates.TEMPLATES) {
       const mail = templates.render(name, SAMPLES[name]);
       expect(mail.subject).not.toMatch(/\{\{|\}\}/);
