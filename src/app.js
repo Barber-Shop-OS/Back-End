@@ -21,6 +21,13 @@ require("./modules/subscription/accessControl").register();
 require("./modules/auth/emailVerificationService").register();
 const app = express();
 
+// BE-42 / SEC-07: atrás de proxy (Render, Cloudflare) o IP real vem do X-Forwarded-For. Número de
+// proxies confiáveis em TRUST_PROXY (0 = nenhum, padrão).
+app.set('trust proxy', Number(process.env.TRUST_PROXY || 0));
+app.disable('x-powered-by');
+// BE-42: X-Request-Id em toda requisição/log.
+app.use(require('./middlewares/requestIdMiddleware'));
+
 // Middleware
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
@@ -55,6 +62,18 @@ if (!config.isProduction) {
 // Health check endpoint for hosting platforms such as Render.
 app.get('/', (req, res) => {
 	res.status(200).send('OK');
+});
+
+// BE-42: liveness (processo de pé) e readiness (banco respondendo).
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime_s: Math.round(process.uptime()) }));
+app.get('/ready', async (req, res) => {
+	try {
+		await require('./config/sequelize').authenticate();
+		return res.status(200).json({ status: 'ready', database: 'ok' });
+	} catch (error) {
+		logger.error('[ready] banco indisponível', { message: error.message });
+		return res.status(503).json({ status: 'unavailable', database: 'error' });
+	}
 });
 
 // Routes

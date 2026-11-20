@@ -362,10 +362,11 @@
 - **Fazer:** `/api/admin/*` (role `admin`): listar/buscar barbearias com status de assinatura, suspender/reativar, estender trial, listar usuários, métricas (MRR, ativos, churn, trials). Criação de admin só via script CLI (`npm run create-admin`), nunca via API pública `[SEC-27]`.
 - **Aceite:** owner recebe 403 em todo `/api/admin/*`.
 
-### [ ] BE-42 — Observabilidade e saúde
+### [x] BE-42 — Observabilidade e saúde
 - **Depende de:** BE-08
 - **Fazer:** middleware `request_id` (header `X-Request-Id`, gera UUID se ausente; incluído em logs e respostas de erro); logs JSON em produção; `GET /health` (liveness) e `GET /ready` (checa DB); Sentry opcional (`SENTRY_DSN`) com scrubbing de `Authorization`/`password`/`token`; `app.set('trust proxy', 1)` quando atrás de proxy (Render/Cloudflare) `[SEC-07]`.
 - **Aceite:** todo log de requisição tem `request_id`.
+- **Feito:** `request_id` via AsyncLocalStorage (aparece em todo log da requisição e no corpo dos 500); logs JSON no stdout em produção; mascaramento de campos sensíveis; `GET /health` e `GET /ready`; `TRUST_PROXY`. **Pendente:** Sentry (precisa de `SENTRY_DSN` e da dependência `@sentry/node` — decidir se vale).
 
 ### [ ] BE-43 — Contrato OpenAPI versionado
 - **Depende de:** BE-37
