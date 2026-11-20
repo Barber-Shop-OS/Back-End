@@ -1,5 +1,6 @@
 // Barber service (BE-05): posse por tenant, vínculo com usuário e DTO público sem dados pessoais.
 const { parsePagination, likeContains } = require('../../shared/query');
+const audit = () => require('../audit/auditService');
 const { sequelize, User, Service, Branch } = require('../../models');
 const barberRepository = require('./barberRepository');
 const { assertCanManageBranch, assertCanManageBarber } = require('../../shared/authz');
@@ -210,6 +211,13 @@ const remove = async (id, currentUser, { force } = {}) => {
     }
   });
 
+  await audit().record({
+    action: 'barber.deactivated',
+    entity: 'barber',
+    entityId: id,
+    barbershopId: barber.Branch ? barber.Branch.barbershop_id : null,
+    after: { cancelled_appointments: future.map((appt) => appt.id) },
+  });
   return { cancelled_appointments: future.map((appt) => appt.id) };
 };
 

@@ -10,5 +10,5 @@ module.exports = (req, res, next) => {
   const id = incoming && SAFE_ID.test(incoming) ? incoming : crypto.randomUUID();
   req.id = id;
   res.set('X-Request-Id', id);
-  requestContext.run({ requestId: id }, next);
+  requestContext.run({ requestId: id, ip: req.ip, user: null }, next);
 };

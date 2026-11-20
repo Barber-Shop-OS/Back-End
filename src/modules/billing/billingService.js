@@ -1,6 +1,7 @@
 // BE-32: assinatura do SaaS na AbacatePay (checkout, troca de plano, cancelamento, portal).
 // Regra de ouro: a assinatura só é ATIVADA por webhook (BE-33) — nunca pelo retorno do navegador.
 const { Plan, User } = require('../../models');
+const audit = () => require('../audit/auditService');
 const { assertCanManageBarbershop } = require('../../shared/authz');
 const { normalizeTaxId } = require('../../shared/taxId');
 const subscriptionService = require('../subscription/subscriptionService');
@@ -125,6 +126,7 @@ const checkout = async ({ barbershop_id: barbershopId, plan_code: planCode, tax_
     to: subscription.status,
     payload: { plan_code: plan.code, checkout_id: billing.id },
   });
+  await audit().record({ action: 'subscription.checkout', entity: 'subscription', entityId: subscription.id, barbershopId: barbershop.id, after: { plan_code: plan.code } });
   return { checkout_url: billing.url, checkout_id: billing.id, subscription: summary(subscription) };
 };
 
@@ -143,6 +145,7 @@ const changePlan = async ({ barbershop_id: barbershopId, plan_code: planCode }, 
   const pending = planCode === subscription.plan_code ? null : plan.code;
   await subscription.update({ pending_plan_code: pending });
   await subscriptionService.recordEvent(subscription, 'plan_change.requested', { payload: { plan_code: plan.code } });
+  await audit().record({ action: 'subscription.plan_change', entity: 'subscription', entityId: subscription.id, barbershopId: barbershop.id, before: { plan_code: subscription.plan_code }, after: { plan_code: plan.code } });
   return { subscription: summary(subscription), effective_at: subscription.current_period_end };
 };
 
@@ -158,6 +161,7 @@ const cancel = async ({ barbershop_id: barbershopId }, user, now = new Date()) =
   if (!subscription.cancel_at_period_end) {
     await subscription.update({ cancel_at_period_end: true, cancel_requested_at: now });
     await subscriptionService.recordEvent(subscription, 'cancel.requested', { payload: { at_period_end: subscription.current_period_end } });
+    await audit().record({ action: 'subscription.cancel_requested', entity: 'subscription', entityId: subscription.id, barbershopId: subscription.barbershop_id });
   }
   return { subscription: summary(subscription) };
 };

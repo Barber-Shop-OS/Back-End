@@ -44,9 +44,18 @@ const User = sequelize.define("users", {
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
-    timestamps: false, 
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false,
+    // BE-36: soft delete — conta excluída não loga nem aparece, mas o histórico fica.
+    paranoid: true,
+    deletedAt: 'deleted_at',
   }
 );
 

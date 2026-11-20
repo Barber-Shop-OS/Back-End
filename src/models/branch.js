@@ -51,9 +51,18 @@ const Branch = sequelize.define('Branch', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+  deleted_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'branches',
-  timestamps: false,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: false,
+  // BE-36: soft delete — excluir não apaga histórico.
+  paranoid: true,
+  deletedAt: 'deleted_at',
 });
 
 module.exports = Branch;

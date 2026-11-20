@@ -1,5 +1,6 @@
 // Service service (BE-06): serviços por barbearia, dinheiro em centavos/DECIMAL, ativação e soft delete.
 const { parsePagination, likeContains } = require('../../shared/query');
+const audit = () => require('../audit/auditService');
 const { sequelize, Barbershop, Barber, Branch, BarberService } = require('../../models');
 const serviceRepository = require('./serviceRepository');
 const { assertCanManageBarbershop, assertCanManageService, ownsBarbershop } = require('../../shared/authz');
@@ -136,19 +137,22 @@ const create = async (data, currentUser) => {
 };
 
 const update = async (id, data, currentUser) => {
-  await assertCanManageService(currentUser, id);
+  const before = await assertCanManageService(currentUser, id);
   const updateData = normalizeServiceData(pickFields(data, UPDATABLE_FIELDS));
   await serviceRepository.update(id, updateData);
-  return serviceRepository.findById(id);
+  const after = await serviceRepository.findById(id);
+  await audit().recordChange({ action: 'service.updated', entity: 'service', entityId: id, barbershopId: before.barbershop_id, before, after });
+  return after;
 };
 
 /** Soft delete: agendamentos antigos continuam apontando para o serviço. */
 const remove = async (id, currentUser) => {
-  await assertCanManageService(currentUser, id);
+  const service = await assertCanManageService(currentUser, id);
   const ok = await serviceRepository.delete(id);
   if (!ok) {
     throw new NotFoundError('Serviço não encontrado');
   }
+  await audit().record({ action: 'service.deleted', entity: 'service', entityId: id, barbershopId: service.barbershop_id, before: service });
   return true;
 };
 

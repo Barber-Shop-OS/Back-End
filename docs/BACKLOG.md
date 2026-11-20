@@ -332,10 +332,11 @@
 - **Aceite:** testes de cada transição; agendamentos existentes não são apagados.
 - **Feito (2026-11-19):** `entitlements.accessLevel` (full / grace / read_only) é a regra única. Escrita do painel passa por `authz.assertWritable` dentro dos `assertCanManage*` (402 `SUBSCRIPTION_INACTIVE`; leitura, cobrança e exclusões continuam liberadas; equipe ainda pode cancelar atendimentos). Limites: filiais e barbeiros (402 `PLAN_LIMIT_REACHED` com `upgrade_to`). Recursos: `clients_crm` (detalhe/estatísticas de clientes) e `financial_reports` (detalhamento do dashboard; `locked_features`). `/api/me` ganhou `billing_banner` e `billing_banners[]`. Ciclo diário de trials roda no job `billing.daily`. **Pendente:** expurgo de dados após 90 dias (decidir com o responsável).
 
-### [ ] BE-36 — Auditoria e soft delete
+### [x] BE-36 — Auditoria e soft delete
 - **Depende de:** BE-15
 - **Fazer:** `paranoid: true` (`deleted_at`) em barbershops, branches, barbers, services, users. Tabela `audit_logs (actor_id, barbershop_id, action, entity, entity_id, before JSON, after JSON, ip, created_at)` gravada no service em ações sensíveis (troca de role, exclusões, preço, assinatura, pagamentos). `GET /api/audit-logs?barbershop_id` (owner/admin).
 - **Aceite:** excluir serviço não quebra histórico de agendamentos.
+- **Feito:** `deleted_at` (paranoid) em barbearias, filiais e usuários (serviços já tinham; barbeiros usam `active`). Ator, IP e `request_id` vêm do contexto da requisição. Ações auditadas: preço/edição e exclusão de serviço, exclusão de filial/barbearia/usuário, troca de papel, desativação de barbeiro, pagamentos, checkout/troca/cancelamento de assinatura. Includes de histórico usam `paranoid: false`.
 
 ### [x] BE-37 — Padrão de erros com `code`
 - **Depende de:** BE-08

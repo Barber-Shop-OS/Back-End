@@ -3,6 +3,7 @@
 // Ler: os mesmos + o cliente do agendamento. Qualquer outro usuário recebe 404.
 // Listar (financeiro): dono (barbearias dele), barbeiro (próprios atendimentos) ou admin.
 const { Op } = require('sequelize');
+const audit = () => require('../audit/auditService');
 const { Appointment, Barbershop } = require('../../models');
 const { METHODS } = require('../../models/payment');
 const paymentRepository = require('./paymentRepository');
@@ -39,7 +40,7 @@ const create = async (data, currentUser) => {
     throw new ConflictError('Pagamento já registrado para este agendamento', CODES.PAYMENT_ALREADY_REGISTERED);
   }
 
-  return paymentRepository.create({
+  const payment = await paymentRepository.create({
     appointment_id: Number(appointment_id),
     amount: fromCents(toCents(amount)),
     method,
@@ -49,6 +50,8 @@ const create = async (data, currentUser) => {
     branch_id: appointment.branch_id,
     barbershop_id: appointment.Branch ? appointment.Branch.barbershop_id : null,
   });
+  await audit().record({ action: 'payment.created', entity: 'payment', entityId: payment.id, barbershopId: payment.barbershop_id, after: payment });
+  return payment;
 };
 
 const findById = async (id, currentUser) => {
@@ -86,7 +89,16 @@ const updateStatus = async (id, status, currentUser) => {
     payload.paid_at = new Date();
   }
 
-  return paymentRepository.update(id, payload);
+  const updated = await paymentRepository.update(id, payload);
+  await audit().recordChange({
+    action: 'payment.status_changed',
+    entity: 'payment',
+    entityId: id,
+    barbershopId: currentPayment.barbershop_id,
+    before: { status: currentPayment.status },
+    after: { status: updated.status },
+  });
+  return updated;
 };
 
 const findByAppointmentId = async (appointmentId, currentUser) => {

@@ -2,7 +2,8 @@
 const { Appointment, User, Barber, Service, Branch, Barbershop, BarbershopClient } = require('../../models');
 
 const defaultInclude = () => [
-  { model: User, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
+  // paranoid: false → conta/filial excluída (BE-36) continua visível no histórico.
+  { model: User, as: 'client', attributes: ['id', 'name', 'email', 'phone'], paranoid: false },
   // BE-23: cliente da barbearia (inclui cliente rápido sem conta).
   { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'phone', 'email', 'user_id'] },
   {
@@ -16,7 +17,8 @@ const defaultInclude = () => [
   {
     model: Branch,
     attributes: ['id', 'name', 'barbershop_id', 'timezone'],
-    include: [{ model: Barbershop, attributes: ['id', 'owner_id'] }],
+    paranoid: false,
+    include: [{ model: Barbershop, attributes: ['id', 'owner_id'], paranoid: false }],
   },
 ];
 

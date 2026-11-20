@@ -122,7 +122,7 @@ const loadAppointmentContext = (appointmentId) =>
   Appointment.findByPk(appointmentId, {
     include: [
       { model: Barber },
-      { model: Branch, include: [{ model: Barbershop }] },
+      { model: Branch, paranoid: false, include: [{ model: Barbershop, paranoid: false }] },
     ],
   });
 

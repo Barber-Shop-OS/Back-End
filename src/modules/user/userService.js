@@ -1,5 +1,6 @@
 // User service: listagem (admin), leitura/edição do próprio perfil e troca de papel (admin).
 const { parsePagination, likeContains } = require('../../shared/query');
+const audit = () => require('../audit/auditService');
 const userRepository = require('./userRepository');
 const { normalizePhone } = require('../../shared/phone');
 const { sanitizeUser, PRIVATE_USER_FIELDS } = require('../../shared/sanitizeUser');
@@ -115,6 +116,7 @@ const changeRole = async (id, role, currentUser) => {
   }
   // Incrementar token_version derruba as sessões abertas com o papel antigo.
   await userRepository.update(id, { role, token_version: Number(user.token_version || 0) + 1 });
+  await audit().record({ action: 'user.role_changed', entity: 'user', entityId: id, before: { role: user.role }, after: { role } });
   return sanitizeUser(await userRepository.findById(id));
 };
 
@@ -123,6 +125,7 @@ const remove = async (id) => {
   if (!ok) {
     throw new NotFoundError('Usuário não encontrado');
   }
+  await audit().record({ action: 'user.deleted', entity: 'user', entityId: id });
   return true;
 };
 

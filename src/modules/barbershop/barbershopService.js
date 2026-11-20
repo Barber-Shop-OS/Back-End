@@ -1,5 +1,6 @@
 // Barbershop service responsible for search, ownership checks, and CRUD.
 const { parsePagination, likeContains } = require('../../shared/query');
+const audit = () => require('../audit/auditService');
 const { AppError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
 const { Barbershop, Branch, Address } = require('../../models');
 const barbershopRepository = require('./barbershopRepository');
@@ -156,7 +157,9 @@ const remove = async (id) => {
   if (!barbershop) {
     throw new NotFoundError('Barbearia não encontrada');
   }
-  return barbershopRepository.delete(id);
+  const result = await barbershopRepository.delete(id);
+  await audit().record({ action: 'barbershop.deleted', entity: 'barbershop', entityId: id, barbershopId: barbershop.id, before: barbershop });
+  return result;
 };
 
 module.exports = {

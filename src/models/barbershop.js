@@ -39,9 +39,18 @@ const Barbershop = sequelize.define('Barbershop', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+  deleted_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'barbershops',
-  timestamps: false,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: false,
+  // BE-36: soft delete — excluir não apaga histórico.
+  paranoid: true,
+  deletedAt: 'deleted_at',
   hooks: {
     // Sem slug informado, gera um único a partir do nome.
     beforeValidate: async (barbershop, options) => {

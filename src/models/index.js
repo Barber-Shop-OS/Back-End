@@ -25,6 +25,7 @@ const WebhookEvent = require('./webhookEvent');
 const UserToken = require('./userToken');
 const UserIdentity = require('./userIdentity');
 const RefreshToken = require('./refreshToken');
+const AuditLog = require('./auditLog');
 
 // ============================================
 // User associations
@@ -190,8 +191,11 @@ User.hasMany(UserIdentity, { foreignKey: 'user_id', as: 'identities', onDelete: 
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
 
+AuditLog.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
+
 module.exports = {
   sequelize,
+  AuditLog,
   RefreshToken,
   UserIdentity,
   UserToken,

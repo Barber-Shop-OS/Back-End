@@ -1,5 +1,6 @@
 // Branch service: filiais e seus endereços, sempre dentro do tenant do usuário (BE-03).
 const { parsePagination, likeContains } = require('../../shared/query');
+const audit = () => require('../audit/auditService');
 const { sequelize, Address, Barber } = require('../../models');
 const branchRepository = require('./branchRepository');
 const addressService = require('../address/addressService');
@@ -127,8 +128,9 @@ const update = async (id, branchData, addressData, currentUser) => {
 };
 
 const remove = async (id, currentUser) => {
-  await assertCanManageBranch(currentUser, id, { access: 'read' });
+  const branch = await assertCanManageBranch(currentUser, id, { access: 'read' });
   await branchRepository.delete(id);
+  await audit().record({ action: 'branch.deleted', entity: 'branch', entityId: id, barbershopId: branch.barbershop_id, before: { id: branch.id, name: branch.name } });
   return true;
 };
 
