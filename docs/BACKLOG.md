@@ -348,10 +348,11 @@
 - **Fazer:** Joi + `validate({body, query, params})` com `stripUnknown`, `abortEarly:false`; ids inteiros positivos; `pageSize` máx. 100 (hoje ilimitado → DoS por `pageSize=1000000`); strings com tamanho máximo; `express.json({ limit: '100kb' })`; e-mail normalizado (`trim().toLowerCase()`) no cadastro/login. Substituir os validators manuais de `middlewares/validators/*`.
 - **Aceite:** `pageSize=100000` → 100 itens no máximo; campos extras ignorados.
 
-### [ ] BE-39 — Seed de desenvolvimento e E2E
+### [x] BE-39 — Seed de desenvolvimento e E2E
 - **Depende de:** BE-12
 - **Fazer:** `src/seeders/` + `npm run seed`: admin, 2 owners (planos diferentes), 3 filiais, 6 barbeiros, serviços, jornada, 50 agendamentos em estados variados, clientes. Idempotente. Usado pelos E2E do front (FE-32) e mobile.
 - **Aceite:** `npm run migrate:reset && npm run seed` em MySQL limpo; nunca roda com `NODE_ENV=production`.
+- **Feito:** `src/seeders/devSeed.js` + `npm run seed` (aplica migrations pendentes). Contas `admin@barberos.dev`, `dono.navalha@barberos.dev` (Profissional ativo, 2 filiais, slug `navalha-de-ouro`), `dono.bigode@barberos.dev` (trial Essencial), `barbeiro1..6@`, `cliente1..8@barberos.dev`; senha `Barberos#Dev2026`. ~42 agendamentos (domingos pulados), pagamentos dos concluídos e cliente de balcão.
 
 ### [ ] BE-40 — LGPD: exportar e excluir conta `[SEC-20]`
 - **Depende de:** BE-36
