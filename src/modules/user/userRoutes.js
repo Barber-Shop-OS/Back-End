@@ -160,6 +160,22 @@ router.get('/:id', authMiddleware, schemas.byId, userController.getUserById);
  *               message: Usuário não encontrado
  */
 router.put('/:id', authMiddleware, schemas.update, userController.updateUser);
+/**
+ * @swagger
+ * /user/{id}:
+ *   patch:
+ *     summary: Atualizar usuário parcialmente (mesmas regras do PUT)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: integer } }
+ *     responses:
+ *       200: { description: Usuário atualizado }
+ *       400: { description: Campo não permitido }
+ *       401: { description: Não autenticado }
+ *       404: { description: Usuário não encontrado }
+ */
 router.patch('/:id', authMiddleware, schemas.update, userController.updateUser);
 
 /**

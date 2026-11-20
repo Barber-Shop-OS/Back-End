@@ -372,10 +372,11 @@
 - **Aceite:** todo log de requisição tem `request_id`.
 - **Feito:** `request_id` via AsyncLocalStorage (aparece em todo log da requisição e no corpo dos 500); logs JSON no stdout em produção; mascaramento de campos sensíveis; `GET /health` e `GET /ready`; `TRUST_PROXY`. **Pendente:** Sentry (precisa de `SENTRY_DSN` e da dependência `@sentry/node` — decidir se vale).
 
-### [ ] BE-43 — Contrato OpenAPI versionado
+### [x] BE-43 — Contrato OpenAPI versionado
 - **Depende de:** BE-37
 - **Fazer:** completar anotações Swagger dos módulos; `npm run openapi:export` gera `docs/openapi.json` (commitado, consumido pelo `openapi-typescript` do front e do mobile); teste que falha se a rota existe sem documentação. Remover `docs/API_ENDPOINTS_SUMMARY.json`, `API_README.md`, `SWAGGER_DOCUMENTATION.md` e a collection Postman desatualizados (ou gerar a collection do OpenAPI).
 - **Aceite:** `docs/openapi.json` reflete 100% das rotas.
+- **Feito:** `npm run openapi:export` (chaves ordenadas, servidor relativo `/api`); `openapi.test.js` falha se rota não documentada, documentação órfã ou arquivo desatualizado. Docs antigos e collection Postman removidos (importe o `openapi.json` no Postman/Insomnia).
 
 ---
 

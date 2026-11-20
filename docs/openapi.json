@@ -1,0 +1,5873 @@
+{
+  "components": {
+    "schemas": {
+      "Address": {
+        "properties": {
+          "cep": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "complement": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Appointment": {
+        "properties": {
+          "barber_id": {
+            "type": "integer"
+          },
+          "branch_id": {
+            "type": "integer"
+          },
+          "cancel_reason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "cancelled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "cancelled_by": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "duration_min": {
+            "type": "integer"
+          },
+          "end_at": {
+            "description": "Fim (UTC)",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "notes": {
+            "nullable": true,
+            "type": "string"
+          },
+          "price_snapshot": {
+            "example": "50.00",
+            "type": "string"
+          },
+          "service_id": {
+            "type": "integer"
+          },
+          "service_name_snapshot": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "web",
+              "mobile",
+              "balcao"
+            ],
+            "type": "string"
+          },
+          "start_at": {
+            "description": "Início (UTC)",
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "confirmado",
+              "concluido",
+              "cancelado",
+              "nao_compareceu"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "AppointmentActionResponse": {
+        "properties": {
+          "appointment": {
+            "description": "Agendamento completo. `can_cancel_until` (início − 24 h) e `allowed_actions` (subconjunto de cancel, reschedule, complete, no_show para quem chamou) vêm em toda resposta de agendamento; o front só exibe o que vier em allowed_actions.\n",
+            "properties": {
+              "allowed_actions": {
+                "items": {
+                  "enum": [
+                    "cancel",
+                    "reschedule",
+                    "complete",
+                    "no_show"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "can_cancel_until": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "confirmado",
+                  "concluido",
+                  "cancelado",
+                  "nao_compareceu"
+                ],
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Barber": {
+        "properties": {
+          "bio": {
+            "type": "string"
+          },
+          "branch_id": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Barbershop": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Branch": {
+        "properties": {
+          "address_id": {
+            "type": "integer"
+          },
+          "barbershop_id": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "code": {
+            "description": "Código de erro",
+            "type": "string"
+          },
+          "message": {
+            "description": "Mensagem de erro",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse": {
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "page": {
+            "example": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "example": 10,
+            "type": "integer"
+          },
+          "total": {
+            "example": 0,
+            "type": "integer"
+          },
+          "totalPages": {
+            "example": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Payment": {
+        "properties": {
+          "amount": {
+            "format": "float",
+            "type": "number"
+          },
+          "appointment_id": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "method": {
+            "enum": [
+              "PIX",
+              "CASH"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Service": {
+        "properties": {
+          "barbershop_id": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration": {
+            "description": "Duração em minutos",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "format": "float",
+            "type": "number"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "User": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "cliente",
+              "barbeiro",
+              "owner",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token para autenticação",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "support@barberos.com",
+      "name": "BarberOS Team",
+      "url": "https://barberos.com"
+    },
+    "description": "API REST para gestão de barbearias - SaaS multi-barbearia com suporte a múltiplas filiais, agendamentos, pagamentos e gestão de barbeiros.",
+    "license": {
+      "name": "ISC"
+    },
+    "termsOfService": "http://swagger.io/terms/",
+    "title": "BarberOS API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/address": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "cep": {
+                    "example": 1001000,
+                    "type": "string"
+                  },
+                  "city": {
+                    "example": "São Paulo",
+                    "type": "string"
+                  },
+                  "complement": {
+                    "example": "Fundos",
+                    "type": "string"
+                  },
+                  "number": {
+                    "example": 100,
+                    "type": "integer"
+                  },
+                  "state": {
+                    "example": "SP",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "cep",
+                  "number",
+                  "city",
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Endereço criado com sucesso"
+          },
+          "400": {
+            "description": "Campos de endereço inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para criar endereço"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar um endereço",
+        "tags": [
+          "Address"
+        ]
+      }
+    },
+    "/address/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do endereço",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endereço encontrado"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter endereço por ID",
+        "tags": [
+          "Address"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "ID do endereço",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "cep": {
+                    "example": 1001000,
+                    "type": "string"
+                  },
+                  "city": {
+                    "example": "São Paulo",
+                    "type": "string"
+                  },
+                  "complement": {
+                    "example": "Loja 1",
+                    "type": "string"
+                  },
+                  "number": {
+                    "example": 120,
+                    "type": "integer"
+                  },
+                  "state": {
+                    "example": "SP",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "cep",
+                  "number",
+                  "city",
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Endereço atualizado com sucesso"
+          },
+          "400": {
+            "description": "Campos de endereço inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para atualizar endereço"
+          },
+          "404": {
+            "description": "Endereço não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar endereço por ID",
+        "tags": [
+          "Address"
+        ]
+      }
+    },
+    "/admin/barbershops": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "enum": [
+                "active",
+                "suspended",
+                "deleted"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subscription_status",
+            "schema": {
+              "enum": [
+                "trialing",
+                "pending",
+                "active",
+                "past_due",
+                "canceled",
+                "expired"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Barbearias com dono e status da assinatura (busca por nome/slug)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/barbershops/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhe"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Detalhe (filiais, uso, assinatura e eventos)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/barbershops/{id}/extend-trial": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "days": {
+                    "maximum": 90,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "days"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ barbershop_id, status, trial_ends_at }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Estende o trial (ativo ou expirado) em N dias",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/barbershops/{id}/reactivate": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ id, status }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reativa a barbearia",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/barbershops/{id}/suspend": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ id, status }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Suspende a barbearia (sai da busca, página e agendamento)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/metrics": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Métricas"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "MRR, assinaturas por status/plano, trials, novas barbearias e churn (30 dias)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Lista paginada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Usuários (busca por nome/e-mail, filtro por papel)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/users/{id}/role": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "role": {
+                    "enum": [
+                      "cliente",
+                      "barbeiro",
+                      "owner",
+                      "admin"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Papel atualizado"
+          },
+          "400": {
+            "description": "Papel inválido ou admin tentando remover o próprio acesso"
+          },
+          "403": {
+            "description": "Não é admin"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Alterar o papel de um usuário (somente admin)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/appointment": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Status do agendamento",
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de agendamentos retornada com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para listar agendamentos"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Listar agendamentos com filtros e paginação",
+        "tags": [
+          "Appointment"
+        ]
+      },
+      "post": {
+        "description": "Cliente agenda para si (user_id do body é ignorado). Dono/admin da filial ou o próprio barbeiro agendam para um cliente e devem informar client_id (cliente da barbearia, inclusive \"cliente rápido\" sem conta — BE-23) ou user_id. O status inicial é sempre `confirmado`; o campo status do body é ignorado. O horário é revalidado na transação com as mesmas regras de GET /availability (BE-14): fora da agenda → 400 SLOT_UNAVAILABLE; já reservado → 409 SLOT_TAKEN. Sem barber_id (\"sem preferência\") o servidor escolhe o barbeiro livre com menos agendamentos no dia. Cliente tem no máximo 3 agendamentos futuros por barbearia (409 TOO_MANY_ACTIVE_APPOINTMENTS) e 10 criações por hora. A equipe agenda sem antecedência mínima e em grade de 5 min.\n",
+        "parameters": [
+          {
+            "description": "Repetir a requisição com a mesma chave (24 h) devolve o mesmo agendamento com o header Idempotent-Replayed=true; mesma chave com outro corpo → 409 IDEMPOTENCY_KEY_REUSED.\n",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "example": "3f1c7a52-6a0e-4b8e-9d55-2a7c1e2b9f10",
+              "maxLength": 100,
+              "minLength": 8,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "appointment_date": {
+                    "deprecated": true,
+                    "description": "Nome antigo de start_at",
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "barber_id": {
+                    "description": "Opcional; ausente = sem preferência",
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "branch_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "client_id": {
+                    "description": "Cliente da barbearia (GET /barbershop/{id}/clients) — só quando a barbearia agenda",
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "notes": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "service_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "source": {
+                    "enum": [
+                      "web",
+                      "mobile",
+                      "balcao"
+                    ],
+                    "type": "string"
+                  },
+                  "start_at": {
+                    "description": "Início em UTC; o fim é calculado pela duração do serviço",
+                    "example": "2026-12-10T14:00:00.000Z",
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "description": "Cliente com conta — só quando a barbearia agenda (alternativa a client_id)",
+                    "example": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "service_id",
+                  "branch_id",
+                  "start_at"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Agendamento criado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos, barbeiro fora da filial ou horário fora da agenda (SLOT_UNAVAILABLE)"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Entidade relacionada não encontrada"
+          },
+          "409": {
+            "description": "SLOT_TAKEN, TOO_MANY_ACTIVE_APPOINTMENTS ou IDEMPOTENCY_KEY_REUSED"
+          },
+          "429": {
+            "description": "Limite de criação por hora atingido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar um novo agendamento",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "ID do agendamento",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Agendamento removido com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover agendamento por ID",
+        "tags": [
+          "Appointment"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do agendamento",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agendamento encontrado"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter agendamento por ID",
+        "tags": [
+          "Appointment"
+        ]
+      },
+      "put": {
+        "deprecated": true,
+        "description": "Mantido por compatibilidade. Usa a mesma máquina de estados de /cancel, /complete e /no-show (BE-15). Preferir as rotas de ação.\n",
+        "parameters": [
+          {
+            "description": "ID do agendamento",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "confirmado",
+                      "concluido",
+                      "cancelado",
+                      "nao_compareceu"
+                    ],
+                    "example": "confirmado",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Status do agendamento atualizado com sucesso"
+          },
+          "400": {
+            "description": "Status inválido"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar status de um agendamento (legado)",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}/cancel": {
+      "post": {
+        "description": "Cliente até 24 h antes do início (depois → 409 CANCELLATION_WINDOW_CLOSED); equipe a qualquer momento enquanto estiver confirmado. Estados finais → 409 INVALID_STATUS_TRANSITION.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "reason": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentActionResponse"
+                }
+              }
+            },
+            "description": "Cancelado"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado (ou de outra pessoa)"
+          },
+          "409": {
+            "description": "CANCELLATION_WINDOW_CLOSED ou INVALID_STATUS_TRANSITION"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cancelar agendamento",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}/complete": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentActionResponse"
+                }
+              }
+            },
+            "description": "Concluído"
+          },
+          "403": {
+            "description": "Cliente não pode concluir"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          },
+          "409": {
+            "description": "Antes do início ou estado final (INVALID_STATUS_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Concluir atendimento (equipe, depois do início)",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}/events": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "cancelled": null,
+            "completed": null,
+            "description": "Lista de eventos (created",
+            "no_show)": null,
+            "rescheduled": null
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Histórico do agendamento (quem, quando, de → para)",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}/no-show": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentActionResponse"
+                }
+              }
+            },
+            "description": "Falta registrada"
+          },
+          "403": {
+            "description": "Cliente não pode marcar falta"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          },
+          "409": {
+            "description": "Antes do início ou estado final (INVALID_STATUS_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Marcar falta do cliente (equipe, depois do início)",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/appointment/{id}/reschedule": {
+      "post": {
+        "description": "Mesmo prazo do cancelamento. O novo horário é validado como na criação (400 SLOT_UNAVAILABLE, 409 SLOT_TAKEN); a duração é a do serviço no momento da reserva.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barber_id": {
+                    "type": "integer"
+                  },
+                  "start_at": {
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "start_at"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentActionResponse"
+                }
+              }
+            },
+            "description": "Reagendado"
+          },
+          "400": {
+            "description": "Dados inválidos ou SLOT_UNAVAILABLE"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          },
+          "409": {
+            "SLOT_TAKEN ou INVALID_STATUS_TRANSITION": null,
+            "description": "CANCELLATION_WINDOW_CLOSED"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reagendar (novo horário e, opcionalmente, outro barbeiro da mesma filial)",
+        "tags": [
+          "Appointment"
+        ]
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "description": "Dono informa barbershop_id (a própria); admin pode omitir para ver tudo.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "barbershop_id",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity",
+            "schema": {
+              "example": "service",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "schema": {
+              "example": "service.updated",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ items: [{ action, entity, entity_id, before, after, actor, ip, request_id, created_at }], page, pageSize, total, totalPages }"
+          },
+          "400": {
+            "description": "barbershop_id obrigatório para dono"
+          },
+          "403": {
+            "description": "Barbearia de outro dono"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Trilha de auditoria (exclusões, troca de papel, preço, assinatura, pagamentos)",
+        "tags": [
+          "Audit"
+        ]
+      }
+    },
+    "/auth/confirm-email-change": {
+      "post": {
+        "description": "Troca o e-mail, marca como verificado, derruba as sessões e avisa o e-mail antigo.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "E-mail alterado"
+          },
+          "409": {
+            "description": "EMAIL_IN_USE (alguém cadastrou o e-mail nesse meio-tempo)"
+          },
+          "410": {
+            "description": "TOKEN_INVALID_OR_EXPIRED"
+          }
+        },
+        "security": [],
+        "summary": "Confirma a troca de e-mail com o token enviado ao novo endereço",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "description": "Sempre 202 com mensagem neutra, exista ou não a conta. Link de uso único, válido por 1 h. Limite por IP e por e-mail.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "{ message }"
+          },
+          "429": {
+            "description": "RATE_LIMITED"
+          }
+        },
+        "security": [],
+        "summary": "Pede o link de redefinição de senha (resposta sempre igual)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "description": "Valida o id_token (audience = GOOGLE_CLIENT_ID, e-mail verificado). Conta existente com o mesmo e-mail é vinculada. intent=login/signup-client cria conta de cliente se não existir; signup-owner exige barbershop.name e phone e cria dono + barbearia + trial.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop": {
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "id_token": {
+                    "type": "string"
+                  },
+                  "intent": {
+                    "enum": [
+                      "login",
+                      "signup-owner",
+                      "signup-client"
+                    ],
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "plan_code": {
+                    "enum": [
+                      "essencial",
+                      "profissional",
+                      "rede"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id_token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ token, user, created }"
+          },
+          "201": {
+            "description": "Conta criada: { token, user, created: true, barbershop?, subscription? }"
+          },
+          "401": {
+            "audience": null,
+            "description": "GOOGLE_TOKEN_INVALID (assinatura",
+            "expirado ou e-mail não verificado)": null
+          },
+          "409": {
+            "description": "EMAIL_IN_USE (cadastro de dono com e-mail de conta existente)"
+          },
+          "503": {
+            "description": "GOOGLE_LOGIN_UNAVAILABLE (GOOGLE_CLIENT_ID ausente)"
+          }
+        },
+        "security": [],
+        "summary": "Entrar ou cadastrar com Google (ID token do Google Identity Services)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "example": "carlos@barber.com",
+                    "type": "string"
+                  },
+                  "password": {
+                    "example": "senha123",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Login realizado com sucesso",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "user": {
+                    "email": "carlos@barber.com",
+                    "id": 1,
+                    "name": "Carlos Silva",
+                    "role": "cliente"
+                  }
+                }
+              }
+            },
+            "description": "Login realizado com sucesso"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "E-mail e senha são obrigatórios"
+                }
+              }
+            },
+            "description": "Campos obrigatórios ausentes"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Credenciais inválidas"
+                }
+              }
+            },
+            "description": "Credenciais inválidas"
+          }
+        },
+        "summary": "Autenticar usuário e obter token JWT",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "responses": {
+          "204": {
+            "description": "Sessão encerrada"
+          }
+        },
+        "security": [],
+        "summary": "Encerra esta sessão (revoga o refresh e limpa o cookie)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "responses": {
+          "204": {
+            "description": "Sessões encerradas"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Encerra todas as sessões do usuário (todos os dispositivos)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "email": "carlos@barber.com",
+                  "id": 1,
+                  "name": "Carlos Silva",
+                  "role": "cliente"
+                }
+              }
+            },
+            "description": "Dados do usuário retornados com sucesso"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Token inválido ou expirado"
+                }
+              }
+            },
+            "description": "Token ausente, inválido ou expirado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário não encontrado"
+                }
+              }
+            },
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter dados do usuário autenticado",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "Web: refresh no cookie httpOnly `bo_refresh` (Path=/api/auth) — exige header `X-Requested-With: XMLHttpRequest` e Origin permitida. Mobile: `{ refresh_token }` no corpo e header `X-Client-Type: mobile`. Cada refresh só vale uma vez; reapresentar um já usado revoga a sessão inteira (401 REFRESH_REUSED).\n",
+        "responses": {
+          "200": {
+            "description": "{ token, access_token_expires_in, refresh_token? (mobile) }"
+          },
+          "401": {
+            "description": "REFRESH_INVALID / REFRESH_REUSED"
+          },
+          "403": {
+            "description": "CSRF_REJECTED"
+          }
+        },
+        "security": [],
+        "summary": "Renova o access token (rotação do refresh token)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "example": "carlos@barber.com",
+                    "type": "string"
+                  },
+                  "name": {
+                    "example": "Carlos Silva",
+                    "type": "string"
+                  },
+                  "password": {
+                    "example": "senha123",
+                    "minLength": 6,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário cadastrado com sucesso",
+                  "user": {
+                    "email": "carlos@barber.com",
+                    "id": 1,
+                    "name": "Carlos Silva",
+                    "role": "cliente"
+                  }
+                }
+              }
+            },
+            "description": "Usuário cadastrado com sucesso"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Senha deve ter no mínimo 6 caracteres"
+                }
+              }
+            },
+            "description": "Dados inválidos para cadastro"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "E-mail já está em uso"
+                }
+              }
+            },
+            "description": "E-mail já cadastrado"
+          }
+        },
+        "summary": "Cadastrar um novo usuário no sistema",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/register-owner": {
+      "post": {
+        "description": "Tudo em uma transação. A filial é criada no passo seguinte do wizard (POST /branch).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "barbershop": {
+                  "name": "Navalha de Ouro"
+                },
+                "email": "carlos@navalha.com",
+                "name": "Carlos Silva",
+                "password": "Tesoura#Navalha9",
+                "phone": "(11) 99999-0000",
+                "plan_code": "profissional"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Conta criada: token, user, barbershop, subscription"
+          },
+          "400": {
+            "description": "Dados inválidos ou senha fraca"
+          },
+          "409": {
+            "description": "E-mail (EMAIL_IN_USE) ou slug (SLUG_TAKEN) em uso"
+          }
+        },
+        "security": [],
+        "summary": "Cadastro do dono — cria usuário owner, barbearia (slug) e assinatura em trial de 14 dias",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/resend-verification": {
+      "post": {
+        "responses": {
+          "202": {
+            "description": "{ already_verified, message }"
+          },
+          "429": {
+            "description": "RATE_LIMITED"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reenvia o link de confirmação de e-mail (usuário logado)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "description": "Derruba todas as sessões (token_version) e invalida outros links pendentes.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "minLength": 8,
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Senha redefinida"
+          },
+          "400": {
+            "description": "Senha fraca (WEAK_PASSWORD)"
+          },
+          "410": {
+            "description": "TOKEN_INVALID_OR_EXPIRED (inexistente",
+            "expirado ou já usado)": null
+          }
+        },
+        "security": [],
+        "summary": "Redefine a senha com o token do e-mail",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ message, email_verified_at }"
+          },
+          "410": {
+            "description": "TOKEN_INVALID_OR_EXPIRED — oferecer reenviar (POST /auth/resend-verification)"
+          }
+        },
+        "security": [],
+        "summary": "Confirma o e-mail com o token do link",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/availability": {
+      "get": {
+        "description": "Público. Regras: horário da filial ∩ jornada do barbeiro − fechamentos − bloqueios − agendamentos confirmados; antecedência mínima de 30 min; até 30 dias à frente; grade de 15 min a partir da meia-noite no fuso da filial. Sem `barber_id` (\"sem preferência\") devolve a união dos barbeiros que executam o serviço, com a lista de quem está livre em cada horário.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Data local da filial",
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "example": "2026-12-10",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "barber_id",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "barber_ids": {
+                        "example": [
+                          3,
+                          7
+                        ],
+                        "items": {
+                          "type": "integer"
+                        },
+                        "type": "array"
+                      },
+                      "end_at": {
+                        "example": "2026-12-10T12:30:00.000Z",
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "start_at": {
+                        "example": "2026-12-10T12:00:00.000Z",
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Lista de horários (vazia se o dia estiver fechado ou lotado)"
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "404": {
+            "description": "Filial",
+            "serviço ou barbeiro não encontrado": null
+          },
+          "429": {
+            "description": "Limite de consultas atingido"
+          }
+        },
+        "summary": "Horários livres de uma filial para um serviço num dia",
+        "tags": [
+          "Availability"
+        ]
+      }
+    },
+    "/barber": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "items": [],
+                  "page": 1,
+                  "pageSize": 10,
+                  "total": 0,
+                  "totalPages": 0
+                }
+              }
+            },
+            "description": "Lista de barbeiros retornada com sucesso"
+          }
+        },
+        "summary": "Listar barbeiros com filtros e paginação",
+        "tags": [
+          "Barber"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "example": "Especialista em corte social",
+                    "type": "string"
+                  },
+                  "branch_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "photo_url": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "example": 2,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "user_id",
+                  "branch_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "barber": {
+                    "bio": "Especialista em corte social",
+                    "branch_id": 1,
+                    "id": 1,
+                    "user_id": 2
+                  },
+                  "message": "Barbeiro criado com sucesso"
+                }
+              }
+            },
+            "description": "Barbeiro criado com sucesso"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Campo 'user_id' é obrigatório e deve ser um inteiro positivo"
+                }
+              }
+            },
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para criar barbeiro"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar um novo barbeiro",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barber/{id}": {
+      "delete": {
+        "description": "Com agendamentos futuros retorna 409 BARBER_HAS_FUTURE_APPOINTMENTS, a menos que force=cancel.",
+        "parameters": [
+          {
+            "description": "ID do barbeiro",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cancela os agendamentos futuros antes de desativar",
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "enum": [
+                "cancel"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Barbeiro desativado"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para remover barbeiro"
+          },
+          "404": {
+            "description": "Barbeiro não encontrado"
+          },
+          "409": {
+            "description": "Barbeiro com agendamentos futuros"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Desativar um barbeiro (histórico preservado)",
+        "tags": [
+          "Barber"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do barbeiro",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "bio": "Especialista em fade",
+                  "branch_id": 1,
+                  "id": 1,
+                  "user_id": 2
+                }
+              }
+            },
+            "description": "Barbeiro encontrado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Barbeiro não encontrado"
+                }
+              }
+            },
+            "description": "Barbeiro não encontrado"
+          }
+        },
+        "summary": "Obter um barbeiro por ID",
+        "tags": [
+          "Barber"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "ID do barbeiro",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "example": "Especialista em navalhado",
+                    "type": "string"
+                  },
+                  "branch_id": {
+                    "example": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "branch_id",
+                  "bio"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Barbeiro atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para atualizar barbeiro"
+          },
+          "404": {
+            "description": "Barbeiro não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar dados de um barbeiro",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barber/{id}/services": {
+      "put": {
+        "description": "Substitui a lista. Serviço de outra barbearia → 400. Barbeiro novo executa todos os serviços ativos.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "service_ids": [
+                  1,
+                  2
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Barbeiro com a lista nova"
+          },
+          "400": {
+            "description": "Serviço inexistente ou de outra barbearia"
+          },
+          "403": {
+            "description": "Barbeiro de outro tenant"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Definir os serviços que o barbeiro executa",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barber/{id}/time-off": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de bloqueios"
+          },
+          "403": {
+            "description": "Sem permissão"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Bloqueios do barbeiro (dono ou o próprio barbeiro)",
+        "tags": [
+          "Barber"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "end_at": "2026-12-01T16:00:00.000Z",
+                "reason": "Almoço",
+                "start_at": "2026-12-01T15:00:00.000Z"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Bloqueio criado"
+          },
+          "400": {
+            "description": "Intervalo inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "409": {
+            "description": "Coincide com agendamentos confirmados (TIME_OFF_CONFLICT",
+            "details.appointments)": null
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar bloqueio (almoço, folga)",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barber/{id}/time-off/{timeOffId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "timeOffId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removido"
+          },
+          "404": {
+            "description": "Bloqueio não encontrado neste barbeiro"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover bloqueio",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barber/{id}/working-hours": {
+      "get": {
+        "description": "Sem jornada própria, retorna o horário da filial (uses_branch_hours=true). Horários locais HH:mm.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornada"
+          },
+          "404": {
+            "description": "Barbeiro inexistente ou inativo"
+          }
+        },
+        "security": [],
+        "summary": "Jornada efetiva do barbeiro (público)",
+        "tags": [
+          "Barber"
+        ]
+      },
+      "put": {
+        "description": "Cada intervalo precisa caber no horário de funcionamento da filial. Lista vazia = usar o da filial.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "working_hours": [
+                  {
+                    "end_time": "16:00",
+                    "start_time": "10:00",
+                    "weekday": 1
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jornada salva"
+          },
+          "400": {
+            "description": "Fora do horário da filial",
+            "sobreposição ou formato inválido": null
+          },
+          "403": {
+            "description": "Barbeiro de outro tenant"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Substituir a jornada semanal (dono)",
+        "tags": [
+          "Barber"
+        ]
+      }
+    },
+    "/barbershop": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Nome parcial da barbearia",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Cidade da filial",
+            "in": "query",
+            "name": "city",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "items": [],
+                  "page": 1,
+                  "pageSize": 10,
+                  "total": 0,
+                  "totalPages": 0
+                }
+              }
+            },
+            "description": "Lista de barbearias retornada com sucesso"
+          }
+        },
+        "summary": "Listar barbearias com paginação e filtros",
+        "tags": [
+          "Barbershop"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "example": "Barber Prime",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Barbearia criada com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para criar barbearia"
+          },
+          "409": {
+            "description": "Nome já existe para o mesmo owner"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar uma nova barbearia",
+        "tags": [
+          "Barbershop"
+        ]
+      }
+    },
+    "/barbershop/slug/{slug}": {
+      "get": {
+        "description": "Barbearia + filiais ativas (endereço, horário, open_now no fuso da filial) + serviços e barbeiros ativos. Sem dados do dono nem e-mails.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "example": "navalha-de-ouro",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil público"
+          },
+          "404": {
+            "description": "Inexistente",
+            "suspensa ou sem assinatura ativa": null
+          }
+        },
+        "security": [],
+        "summary": "Perfil público da barbearia",
+        "tags": [
+          "Barbershop"
+        ]
+      }
+    },
+    "/barbershop/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "ID da barbearia",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Barbearia removida com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para remover barbearia"
+          },
+          "404": {
+            "description": "Barbearia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover uma barbearia",
+        "tags": [
+          "Barbershop"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID da barbearia",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Barbearia encontrada"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Barbearia não encontrada"
+                }
+              }
+            },
+            "description": "Barbearia não encontrada"
+          }
+        },
+        "summary": "Obter barbearia por ID com owner e filiais",
+        "tags": [
+          "Barbershop"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "ID da barbearia",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "example": "Barber Prime Centro",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Barbearia atualizada com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para editar esta barbearia"
+          },
+          "404": {
+            "description": "Barbearia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar uma barbearia existente",
+        "tags": [
+          "Barbershop"
+        ]
+      }
+    },
+    "/barbershop/{id}/clients": {
+      "get": {
+        "description": "Dono/admin ou barbeiro ativo da barbearia. Busca por nome, e-mail ou parte do telefone.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Nome, e-mail ou dígitos do telefone (mín. 3)",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "enum": [
+                "name",
+                "last_visit",
+                "visits",
+                "total_spent",
+                "created_at"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ items: [{ id, name, phone, email, has_account, visits, no_shows, last_visit, total_spent }], page, pageSize, total, totalPages }"
+          },
+          "403": {
+            "description": "Barbearia de outro tenant"
+          },
+          "404": {
+            "description": "Barbearia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Clientes da barbearia com visitas, última visita, total gasto e faltas",
+        "tags": [
+          "Clients"
+        ]
+      },
+      "post": {
+        "description": "Se já existe conta com o mesmo e-mail/telefone, o cliente nasce vinculado. Duplicado → 409 CLIENT_ALREADY_EXISTS com details.client_id.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "example": "joao@email.com",
+                    "type": "string"
+                  },
+                  "name": {
+                    "example": "João da Silva",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "example": "Prefere máquina 2",
+                    "type": "string"
+                  },
+                  "phone": {
+                    "example": "(11) 98888-7777",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "phone"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente criado"
+          },
+          "409": {
+            "description": "CLIENT_ALREADY_EXISTS"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cadastrar cliente (cliente rápido de balcão, sem conta)",
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/barbershop/{id}/clients/{clientId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cliente"
+          },
+          "404": {
+            "description": "Cliente não encontrado nesta barbearia"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cliente com estatísticas e histórico (últimos 50 agendamentos com pagamento)",
+        "tags": [
+          "Clients"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cliente atualizado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar nome, telefone, e-mail ou observações do cliente",
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/barbershop/{id}/subscription": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assinatura"
+          },
+          "403": {
+            "description": "Barbearia de outro dono"
+          },
+          "404": {
+            "description": "Barbearia ou assinatura não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Assinatura da barbearia (status, plano efetivo, limites e uso)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/cancel": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "barbershop_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ subscription }"
+          },
+          "409": {
+            "description": "NO_ACTIVE_SUBSCRIPTION"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cancela ao fim do período pago (cancel_at_period_end)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/change-plan": {
+      "post": {
+        "description": "Downgrade bloqueado se o uso atual excede o plano novo (409 PLAN_LIMIT_EXCEEDED com details.exceeded).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "type": "integer"
+                  },
+                  "plan_code": {
+                    "enum": [
+                      "essencial",
+                      "profissional",
+                      "rede"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "barbershop_id",
+                  "plan_code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ subscription, effective_at }"
+          },
+          "409": {
+            "description": "NO_ACTIVE_SUBSCRIPTION / SAME_PLAN / PLAN_LIMIT_EXCEEDED"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Troca de plano (vale a partir do próximo ciclo)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/checkout": {
+      "post": {
+        "description": "Cria/reusa o customer (CPF/CNPJ obrigatório, dígitos validados) e o checkout com externalId barbershop-<id>. A assinatura só fica ativa quando o webhook da AbacatePay confirmar o pagamento (BE-33) — o retorno do navegador nunca ativa nada.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "cellphone": {
+                    "example": "11999999999",
+                    "type": "string"
+                  },
+                  "plan_code": {
+                    "enum": [
+                      "essencial",
+                      "profissional",
+                      "rede"
+                    ],
+                    "type": "string"
+                  },
+                  "tax_id": {
+                    "description": "CPF ou CNPJ",
+                    "example": "111.444.777-35",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "barbershop_id",
+                  "plan_code",
+                  "tax_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "{ checkout_url, checkout_id, subscription }"
+          },
+          "400": {
+            "description": "VALIDATION_ERROR / INVALID_TAX_ID"
+          },
+          "403": {
+            "description": "Barbearia de outro dono"
+          },
+          "409": {
+            "description": "SUBSCRIPTION_ALREADY_ACTIVE / PLAN_LIMIT_EXCEEDED"
+          },
+          "502": {
+            "description": "PAYMENT_PROVIDER_ERROR"
+          },
+          "503": {
+            "description": "BILLING_UNAVAILABLE (integração não configurada)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Gera o checkout da assinatura na AbacatePay e devolve a URL de pagamento",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/portal": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "barbershop_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ portal_url }"
+          },
+          "409": {
+            "description": "NO_ACTIVE_SUBSCRIPTION"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Link do portal do cliente AbacatePay (cartão, recibos)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/resume": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "barbershop_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ subscription }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Desfaz o cancelamento agendado",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/branch": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID da barbearia",
+            "in": "query",
+            "name": "barbershop_id",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de filiais retornada com sucesso"
+          }
+        },
+        "summary": "Listar filiais com paginação e filtros",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "cep": {
+                    "example": 1001000,
+                    "type": "string"
+                  },
+                  "city": {
+                    "example": "São Paulo",
+                    "type": "string"
+                  },
+                  "complement": {
+                    "example": "Sala 2",
+                    "type": "string"
+                  },
+                  "name": {
+                    "example": "Unidade Centro",
+                    "type": "string"
+                  },
+                  "number": {
+                    "example": 100,
+                    "type": "integer"
+                  },
+                  "state": {
+                    "example": "SP",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "barbershop_id",
+                  "cep",
+                  "number",
+                  "city",
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Filial criada com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para gerenciar esta filial"
+          },
+          "404": {
+            "description": "Barbearia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar filial com dados de endereço",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "ID da filial",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filial removida com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para remover filial"
+          },
+          "404": {
+            "description": "Filial não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover filial por ID",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID da filial",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filial encontrada"
+          },
+          "404": {
+            "description": "Filial não encontrada"
+          }
+        },
+        "summary": "Obter filial por ID",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "ID da filial",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "cep": {
+                    "example": 1001000,
+                    "type": "string"
+                  },
+                  "city": {
+                    "example": "São Paulo",
+                    "type": "string"
+                  },
+                  "name": {
+                    "example": "Unidade Centro Premium",
+                    "type": "string"
+                  },
+                  "number": {
+                    "example": 120,
+                    "type": "integer"
+                  },
+                  "state": {
+                    "example": "SP",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Filial atualizada com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para gerenciar esta filial"
+          },
+          "404": {
+            "description": "Filial não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar filial e endereço vinculado",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/barbers": {
+      "post": {
+        "description": "Se o e-mail não tiver conta, um convite é criado (202). Usuário cliente é promovido a barbeiro.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "bio": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "format": "email",
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Barbeiro criado"
+          },
+          "202": {
+            "description": "Convite enviado"
+          },
+          "403": {
+            "description": "Filial de outro tenant"
+          },
+          "404": {
+            "description": "Filial ou usuário não encontrado"
+          },
+          "409": {
+            "description": "Usuário já é barbeiro desta filial (BARBER_ALREADY_EXISTS)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Adicionar barbeiro à filial (por user_id ou e-mail)",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/closures": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de fechamentos"
+          }
+        },
+        "security": [],
+        "summary": "Fechamentos da filial (público)",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "all_day": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "date": {
+                    "example": "2026-12-25",
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "end_time": {
+                    "example": "14:00",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "example": "Natal",
+                    "type": "string"
+                  },
+                  "start_time": {
+                    "example": "12:00",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "date"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Fechamento criado"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "403": {
+            "description": "Filial de outro tenant"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar fechamento (dia inteiro ou parcial)",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/closures/{closureId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "closureId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover fechamento",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "closureId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atualizado"
+          },
+          "404": {
+            "description": "Fechamento não encontrado nesta filial"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar fechamento",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/invitations": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista com status pending|accepted|revoked|expired"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Convites da filial (dono)",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "display_name": "Zé",
+                "email": "novo@barbeiro.com"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Convite enviado"
+          },
+          "402": {
+            "description": "Limite de barbeiros do plano (PLAN_LIMIT_REACHED)"
+          },
+          "403": {
+            "description": "Filial de outro tenant"
+          },
+          "409": {
+            "description": "Já é barbeiro da filial"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Convidar barbeiro por e-mail (link de 7 dias, uso único)",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/invitations/{invitationId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invitationId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revogado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Revogar convite",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/invitations/{invitationId}/resend": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invitationId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reenviado"
+          },
+          "410": {
+            "description": "Já aceito ou revogado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reenviar convite (novo link e novo prazo)",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/branch/{id}/opening-hours": {
+      "get": {
+        "description": "Horários locais (HH:mm) no fuso `timezone` da filial; weekday 0 = domingo.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "branch_id": 1,
+                  "opening_hours": [
+                    {
+                      "closes_at": "12:00",
+                      "opens_at": "09:00",
+                      "weekday": 1
+                    }
+                  ],
+                  "timezone": "America/Sao_Paulo"
+                }
+              }
+            },
+            "description": "Semana de funcionamento"
+          },
+          "404": {
+            "description": "Filial não encontrada"
+          }
+        },
+        "security": [],
+        "summary": "Horário de funcionamento da filial (público)",
+        "tags": [
+          "Branch"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "opening_hours": {
+                    "items": {
+                      "properties": {
+                        "closes_at": {
+                          "example": "18:00",
+                          "type": "string"
+                        },
+                        "opens_at": {
+                          "example": "09:00",
+                          "type": "string"
+                        },
+                        "weekday": {
+                          "maximum": 6,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "opening_hours"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Semana salva"
+          },
+          "400": {
+            "description": "Intervalo inválido ou sobreposto"
+          },
+          "403": {
+            "description": "Filial de outro tenant"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Substituir a semana de funcionamento (transação)",
+        "tags": [
+          "Branch"
+        ]
+      }
+    },
+    "/dashboard/barber": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "example": "2026-11-01",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "example": "2026-11-30",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mesmas métricas do summary",
+            "sem revenue_by_barber": null
+          },
+          "404": {
+            "description": "Usuário sem perfil de barbeiro"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Métricas do barbeiro logado (próprios atendimentos, receita e ocupação)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "description": "Período em datas locais (fuso de cada filial), inclusive; padrão = últimos 30 dias; máximo 366. Receita = pagamentos PAID pela data do pagamento. Ocupação = minutos agendados (confirmado, concluído, falta) ÷ minutos disponíveis (horário da filial ∩ jornada − fechamentos − bloqueios).\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "barbershop_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "branch_id",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "example": "2026-11-01",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "example": "2026-11-30",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "appointments": {
+                    "by_status": {
+                      "cancelado": 1,
+                      "concluido": 25,
+                      "confirmado": 3,
+                      "nao_compareceu": 1
+                    },
+                    "total": 30
+                  },
+                  "occupancy": {
+                    "available_minutes": 14400,
+                    "booked_minutes": 870,
+                    "rate": 0.0604
+                  },
+                  "period": {
+                    "from": "2026-11-01",
+                    "to": "2026-11-30"
+                  },
+                  "revenue": {
+                    "average_ticket": "50.00",
+                    "by_method": {
+                      "CARD": "200.00",
+                      "CASH": "250.00",
+                      "PIX": "800.00"
+                    },
+                    "payments": 25,
+                    "total": "1250.00"
+                  },
+                  "revenue_by_barber": [
+                    {
+                      "appointments": 29,
+                      "barber_id": 1,
+                      "name": "Zé",
+                      "revenue": "1250.00"
+                    }
+                  ],
+                  "revenue_by_branch": [
+                    {
+                      "appointments": 29,
+                      "branch_id": 1,
+                      "name": "Centro",
+                      "revenue": "1250.00"
+                    }
+                  ],
+                  "revenue_by_day": [
+                    {
+                      "amount": "0.00",
+                      "date": "2026-11-01"
+                    }
+                  ],
+                  "top_services": [
+                    {
+                      "count": 20,
+                      "name": "Corte",
+                      "revenue": "1000.00",
+                      "service_id": 1
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Métricas"
+          },
+          "400": {
+            "description": "Período inválido"
+          },
+          "403": {
+            "description": "Barbearia de outro dono"
+          },
+          "404": {
+            "description": "Barbearia ou filial não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Métricas da barbearia (receita, agendamentos, ocupação, top serviços, por dia/filial/barbeiro)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/invitations/{token}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Barbearia",
+            "e-mail e se já existe conta": null,
+            "filial": null
+          },
+          "404": {
+            "description": "Token inexistente"
+          },
+          "410": {
+            "description": "Expirado",
+            "usado ou revogado (INVITATION_GONE)": null
+          }
+        },
+        "security": [],
+        "summary": "Dados do convite para a tela de aceite (público)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/invitations/{token}/accept": {
+      "post": {
+        "description": "Logado com o mesmo e-mail do convite, ou sem login informando name + password para criar a conta.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "José Souza",
+                "password": "Tesoura#Navalha9"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Barbeiro vinculado (token incluso quando a conta foi criada agora)"
+          },
+          "401": {
+            "description": "Conta já existe — faça login (LOGIN_REQUIRED)"
+          },
+          "403": {
+            "description": "Logado com e-mail diferente do convite"
+          },
+          "410": {
+            "description": "Expirado",
+            "usado ou revogado": null
+          }
+        },
+        "security": [],
+        "summary": "Aceitar convite",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/me": {
+      "delete": {
+        "description": "Anonimiza nome/e-mail/telefone, remove sessões e vínculos, mantém agendamentos e pagamentos sem dados pessoais. Exige a senha (conta só-Google não precisa). Dono com assinatura vigente → 409 ACTIVE_SUBSCRIPTION (cancele antes).\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conta excluída"
+          },
+          "400": {
+            "description": "INVALID_CURRENT_PASSWORD"
+          },
+          "409": {
+            "description": "ACTIVE_SUBSCRIPTION"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Excluir minha conta (LGPD)",
+        "tags": [
+          "Me"
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Perfil"
+          },
+          "401": {
+            "description": "Não autenticado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Meu perfil, papéis, barbearias que gerencio e perfis de barbeiro",
+        "tags": [
+          "Me"
+        ]
+      },
+      "patch": {
+        "description": "E-mail e senha têm fluxos próprios (BE-29). Outros campos → 400.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Maria",
+                "phone": "(11) 99999-0000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil atualizado"
+          },
+          "400": {
+            "description": "Campo não permitido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar meu perfil (name, phone)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/appointments": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "default": "upcoming",
+              "enum": [
+                "upcoming",
+                "past"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Meus agendamentos (como cliente)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/barbershops": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Lista"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Barbearias que gerencio",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/delete": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Conta excluída (anonimizada)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Excluir minha conta (LGPD) — alias de DELETE /me para clientes HTTP sem corpo em DELETE",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/email": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "new_email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "new_email",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Link enviado ao novo e-mail; aviso ao antigo"
+          },
+          "400": {
+            "description": "INVALID_CURRENT_PASSWORD / PASSWORD_REQUIRED"
+          },
+          "409": {
+            "description": "EMAIL_IN_USE"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pedir troca de e-mail (confirmação pelo novo endereço)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/export": {
+      "get": {
+        "description": "Perfil, contas vinculadas, agendamentos com pagamentos, barbearias, fichas de cliente e perfis de barbeiro.",
+        "responses": {
+          "200": {
+            "description": "JSON com todos os dados pessoais"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Exportar meus dados (LGPD)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/password": {
+      "post": {
+        "description": "Derruba as outras sessões e devolve um token novo para esta. Conta só-Google pode definir a primeira senha sem current_password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "current_password": {
+                    "type": "string"
+                  },
+                  "new_password": {
+                    "minLength": 8,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "new_password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ message, token }"
+          },
+          "400": {
+            "description": "INVALID_CURRENT_PASSWORD / WEAK_PASSWORD"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Trocar minha senha",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/sessions": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "{ items: [{ id, user_agent, ip, last_used_at, expires_at, current }] }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Minhas sessões ativas (dispositivos)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/sessions/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Encerrada"
+          },
+          "404": {
+            "description": "Sessão não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Encerrar uma sessão (dispositivo)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/payment": {
+      "get": {
+        "description": "Dono vê as barbearias dele, barbeiro os próprios atendimentos, admin tudo. Cliente recebe 403.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "barbershop_id",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "branch_id",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "enum": [
+                "PENDING",
+                "PAID",
+                "FAILED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "method",
+            "schema": {
+              "enum": [
+                "PIX",
+                "CASH",
+                "CARD"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ items, page, pageSize, total, totalPages, totals: { count, amount, paid, pending, failed, paid_by_method } }"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Cliente ou barbearia de outro dono"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Listar pagamentos (financeiro) com filtros e totais",
+        "tags": [
+          "Payment"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "amount": {
+                    "description": "Opcional; padrão = preço registrado no agendamento.",
+                    "example": 80,
+                    "type": "number"
+                  },
+                  "appointment_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "method": {
+                    "enum": [
+                      "PIX",
+                      "CASH",
+                      "CARD"
+                    ],
+                    "example": "PIX",
+                    "type": "string"
+                  },
+                  "status": {
+                    "description": "PAID registra o pagamento já recebido (presencial). Padrão PENDING.",
+                    "enum": [
+                      "PENDING",
+                      "PAID"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "appointment_id",
+                  "method"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Pagamento registrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de pagamento inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Agendamento não encontrado"
+          },
+          "409": {
+            "description": "Pagamento já registrado para o agendamento"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Registrar pagamento para um agendamento",
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/payment/appointment/{appointment_id}": {
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do agendamento",
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagamento encontrado com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Pagamento não encontrado para o agendamento"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter pagamento por ID de agendamento",
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/payment/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do pagamento",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagamento encontrado com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter pagamento por ID",
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/payment/{id}/status": {
+      "put": {
+        "parameters": [
+          {
+            "description": "ID do pagamento",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "PAID",
+                      "FAILED"
+                    ],
+                    "example": "PAID",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Status do pagamento atualizado com sucesso"
+          },
+          "400": {
+            "description": "Status inválido"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para atualizar pagamento"
+          },
+          "404": {
+            "description": "Pagamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar status de um pagamento",
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/plans": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "items": [
+                    {
+                      "code": "essencial",
+                      "currency": "BRL",
+                      "features": [
+                        "agenda"
+                      ],
+                      "interval": "MONTHLY",
+                      "limits": {
+                        "barbers": 3,
+                        "branches": 1
+                      },
+                      "name": "Essencial",
+                      "price": "99.00",
+                      "price_cents": 9900
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Planos"
+          }
+        },
+        "security": [],
+        "summary": "Planos disponíveis com preço, limites e recursos (público)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/search/branches": {
+      "get": {
+        "description": "Filiais ativas de barbearias ativas com assinatura ativa, em atraso ou em trial vigente. `q` procura no nome da barbearia, da filial ou de um serviço; `city` na cidade; `service` mantém só quem oferece o serviço. Com `lat` e `lng` ordena por distância (km) — filiais sem coordenadas vão para o fim. `pageSize` máximo 50.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "service",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lat",
+            "schema": {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lng",
+            "schema": {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "address": {
+                            "type": "object"
+                          },
+                          "barbershop": {
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "logo_url": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "distance_km": {
+                            "description": "Só com lat/lng",
+                            "nullable": true,
+                            "type": "number"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "timezone": {
+                            "type": "string"
+                          },
+                          "whatsapp": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Página de filiais"
+          },
+          "400": {
+            "description": "Parâmetros inválidos (ex. lat sem lng)"
+          },
+          "429": {
+            "description": "Limite de buscas atingido"
+          }
+        },
+        "summary": "Buscar filiais (público)",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/services": {
+      "get": {
+        "description": "barbershop_id é obrigatório. Quem gerencia a barbearia pode pedir include_inactive=true.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "barbershop_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de serviços retornada com sucesso"
+          }
+        },
+        "summary": "Listar serviços ativos de uma barbearia",
+        "tags": [
+          "Service"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "description": {
+                    "example": "Corte e finalização",
+                    "type": "string"
+                  },
+                  "duration": {
+                    "example": 40,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "example": "Corte completo",
+                    "type": "string"
+                  },
+                  "price": {
+                    "example": 45,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "price",
+                  "duration",
+                  "barbershop_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Serviço criado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para criar serviço"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Criar um novo serviço",
+        "tags": [
+          "Service"
+        ]
+      }
+    },
+    "/services/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "ID do serviço",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Serviço removido com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para remover serviço"
+          },
+          "404": {
+            "description": "Serviço não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover um serviço por ID",
+        "tags": [
+          "Service"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do serviço",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Serviço encontrado"
+          },
+          "404": {
+            "description": "Serviço não encontrado"
+          }
+        },
+        "summary": "Obter serviço por ID",
+        "tags": [
+          "Service"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "description": "ID do serviço",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barbershop_id": {
+                    "example": 1,
+                    "type": "integer"
+                  },
+                  "description": {
+                    "example": "Corte, barba e finalização",
+                    "type": "string"
+                  },
+                  "duration": {
+                    "example": 60,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "example": "Corte premium",
+                    "type": "string"
+                  },
+                  "price": {
+                    "example": 65,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "price",
+                  "duration",
+                  "barbershop_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Serviço atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para atualizar serviço"
+          },
+          "404": {
+            "description": "Serviço não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar um serviço existente",
+        "tags": [
+          "Service"
+        ]
+      }
+    },
+    "/user": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Página atual",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Quantidade de itens por página",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "items": [],
+                  "page": 1,
+                  "pageSize": 10,
+                  "total": 0,
+                  "totalPages": 0
+                }
+              }
+            },
+            "description": "Usuários retornados com sucesso"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Token não fornecido"
+                }
+              }
+            },
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Acesso restrito. Permissão necessária: admin"
+                }
+              }
+            },
+            "description": "Acesso restrito ao perfil admin"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Listar usuários com paginação e filtros",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/user/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "ID do usuário",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuário removido com sucesso"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Token não fornecido"
+                }
+              }
+            },
+            "description": "Usuário não autenticado"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Acesso restrito. Permissão necessária: admin"
+                }
+              }
+            },
+            "description": "Acesso restrito ao perfil admin"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário não encontrado"
+                }
+              }
+            },
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover um usuário por ID",
+        "tags": [
+          "User"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "description": "ID do usuário",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "email": "carlos@barber.com",
+                  "id": 1,
+                  "name": "Carlos Silva",
+                  "role": "cliente"
+                }
+              }
+            },
+            "description": "Usuário encontrado com sucesso"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Token inválido ou expirado"
+                }
+              }
+            },
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário não encontrado"
+                }
+              }
+            },
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Obter dados de um usuário por ID",
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado"
+          },
+          "400": {
+            "description": "Campo não permitido"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar usuário parcialmente (mesmas regras do PUT)",
+        "tags": [
+          "User"
+        ]
+      },
+      "put": {
+        "description": "O próprio usuário altera apenas `name` e `phone`. Admin também altera `email`. `role` e `password` não são aceitos aqui (400) — papel em PATCH /admin/users/{id}/role.\n",
+        "parameters": [
+          {
+            "description": "ID do usuário",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "description": "Somente admin",
+                    "example": "carlos.souza@barber.com",
+                    "type": "string"
+                  },
+                  "name": {
+                    "example": "Carlos Souza",
+                    "type": "string"
+                  },
+                  "phone": {
+                    "example": "(11) 99999-9999",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário atualizado com sucesso",
+                  "user": {
+                    "email": "carlos.souza@barber.com",
+                    "id": 1,
+                    "name": "Carlos Souza",
+                    "role": "cliente"
+                  }
+                }
+              }
+            },
+            "description": "Usuário atualizado com sucesso"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Dados inválidos"
+                }
+              }
+            },
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Token inválido ou expirado"
+                }
+              }
+            },
+            "description": "Usuário não autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Usuário não encontrado"
+                }
+              }
+            },
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atualizar dados do próprio usuário (ou qualquer usuário, se admin)",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/webhooks/abacatepay": {
+      "post": {
+        "description": "Autenticado por ?webhookSecret= (ou header X-Webhook-Secret) e, se configurada a chave pública, pelo header X-Webhook-Signature (HMAC-SHA256 base64 do corpo cru). Idempotente pelo `id` do evento. Responde 200 rápido e processa em background. Segredo inválido → 401 sem efeito.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "webhookSecret",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ received: true, duplicate: boolean }"
+          },
+          "400": {
+            "description": "Corpo inválido"
+          },
+          "401": {
+            "description": "Segredo ou assinatura inválidos"
+          },
+          "503": {
+            "description": "Webhook não configurado (a AbacatePay tenta de novo)"
+          }
+        },
+        "security": [],
+        "summary": "Webhook v2 da AbacatePay (assinatura SaaS)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Prefixo da API (mesmo host do ambiente)",
+      "url": "/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Autenticação e autorização de usuários",
+      "name": "Auth"
+    },
+    {
+      "description": "Planos e assinatura SaaS",
+      "name": "Billing"
+    },
+    {
+      "description": "Dados do usuário logado",
+      "name": "Me"
+    },
+    {
+      "description": "Gestão de usuários",
+      "name": "User"
+    },
+    {
+      "description": "Gestão de barbeiros",
+      "name": "Barber"
+    },
+    {
+      "description": "Gestão de serviços",
+      "name": "Service"
+    },
+    {
+      "description": "Gestão de agendamentos",
+      "name": "Appointment"
+    },
+    {
+      "description": "Horários livres para agendamento (público)",
+      "name": "Availability"
+    },
+    {
+      "description": "Busca pública de filiais",
+      "name": "Search"
+    },
+    {
+      "description": "Gestão de pagamentos",
+      "name": "Payment"
+    },
+    {
+      "description": "Gestão de barbearias",
+      "name": "Barbershop"
+    },
+    {
+      "description": "Gestão de filiais",
+      "name": "Branch"
+    },
+    {
+      "description": "Gestão de endereços",
+      "name": "Address"
+    }
+  ]
+}

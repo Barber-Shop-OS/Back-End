@@ -18,7 +18,8 @@
     "test:mysql": "cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit",
     "billing:sync-products": "node scripts/billing-sync-products.js",
     "seed": "node scripts/seed.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "openapi:export": "node scripts/openapi-export.js"
   },
   "keywords": [],
   "author": "",
