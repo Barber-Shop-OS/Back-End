@@ -116,6 +116,13 @@ const MATRIX = {
   'PUT /api/payment/:id/status': ['admin', 'owner', 'barbeiro'],
 
   'PATCH /api/admin/users/:id/role': ['admin'],
+  'GET /api/admin/barbershops': ['admin'],
+  'GET /api/admin/barbershops/:id': ['admin'],
+  'POST /api/admin/barbershops/:id/suspend': ['admin'],
+  'POST /api/admin/barbershops/:id/reactivate': ['admin'],
+  'POST /api/admin/barbershops/:id/extend-trial': ['admin'],
+  'GET /api/admin/users': ['admin'],
+  'GET /api/admin/metrics': ['admin'],
   'GET /api/plans': 'public',
   'POST /api/billing/checkout': ['admin', 'owner'],
   'POST /api/billing/change-plan': ['admin', 'owner'],

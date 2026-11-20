@@ -360,10 +360,11 @@
 - **Aceite:** após exclusão não é possível logar e os dados pessoais não aparecem em nenhuma listagem.
 - **Feito:** `GET /api/me/export`; `DELETE /api/me` (alias `POST /api/me/delete`) com senha: anonimiza usuário (`deleted+<id>@deleted.invalid`), fichas de cliente nas barbearias, perfis de barbeiro; apaga sessões/tokens/identidades; soft delete; agendamentos e pagamentos ficam. Dono com assinatura `trialing/pending/active/past_due` → 409 `ACTIVE_SUBSCRIPTION`. `terms_version` aceito no cadastro (cliente, dono, Google) → `terms_accepted_at`. **Pendente (SEC-20):** textos de termos/privacidade publicados, retenção/expurgo automático, registro de operadores.
 
-### [ ] BE-41 — API administrativa da plataforma
+### [x] BE-41 — API administrativa da plataforma
 - **Depende de:** BE-31, BE-36
 - **Fazer:** `/api/admin/*` (role `admin`): listar/buscar barbearias com status de assinatura, suspender/reativar, estender trial, listar usuários, métricas (MRR, ativos, churn, trials). Criação de admin só via script CLI (`npm run create-admin`), nunca via API pública `[SEC-27]`.
 - **Aceite:** owner recebe 403 em todo `/api/admin/*`.
+- **Feito:** `GET /admin/barbershops` (busca, filtros por status e status da assinatura), `GET /admin/barbershops/:id`, `POST .../suspend|reactivate|extend-trial`, `GET /admin/users`, `GET /admin/metrics` (MRR, por status/plano, trials, novas, churn 30 d). Ações auditadas. `npm run create-admin -- <email> "<nome>" "<senha>"`. **Pendente (SEC-27):** 2FA para admin.
 
 ### [x] BE-42 — Observabilidade e saúde
 - **Depende de:** BE-08
