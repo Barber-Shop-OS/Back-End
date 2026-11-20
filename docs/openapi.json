@@ -3149,6 +3149,165 @@
         ]
       }
     },
+    "/barbershop/{id}/members": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ items: [{ id, user, role, branch_ids }] }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Gerentes da barbearia (dono)",
+        "tags": [
+          "Members"
+        ]
+      },
+      "post": {
+        "description": "branch_ids nulo/ausente = todas as filiais. Recurso branch_managers (402 FEATURE_NOT_IN_PLAN fora do plano Rede).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "branch_ids": {
+                    "items": {
+                      "type": "integer"
+                    },
+                    "nullable": true,
+                    "type": "array"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Gerente adicionado"
+          },
+          "402": {
+            "description": "FEATURE_NOT_IN_PLAN"
+          },
+          "404": {
+            "description": "USER_NOT_FOUND"
+          },
+          "409": {
+            "description": "Já é gerente"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Adicionar gerente (conta existente, por e-mail) — plano Rede",
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/barbershop/{id}/members/{memberId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "memberId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover gerente",
+        "tags": [
+          "Members"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "memberId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atualizado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Alterar filiais do gerente",
+        "tags": [
+          "Members"
+        ]
+      }
+    },
     "/barbershop/{id}/subscription": {
       "get": {
         "parameters": [

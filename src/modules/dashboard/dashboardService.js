@@ -13,7 +13,9 @@ const {
   BarberWorkingHour,
   BarberTimeOff,
 } = require('../../models');
-const { assertCanManageBarbershop } = require('../../shared/authz');
+const { assertCanManageBarbershop, membershipFor, ownsBarbershop } = require('../../shared/authz');
+const { Barbershop } = require('../../models');
+const { ForbiddenError } = require('../../utils/errorHandler');
 const time = require('../../shared/time');
 const metrics = require('./metrics');
 const { ValidationError, NotFoundError } = require('../../utils/errorHandler');
@@ -211,9 +213,20 @@ const compute = async ({ branches, period, appointmentFilter = {}, barberIds }) 
 /** GET /api/dashboard/summary — dono/admin da barbearia; branch_id opcional restringe a uma filial. */
 const summary = async (query, user, now = new Date()) => {
   const period = resolvePeriod(query, now);
-  await assertCanManageBarbershop(user, query.barbershop_id, { access: 'read' });
   const where = { barbershop_id: query.barbershop_id };
   if (query.branch_id) where.id = query.branch_id;
+  // BE-47: gerente de filial vê só as filiais que administra.
+  const shop = await Barbershop.findByPk(query.barbershop_id, { attributes: ['id', 'owner_id'] });
+  const membership = shop && !ownsBarbershop(user, shop) ? membershipFor(user, shop.id) : null;
+  if (membership) {
+    if (membership.branch_ids) {
+      const allowed = membership.branch_ids.map(Number);
+      if (query.branch_id && !allowed.includes(Number(query.branch_id))) throw new ForbiddenError('Sem permissão para esta filial');
+      if (!query.branch_id) where.id = allowed;
+    }
+  } else {
+    await assertCanManageBarbershop(user, query.barbershop_id, { access: 'read' });
+  }
   const branches = await Branch.findAll({ where, attributes: ['id', 'name', 'timezone'], order: [['id', 'ASC']] });
   if (query.branch_id && !branches.length) throw new NotFoundError('Filial não encontrada');
   const result = await compute({ branches, period });

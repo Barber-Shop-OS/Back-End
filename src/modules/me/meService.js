@@ -17,7 +17,16 @@ const listBarbershops = async (userId) => {
     attributes: ['id', 'name', 'slug', 'status', 'logo_url'],
     order: [['id', 'ASC']],
   });
-  return rows.map((row) => row.toJSON());
+  // BE-47: barbearias onde a pessoa é gerente (com as filiais que administra).
+  const { BarbershopMember } = require('../../models');
+  const memberships = await BarbershopMember.findAll({
+    where: { user_id: userId },
+    include: [{ model: Barbershop, attributes: ['id', 'name', 'slug', 'status', 'logo_url'], where: { status: { [Op.ne]: 'deleted' } } }],
+  });
+  return [
+    ...rows.map((row) => ({ ...row.toJSON(), membership: 'owner', branch_ids: null })),
+    ...memberships.map((row) => ({ ...row.Barbershop.toJSON(), membership: row.role, branch_ids: row.branch_ids || null })),
+  ];
 };
 
 const listBarberProfiles = async (userId) => {

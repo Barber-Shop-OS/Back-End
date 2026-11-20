@@ -41,6 +41,16 @@ const buildVisibilityScope = async (currentUser) => {
     scopes.push({ barber_id: barberProfiles.map((barber) => barber.id) });
   }
 
+  // BE-47: gerente vê a agenda das filiais que administra.
+  for (const membership of currentUser.memberships || []) {
+    if (membership.branch_ids && membership.branch_ids.length) {
+      scopes.push({ branch_id: membership.branch_ids.map(Number) });
+    } else if (!membership.branch_ids) {
+      const managed = await Branch.findAll({ where: { barbershop_id: membership.barbershop_id }, attributes: ['id'] });
+      if (managed.length) scopes.push({ branch_id: managed.map((branch) => branch.id) });
+    }
+  }
+
   return { [Op.or]: scopes };
 };
 

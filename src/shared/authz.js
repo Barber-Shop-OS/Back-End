@@ -15,6 +15,29 @@ const sameId = (a, b) => a !== null && a !== undefined && String(a) === String(b
 
 const ownsBarbershop = (user, barbershop) => isAdmin(user) || sameId(barbershop.owner_id, user && user.id);
 
+/** BE-47: gerência do usuário nesta barbearia (ou undefined). */
+const membershipFor = (user, barbershopId) =>
+  user && Array.isArray(user.memberships) ? user.memberships.find((item) => sameId(item.barbershop_id, barbershopId)) : undefined;
+
+/**
+ * Filiais que o usuário administra numa barbearia: null = todas (dono, admin ou gerente geral),
+ * array = só essas (gerente de filial), [] = nenhuma.
+ */
+const managedBranchIds = (user, barbershop) => {
+  if (ownsBarbershop(user, barbershop)) return null;
+  const membership = membershipFor(user, barbershop.id);
+  if (!membership) return [];
+  return membership.branch_ids === null || membership.branch_ids === undefined ? null : membership.branch_ids.map(Number);
+};
+
+/** Dono/admin ou gerente que cobre esta filial. */
+const canManageBranch = (user, branch) => {
+  if (!branch || !branch.Barbershop) return false;
+  const ids = managedBranchIds(user, branch.Barbershop);
+  return ids === null || ids.includes(Number(branch.id));
+};
+
+
 /**
  * BE-35: escrita no painel exige assinatura com acesso (trial válido, ativa ou em carência).
  * Senão 402 SUBSCRIPTION_INACTIVE — painel em modo leitura, dados preservados. Admin passa sempre.
@@ -54,7 +77,7 @@ const loadBranchWithBarbershop = (branchId) =>
 const assertCanManageBranch = async (user, branchId, options) => {
   const branch = await loadBranchWithBarbershop(branchId);
   if (!branch) throw new NotFoundError('Filial não encontrada');
-  if (!ownsBarbershop(user, branch.Barbershop)) {
+  if (!canManageBranch(user, branch)) {
     throw new ForbiddenError('Sem permissão para gerenciar esta filial');
   }
   await assertWritable(user, branch.barbershop_id, options);
@@ -67,7 +90,7 @@ const assertCanManageBarber = async (user, barberId, options) => {
     include: [{ model: Branch, include: [{ model: Barbershop }] }],
   });
   if (!barber) throw new NotFoundError('Barbeiro não encontrado');
-  if (!barber.Branch || !ownsBarbershop(user, barber.Branch.Barbershop)) {
+  if (!barber.Branch || !canManageBranch(user, barber.Branch)) {
     throw new ForbiddenError('Sem permissão para gerenciar este barbeiro');
   }
   await assertWritable(user, barber.Branch.barbershop_id, options);
@@ -84,7 +107,7 @@ const assertCanManageBarberAgenda = async (user, barberId, options) => {
   });
   if (!barber) throw new NotFoundError('Barbeiro não encontrado');
   const isSelfBarber = sameId(barber.user_id, user && user.id);
-  if (!isSelfBarber && !(barber.Branch && ownsBarbershop(user, barber.Branch.Barbershop))) {
+  if (!isSelfBarber && !(barber.Branch && canManageBranch(user, barber.Branch))) {
     throw new ForbiddenError('Sem permissão para gerenciar a agenda deste barbeiro');
   }
   if (barber.Branch) await assertWritable(user, barber.Branch.barbershop_id, options);
@@ -133,7 +156,7 @@ const isAppointmentStaff = (user, appointment) => {
   const barber = appointmentBarber(appointment);
   return (
     isAdmin(user) ||
-    Boolean(appointment.Branch && ownsBarbershop(user, appointment.Branch.Barbershop)) ||
+    Boolean(appointment.Branch && canManageBranch(user, appointment.Branch)) ||
     Boolean(barber && sameId(barber.user_id, user && user.id))
   );
 };
@@ -165,6 +188,9 @@ const assertCanOperateAppointment = async (user, appointmentId, options) => {
 
 module.exports = {
   isAdmin,
+  membershipFor,
+  managedBranchIds,
+  canManageBranch,
   assertWritable,
   ownsBarbershop,
   assertCanManageBarbershop,

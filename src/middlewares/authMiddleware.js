@@ -33,7 +33,18 @@ const authMiddleware = async (req, res, next) => {
       return next(new UnauthorizedError('Token inválido ou expirado'));
     }
 
-    req.user = { id: user.id, email: user.email, role: user.role };
+    // BE-47: gerências (papel por barbearia) — usadas pelo authz e pelo roleMiddleware.
+    const { BarbershopMember } = require('../models');
+    const memberships = await BarbershopMember.findAll({
+      where: { user_id: user.id },
+      attributes: ['barbershop_id', 'role', 'branch_ids'],
+    });
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      memberships: memberships.map((row) => ({ barbershop_id: row.barbershop_id, role: row.role, branch_ids: row.branch_ids || null })),
+    };
     // BE-36: a auditoria descobre quem está agindo pelo contexto da requisição.
     const context = require('../shared/requestContext').get();
     if (context) context.user = req.user;

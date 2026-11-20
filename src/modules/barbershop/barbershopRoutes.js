@@ -93,6 +93,8 @@ router.get('/slug/:slug', require('../../middlewares/publicCache')(30), schemas.
 require('../subscription/subscriptionRoutes').registerBarbershopRoutes(router);
 // BE-23: /:id/clients
 require('../client/clientRoutes').registerBarbershopRoutes(router);
+// BE-47: /:id/members
+require('../member/memberRoutes').registerBarbershopRoutes(router);
 
 router.get('/:id', schemas.byId, barbershopController.getById);
 

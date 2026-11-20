@@ -3,7 +3,7 @@
 // Escopo estrito: cliente da barbearia A nunca aparece para B (consultas sempre por barbershop_id).
 const { Op } = require('sequelize');
 const { sequelize, BarbershopClient, Barbershop, Barber, Branch, User, Appointment, Payment } = require('../../models');
-const { ownsBarbershop, assertWritable } = require('../../shared/authz');
+const { ownsBarbershop, assertWritable, membershipFor } = require('../../shared/authz');
 const { normalizePhone } = require('../../shared/phone');
 const { parsePagination, likeMatch } = require('../../shared/query');
 const { pickFields } = require('../../shared/pickFields');
@@ -16,7 +16,7 @@ const accessControl = () => require('../subscription/accessControl');
 const assertStaffOfBarbershop = async (user, barbershopId) => {
   const barbershop = await Barbershop.findByPk(barbershopId, { attributes: ['id', 'owner_id'] });
   if (!barbershop) throw new NotFoundError('Barbearia não encontrada');
-  if (ownsBarbershop(user, barbershop)) return barbershop;
+  if (ownsBarbershop(user, barbershop) || membershipFor(user, barbershop.id)) return barbershop;
   const barber = await Barber.findOne({
     where: { user_id: user.id, active: true },
     include: [{ model: Branch, attributes: ['id'], where: { barbershop_id: barbershop.id }, required: true }],

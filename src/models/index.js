@@ -27,6 +27,7 @@ const UserIdentity = require('./userIdentity');
 const RefreshToken = require('./refreshToken');
 const AuditLog = require('./auditLog');
 const Upload = require('./upload');
+const BarbershopMember = require('./barbershopMember');
 
 // ============================================
 // User associations
@@ -194,8 +195,13 @@ User.hasMany(RefreshToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
 
 AuditLog.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
 
+Barbershop.hasMany(BarbershopMember, { foreignKey: 'barbershop_id', as: 'members', onDelete: 'CASCADE' });
+BarbershopMember.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
+BarbershopMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   sequelize,
+  BarbershopMember,
   Upload,
   AuditLog,
   RefreshToken,

@@ -124,16 +124,32 @@ const resolveListScope = async (query, currentUser) => {
     }
   }
   if (query.barbershop_id) {
-    if (currentUser.role !== 'barbeiro') await assertCanManageBarbershop(currentUser, query.barbershop_id, { access: 'read' });
+    const membership = (currentUser.memberships || []).find((item) => String(item.barbershop_id) === String(query.barbershop_id));
+    if (membership && membership.branch_ids && !query.branch_id) {
+      where.branch_id = { [Op.in]: membership.branch_ids.map(Number) };
+    } else if (!membership && currentUser.role !== 'barbeiro') {
+      await assertCanManageBarbershop(currentUser, query.barbershop_id, { access: 'read' });
+    }
     where.barbershop_id = query.barbershop_id;
   }
 
   if (isAdmin(currentUser)) return { where, barberUserId };
 
-  if (currentUser.role === 'owner') {
+  // BE-47: gerente — só as filiais que administra (somadas às barbearias próprias, se houver).
+  const memberships = currentUser.memberships || [];
+  if (currentUser.role === 'owner' || memberships.length) {
     if (!where.barbershop_id && !where.branch_id) {
       const owned = await Barbershop.findAll({ where: { owner_id: currentUser.id }, attributes: ['id'] });
-      where.barbershop_id = { [Op.in]: owned.map((shop) => shop.id) };
+      const or = [];
+      if (owned.length) or.push({ barbershop_id: { [Op.in]: owned.map((shop) => shop.id) } });
+      for (const membership of memberships) {
+        or.push(
+          membership.branch_ids
+            ? { branch_id: { [Op.in]: membership.branch_ids.map(Number) } }
+            : { barbershop_id: membership.barbershop_id }
+        );
+      }
+      where[Op.or] = or.length ? or : [{ id: null }];
     }
     return { where, barberUserId };
   }

@@ -398,10 +398,11 @@
 - **Depende de:** BE-16
 - **Recomendação:** WhatsApp Cloud API oficial (Meta) com templates aprovados; recurso dos planos `profissional`/`rede`; opt-in do cliente registrado.
 
-### [ ] BE-47 — Papel de gerente de filial [DECISÃO PENDENTE]
+### [x] BE-47 — Papel de gerente de filial (aprovado 2026-11-14)
 - **Depende de:** BE-03
 - **Recomendação:** tabela `barbershop_members (barbershop_id, user_id, role ENUM(owner, manager), branch_ids JSON NULL)` em vez de novo valor no ENUM global de `users.role`; `authz.js` passa a consultar membership. Necessário para o plano `rede` (dono com várias filiais delega a gestão).
 - **Aceite:** gerente da filial X não vê financeiro da filial Y.
+- **Feito:** `barbershop_members` (role manager, `branch_ids` nulo = todas); memberships carregadas no `authMiddleware`; `authz.canManageBranch` usado em filial, barbeiro, agenda e atendimentos; dashboard, financeiro e agenda limitados às filiais do gerente; gerente não acessa cobrança, configurações da barbearia nem a equipe de gestão. `GET/POST/PATCH/DELETE /api/barbershop/:id/members` (dono; recurso `branch_managers` do plano Rede). `/api/me.barbershops[]` traz `membership` e `branch_ids`.
 
 ### [x] BE-48 — Versionamento e paginação consistentes
 - **Depende de:** BE-43

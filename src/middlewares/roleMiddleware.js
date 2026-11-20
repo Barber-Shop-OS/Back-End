@@ -5,7 +5,9 @@ const roleMiddleware = (allowedRoles = []) => (req, res, next) => {
   if (!req.user) {
     return next(new UnauthorizedError('Usuário não autenticado'));
   }
-  if (!allowedRoles.includes(req.user.role)) {
+  // BE-47: gerente de filial passa nas rotas de dono; o authz limita às filiais dele.
+  const isManager = Array.isArray(req.user.memberships) && req.user.memberships.length > 0;
+  if (!allowedRoles.includes(req.user.role) && !(isManager && allowedRoles.includes('owner'))) {
     return next(new ForbiddenError(`Acesso restrito. Permissão necessária: ${allowedRoles.join(', ')}`));
   }
   return next();
