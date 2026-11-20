@@ -86,7 +86,8 @@ router.get('/', schemas.list, barbershopController.getAll);
  *       200: { description: Perfil público }
  *       404: { description: Inexistente, suspensa ou sem assinatura ativa }
  */
-router.get('/slug/:slug', schemas.bySlug, barbershopController.getBySlug);
+// BE-48: cache curto (30 s) + ETag na página pública.
+router.get('/slug/:slug', require('../../middlewares/publicCache')(30), schemas.bySlug, barbershopController.getBySlug);
 
 // BE-31: /:id/subscription
 require('../subscription/subscriptionRoutes').registerBarbershopRoutes(router);

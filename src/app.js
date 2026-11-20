@@ -76,6 +76,14 @@ app.get('/ready', async (req, res) => {
 	}
 });
 
+// BE-48: /api/v1 é o prefixo versionado; /api continua como alias (mesmas rotas) por uma release.
+app.use((req, res, next) => {
+	if (req.url === '/api/v1' || req.url.startsWith('/api/v1/') || req.url.startsWith('/api/v1?')) {
+		req.url = `/api${req.url.slice('/api/v1'.length)}`;
+	}
+	next();
+});
+
 // Routes
 app.use(indexRoutes);
 

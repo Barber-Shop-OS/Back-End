@@ -858,6 +858,37 @@
         ]
       }
     },
+    "/app-config": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "api_version": "v1",
+                  "features": {
+                    "billing": true,
+                    "google_client_id": "xxx.apps.googleusercontent.com",
+                    "google_login": true,
+                    "uploads": true
+                  },
+                  "latest_app_version": "1.2.0",
+                  "maintenance": null,
+                  "min_app_version": "1.0.0",
+                  "terms_version": "2026-11"
+                }
+              }
+            },
+            "description": "Configuração"
+          }
+        },
+        "security": [],
+        "summary": "Configuração pública (versão mínima do app, recursos ligados, manutenção)",
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/appointment": {
       "get": {
         "parameters": [

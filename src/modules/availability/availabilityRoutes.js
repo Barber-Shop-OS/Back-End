@@ -61,7 +61,7 @@ const querySchema = validate({
  *       404: { description: Filial, serviço ou barbeiro não encontrado }
  *       429: { description: Limite de consultas atingido }
  */
-router.get('/', availabilityLimiter, querySchema, async (req, res, next) => {
+router.get('/', availabilityLimiter, require('../../middlewares/publicCache')(30), querySchema, async (req, res, next) => {
   try {
     const slots = await availabilityService.getAvailability(req.query);
     res.set('Cache-Control', 'public, max-age=30');

@@ -20,6 +20,7 @@ const mounts = [
   ['/api/webhooks', require('../modules/billing/webhookRoutes')],
   ['/api/audit-logs', require('../modules/audit/auditRoutes')],
   ['/api/uploads', require('../modules/upload/uploadRoutes')],
+  ['/api/app-config', require('../modules/appConfig/appConfigRoutes')],
   ['/api/admin', require('../modules/admin/adminRoutes')],
   ['/api/invitations', require('../modules/invitation/invitationRoutes')],
   ['/api/plans', require('../modules/subscription/subscriptionRoutes').plansRouter],

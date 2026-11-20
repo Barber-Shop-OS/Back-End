@@ -403,9 +403,10 @@
 - **Recomendação:** tabela `barbershop_members (barbershop_id, user_id, role ENUM(owner, manager), branch_ids JSON NULL)` em vez de novo valor no ENUM global de `users.role`; `authz.js` passa a consultar membership. Necessário para o plano `rede` (dono com várias filiais delega a gestão).
 - **Aceite:** gerente da filial X não vê financeiro da filial Y.
 
-### [ ] BE-48 — Versionamento e paginação consistentes
+### [x] BE-48 — Versionamento e paginação consistentes
 - **Depende de:** BE-43
 - **Fazer:** prefixo `/api/v1` (manter `/api` como alias por 1 release); resposta paginada padrão `{items, page, pageSize, total, totalPages}` em todos os list; `ETag`/`Cache-Control` nas rotas públicas (`/slug/:slug`, `/availability` 30 s). `GET /api/app-config` público (`min_app_version`, flags) para MOB-18.
+- **Feito:** `/api/v1/*` reescrito para as mesmas rotas de `/api/*` (alias mantido; o cookie de refresh continua em `/api/auth`). Listas já seguiam `{items, page, pageSize, total, totalPages}` (teste garante). `Cache-Control: public, max-age=30` + ETag/304 na página pública e na disponibilidade. `GET /api/app-config`: versões do app, manutenção, recursos ligados (Google, cobrança, uploads) e versão dos termos.
 
 ---
 
