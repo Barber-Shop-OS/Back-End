@@ -19,7 +19,8 @@
     "billing:sync-products": "node scripts/billing-sync-products.js",
     "seed": "node scripts/seed.js",
     "create-admin": "node scripts/create-admin.js",
-    "openapi:export": "node scripts/openapi-export.js"
+    "openapi:export": "node scripts/openapi-export.js",
+    "migrate:release": "node scripts/migrate-release.js"
   },
   "keywords": [],
   "author": "",

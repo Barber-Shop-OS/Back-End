@@ -11,18 +11,26 @@ const isTestEnv = process.env.NODE_ENV === 'test';
 const useMysqlInTests = isTestEnv && process.env.TEST_DB_DIALECT === 'mysql';
 const usesSsl = process.env.DB_SSL === 'true';
 
+/**
+ * BE-44 / SEC-12: TLS com o banco validando o certificado. DB_SSL_CA = conteúdo PEM ou caminho do
+ * arquivo da CA do provedor; sem CA usa as CAs do sistema. Nunca desliga a validação por padrão.
+ */
+const sslOptions = () => {
+  const fs = require('fs');
+  const ca = process.env.DB_SSL_CA;
+  const options = { require: true, rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
+  // PEM em variável de ambiente costuma vir com "\n" literais no lugar das quebras de linha.
+  if (ca) options.ca = ca.includes('BEGIN CERTIFICATE') ? ca.replace(/\\n/g, '\n') : fs.readFileSync(ca, 'utf8');
+  return options;
+};
+
 const mysqlOptions = {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   dialect: 'mysql',
   timezone: '+00:00',
   logging: false,
-  dialectOptions: usesSsl
-    ? {
-        // SEC-12 (pendente em BE-44): validar o certificado do provedor com DB_SSL_CA.
-        ssl: { require: true, rejectUnauthorized: false },
-      }
-    : undefined,
+  dialectOptions: usesSsl ? { ssl: sslOptions() } : undefined,
 };
 
 const sequelize =

@@ -91,7 +91,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Onde:** `utils/errorHandler.handleErrorResponse` devolve `err.message` para qualquer erro, inclusive Sequelize/MySQL (nomes de tabela, colunas, SQL).
 - **Correção:** só mensagens de `AppError` vão ao cliente; 500 genérico com `request_id`.
 
-### [ ] SEC-12 — TLS do banco sem validação de certificado — **Médio** → BE-44
+### [x] SEC-12 — TLS do banco sem validação de certificado — **Médio** → BE-44
+- **Fechado (2026-11-19, BE-44):** ver `docs/runbook.md` e `src/config/sequelize.js`.
 - **Onde:** `src/config/sequelize.js` (`rejectUnauthorized: false`).
 - **Correção:** `ca` do provedor via env (`DB_SSL_CA`), `rejectUnauthorized: true`.
 
@@ -151,7 +152,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [ ] SEC-24 — Pentest antes do lançamento — **Alto**
 - Após sprints A–D: checklist OWASP API Top 10 executado manualmente contra staging (registrar evidências em `docs/security/pentest-AAAA-MM.md`), incluindo fluxo de pagamento AbacatePay em devMode. Corrigir achados e reexecutar.
 
-### [ ] SEC-25 — Banco e infraestrutura — **Médio** → BE-44
+### [x] SEC-25 — Banco e infraestrutura — **Médio** → BE-44
+- **Fechado (2026-11-19, BE-44):** ver `docs/runbook.md` e `src/config/sequelize.js`.
 - Usuário de aplicação com `SELECT/INSERT/UPDATE/DELETE` apenas; migrations com usuário separado; banco sem acesso público (allowlist de IP/VPC); backups criptografados com teste de restore trimestral; rotação de segredos documentada (JWT, DB, AbacatePay, SMTP); segredos só no gerenciador do provedor.
 
 ### [x] SEC-26 — Tokens de uso único (reset, verificação, convite) — **Alto** → BE-22, BE-26, BE-27

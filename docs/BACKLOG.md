@@ -383,10 +383,11 @@
 
 ## Fase P3 — Produção e expansão
 
-### [ ] BE-44 — Deploy de produção e operação
+### [x] BE-44 — Deploy de produção e operação
 - **Depende de:** BE-42
 - **Fazer:** Dockerfile multi-stage (`node:22-alpine`, `npm ci --omit=dev`, usuário não-root, `HEALTHCHECK`); migrations como passo de release separado (não no boot de cada instância — ou com lock); ambientes `staging` e `production` com bancos separados; usuário MySQL de aplicação sem `DROP/GRANT` `[SEC-25]`; backup diário com retenção 30 dias + teste de restore documentado; SSL do banco com CA (`rejectUnauthorized: true`) `[SEC-12]`; `docs/runbook.md` (deploy, rollback, rotação de segredos, incidente de webhook).
 - **Aceite:** deploy em staging reproduzível a partir do README.
+- **Feito:** Dockerfile multi-stage (`node:22-alpine`, `npm ci --omit=dev`, usuário `node`, `HEALTHCHECK /health`); `npm run migrate:release` com `GET_LOCK`; `MIGRATE_ON_BOOT=false` só valida o schema; encerramento gracioso (SIGTERM); TLS do banco com CA (`DB_SSL_CA`, `rejectUnauthorized` ligado). `docs/runbook.md`: ambientes, usuário de banco sem DROP/GRANT, deploy, rollback, backup/restore, rotação de segredos, incidente de webhook. Validado com a imagem nova (healthy, não-root, release + boot sem migrations). **Pendente:** provisionar staging/produção reais e o backup gerenciado.
 
 ### [ ] BE-45 — Push notifications (app mobile)
 - **Depende de:** BE-16 (consumido por MOB-11)
