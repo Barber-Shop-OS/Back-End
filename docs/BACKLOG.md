@@ -421,6 +421,11 @@
 - **Fazer:** `GET /api/dashboard/front-desk?branch_id=&date=` (dono, gerente ou recepcionista da filial): `{ date, timezone, branch, total_today, attended, pending, cancelled, no_show, upcoming[] }`.
 - **Feito:** dia local no fuso da filial (padrão hoje). `total_today` exclui cancelados; `attended` = concluídos; `pending` = confirmados; `upcoming` = confirmados ainda não terminados (máx. 50) com `time`, `client {id, user_id, name, phone}`, `services[]`, `barber {id, name}`, `allowed_actions`. Outra filial/tenant → 403; filial inexistente → 404.
 
+### [x] BE-51 — Central de notificações in-app
+- **Depende de:** BE-16, BE-49
+- **Fazer:** tabela `user_notifications` (id, user_id, type, title, body, link, data JSON, read_at, timestamps); notificações nos eventos de agendamento para cliente, barbeiro e equipe da filial (dono, gerentes, recepcionistas), sem avisar o autor; `GET /api/me/notifications?page=&pageSize=&unread=true` (paginado + `unread_count`), `PATCH /api/me/notifications/:id/read`, `POST /api/me/notifications/read-all`.
+- **Feito:** gravadas pelo mesmo job `appointment.email` que envia e-mail/push (criado, cancelado, remarcado; o payload leva `actor_id`). Falha na gravação só vai para o log (e-mail segue); `source_key` (job + destinatário, coluna interna) evita duplicar em reprocessamento. Tipos `appointment.created|cancelled|rescheduled`; `data = { appointment_id, branch_id, barbershop_id, start_at }`; `link` nulo (o front monta a rota a partir de `data`). Notificação de outro usuário → 404. Excluir a conta (LGPD) apaga as notificações. Conclusão/falta não geram notificação (só a equipe age nesses casos e o cliente não precisa de aviso).
+
 ---
 
 ## Sequência recomendada (sprints)

@@ -2,12 +2,13 @@
 const express = require('express');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const validate = require('../../middlewares/validate');
-const { Joi, pagination, email, password } = require('../../shared/schemas');
+const { Joi, pagination, email, password, id } = require('../../shared/schemas');
 const { authLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
 const accountSecurityService = require('./accountSecurityService');
 const sessionService = require('../auth/sessionService');
 const privacyService = require('./privacyService');
 const pushService = require('../notification/pushService');
+const notificationCenter = require('../notification/notificationCenter');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
@@ -277,5 +278,74 @@ router.delete(
     return res.status(204).end();
   })
 );
+
+/**
+ * @swagger
+ * /me/notifications:
+ *   get:
+ *     summary: Minhas notificações in-app (central/sino), mais recentes primeiro
+ *     description: >
+ *       Tipos: appointment.created, appointment.cancelled, appointment.rescheduled. data traz
+ *       { appointment_id, branch_id, barbershop_id, start_at }. unread_count = total de não lidas
+ *       (independe do filtro).
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: unread, schema: { type: boolean } }
+ *       - { in: query, name: page, schema: { type: integer } }
+ *       - { in: query, name: pageSize, schema: { type: integer, maximum: 100 } }
+ *     responses:
+ *       200:
+ *         description: Lista paginada
+ *         content:
+ *           application/json:
+ *             example:
+ *               items:
+ *                 - id: 1
+ *                   type: appointment.created
+ *                   title: Novo agendamento
+ *                   body: 'Ana — Corte · sexta-feira, 20/11/2026 às 14:00'
+ *                   link: null
+ *                   data: { appointment_id: 42, branch_id: 1, barbershop_id: 1, start_at: '2026-11-20T17:00:00.000Z' }
+ *                   read: false
+ *                   read_at: null
+ *                   created_at: '2026-11-20T12:00:00.000Z'
+ *               page: 1
+ *               pageSize: 10
+ *               total: 1
+ *               totalPages: 1
+ *               unread_count: 1
+ * /me/notifications/{id}/read:
+ *   patch:
+ *     summary: Marcar uma notificação como lida (idempotente)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: integer } }
+ *     responses:
+ *       200: { description: "{ notification, unread_count }" }
+ *       404: { description: Não existe ou é de outro usuário }
+ * /me/notifications/read-all:
+ *   post:
+ *     summary: Marcar todas como lidas
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ updated, unread_count: 0 }" }
+ */
+router.get(
+  '/notifications',
+  validate({ query: Joi.object({ ...pagination, unread: Joi.boolean() }) }),
+  handle(async (req, res) => success(res, await notificationCenter.list(req.user.id, req.query)))
+);
+router.patch(
+  '/notifications/:id/read',
+  validate({ params: Joi.object({ id: id().required() }) }),
+  handle(async (req, res) => success(res, await notificationCenter.markRead(req.user.id, req.params.id)))
+);
+router.post('/notifications/read-all', handle(async (req, res) => success(res, await notificationCenter.markAllRead(req.user.id))));
 
 module.exports = router;

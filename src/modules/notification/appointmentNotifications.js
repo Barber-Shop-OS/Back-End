@@ -3,6 +3,7 @@
 //   cancelamento → remove lembretes pendentes + e-mail de cancelamento (.ics METHOD:CANCEL)
 //   reagendamento→ remove lembretes, agenda os novos + e-mail com o novo horário (.ics atualizado)
 //   conclusão/falta → remove lembretes pendentes
+// BE-51: o mesmo job grava as notificações in-app (criado/cancelado/remarcado).
 // Os jobs são enfileirados dentro da transação do agendamento: rollback não deixa e-mail órfão.
 // O e-mail é montado na hora do envio com os dados atuais; lembrete de horário que mudou é ignorado.
 require('dayjs/locale/pt-br');
@@ -64,19 +65,22 @@ const cancelReminders = (appointmentId, transaction) =>
 const enqueueEmail = (appointmentId, kind, extra, transaction) =>
   queue.enqueue(JOB_TYPE, { appointment_id: appointmentId, kind, ...extra }, { reference: reference(appointmentId), transaction });
 
-const onCreate = async ({ appointment, transaction }) => {
-  await enqueueEmail(appointment.id, KINDS.CONFIRMATION, {}, transaction);
+// BE-51: actor_id vai no payload para a central de notificações não avisar o próprio autor.
+const actorOf = (actor) => (actor && actor.id ? { actor_id: actor.id } : {});
+
+const onCreate = async ({ appointment, actor, transaction }) => {
+  await enqueueEmail(appointment.id, KINDS.CONFIRMATION, actorOf(actor), transaction);
   await scheduleReminders(appointment, { transaction });
 };
 
-const onTransition = async ({ action, appointment, payload, transaction }) => {
+const onTransition = async ({ action, appointment, payload, actor, transaction }) => {
   await cancelReminders(appointment.id, transaction);
   if (action === stateMachine.ACTIONS.CANCEL) {
-    await enqueueEmail(appointment.id, KINDS.CANCELLATION, {}, transaction);
+    await enqueueEmail(appointment.id, KINDS.CANCELLATION, actorOf(actor), transaction);
   }
   if (action === stateMachine.ACTIONS.RESCHEDULE) {
     await scheduleReminders(appointment, { transaction });
-    await enqueueEmail(appointment.id, KINDS.RESCHEDULE, { previous_start_at: payload.from.start_at }, transaction);
+    await enqueueEmail(appointment.id, KINDS.RESCHEDULE, { previous_start_at: payload.from.start_at, ...actorOf(actor) }, transaction);
   }
 };
 
@@ -93,7 +97,7 @@ const loadForEmail = (appointmentId) =>
       { model: Barber, attributes: ['id', 'display_name', 'user_id'], include: [{ model: User, attributes: ['name'] }] },
       {
         model: Branch,
-        attributes: ['id', 'name', 'timezone'],
+        attributes: ['id', 'name', 'timezone', 'barbershop_id'],
         include: [{ model: Address }, { model: Barbershop, attributes: ['id', 'name', 'slug'] }],
       },
     ],
@@ -209,9 +213,17 @@ const calendarAttachment = async (appointment, { cancelled = false } = {}) => ({
  * Handler do job. Retorna o e-mail enviado, ou null quando não há o que enviar
  * (lembrete de agendamento cancelado/remarcado, agendamento apagado).
  */
-const handle = async (payload, now = new Date()) => {
+const handle = async (payload, now = new Date(), job = null) => {
   const appointment = await loadForEmail(payload.appointment_id);
   if (!appointment) return null;
+  // BE-51: central de notificações in-app (novo/cancelado/remarcado) — falha só vai para o log.
+  if (!isReminder(payload)) {
+    const tz = appointment.Branch.timezone || time.DEFAULT_TIMEZONE;
+    await require('./notificationCenter').notifyAppointment(appointment, payload, {
+      when: `${formatDate(appointment.start_at, tz)} às ${formatTime(appointment.start_at, tz)}`,
+      jobId: job && job.id,
+    });
+  }
   // BE-45: push para o app (cliente e, em novo/cancelado, o barbeiro) — independe do e-mail.
   await sendPush(appointment, payload);
   if (!recipient(appointment)) return null;
@@ -258,7 +270,7 @@ const register = () => {
   registered = true;
   booking.onCreate(onCreate);
   lifecycle.onTransition(onTransition);
-  worker.register(JOB_TYPE, (payload) => handle(payload));
+  worker.register(JOB_TYPE, (payload, job) => handle(payload, new Date(), job));
   worker.register('email.send', handleTemplateEmail);
   worker.addMaintenance((now) => booking.purgeExpiredIdempotencyKeys(now));
 };

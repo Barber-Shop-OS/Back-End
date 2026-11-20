@@ -91,6 +91,8 @@ const deleteAccount = async (userId, { password } = {}) => {
     await UserIdentity.destroy({ where: { user_id: user.id }, ...opts });
     await UserToken.destroy({ where: { user_id: user.id }, ...opts });
     await RefreshToken.destroy({ where: { user_id: user.id }, ...opts });
+    // BE-51: notificações in-app citam nomes de terceiros — apagadas com a conta.
+    await require('../../models').UserNotification.destroy({ where: { user_id: user.id }, ...opts });
     // Ficha do cliente nas barbearias: sem dados pessoais e sem vínculo com a conta.
     await BarbershopClient.update(
       { name: 'Cliente removido', phone: null, email: null, notes: null, user_id: null },
