@@ -6,21 +6,44 @@
 //   - cliente só enxerga os próprios agendamentos/pagamentos.
 // Recursos públicos (barbearia, filial, barbeiro, serviço) → 403 em escrita de outro tenant.
 // Recursos privados (endereço por id, agendamento, pagamento) → 404, para não revelar existência.
-const { Barbershop, Branch, Barber, Service, Appointment } = require('../models');
-const { ForbiddenError, NotFoundError } = require('../utils/errorHandler');
+const { Barbershop, Branch, Barber, Service, Appointment, Subscription } = require('../models');
+const { ForbiddenError, NotFoundError, AppError, CODES } = require('../utils/errorHandler');
+const entitlements = require('./entitlements');
 
 const isAdmin = (user) => Boolean(user) && user.role === 'admin';
 const sameId = (a, b) => a !== null && a !== undefined && String(a) === String(b);
 
 const ownsBarbershop = (user, barbershop) => isAdmin(user) || sameId(barbershop.owner_id, user && user.id);
 
+/**
+ * BE-35: escrita no painel exige assinatura com acesso (trial válido, ativa ou em carência).
+ * Senão 402 SUBSCRIPTION_INACTIVE — painel em modo leitura, dados preservados. Admin passa sempre.
+ * Barbearia sem linha de assinatura (só dados legados; toda criação abre um trial) não é bloqueada.
+ * `options.access = 'read'` desliga a checagem (consultas, cobrança, exclusões para caber no plano).
+ */
+const assertWritable = async (user, barbershopId, options = {}) => {
+  if ((options && options.access === 'read') || isAdmin(user)) return;
+  const subscription = await Subscription.findOne({ where: { barbershop_id: barbershopId } });
+  if (!subscription) return;
+  const access = entitlements.accessLevel(subscription);
+  if (access === 'read_only') {
+    throw new AppError(
+      'Assinatura inativa: o painel está em modo leitura. Regularize a assinatura para voltar a editar.',
+      402,
+      CODES.SUBSCRIPTION_INACTIVE,
+      { status: subscription.status, access }
+    );
+  }
+};
+
 /** Barbearia que o usuário gerencia. 404 se não existe, 403 se é de outro dono. */
-const assertCanManageBarbershop = async (user, barbershopId) => {
+const assertCanManageBarbershop = async (user, barbershopId, options) => {
   const barbershop = await Barbershop.findByPk(barbershopId);
   if (!barbershop) throw new NotFoundError('Barbearia não encontrada');
   if (!ownsBarbershop(user, barbershop)) {
     throw new ForbiddenError('Sem permissão para gerenciar esta barbearia');
   }
+  await assertWritable(user, barbershop.id, options);
   return barbershop;
 };
 
@@ -28,17 +51,18 @@ const loadBranchWithBarbershop = (branchId) =>
   Branch.findByPk(branchId, { include: [{ model: Barbershop }] });
 
 /** Filial de uma barbearia que o usuário gerencia. */
-const assertCanManageBranch = async (user, branchId) => {
+const assertCanManageBranch = async (user, branchId, options) => {
   const branch = await loadBranchWithBarbershop(branchId);
   if (!branch) throw new NotFoundError('Filial não encontrada');
   if (!ownsBarbershop(user, branch.Barbershop)) {
     throw new ForbiddenError('Sem permissão para gerenciar esta filial');
   }
+  await assertWritable(user, branch.barbershop_id, options);
   return branch;
 };
 
 /** Barbeiro lotado em filial de uma barbearia que o usuário gerencia. */
-const assertCanManageBarber = async (user, barberId) => {
+const assertCanManageBarber = async (user, barberId, options) => {
   const barber = await Barber.findByPk(barberId, {
     include: [{ model: Branch, include: [{ model: Barbershop }] }],
   });
@@ -46,6 +70,7 @@ const assertCanManageBarber = async (user, barberId) => {
   if (!barber.Branch || !ownsBarbershop(user, barber.Branch.Barbershop)) {
     throw new ForbiddenError('Sem permissão para gerenciar este barbeiro');
   }
+  await assertWritable(user, barber.Branch.barbershop_id, options);
   return barber;
 };
 
@@ -53,7 +78,7 @@ const assertCanManageBarber = async (user, barberId) => {
  * Agenda do barbeiro (bloqueios): o dono da barbearia ou o próprio barbeiro. BE-11.
  * Jornada semanal continua só com o dono (assertCanManageBarber).
  */
-const assertCanManageBarberAgenda = async (user, barberId) => {
+const assertCanManageBarberAgenda = async (user, barberId, options) => {
   const barber = await Barber.findByPk(barberId, {
     include: [{ model: Branch, include: [{ model: Barbershop }] }],
   });
@@ -62,16 +87,18 @@ const assertCanManageBarberAgenda = async (user, barberId) => {
   if (!isSelfBarber && !(barber.Branch && ownsBarbershop(user, barber.Branch.Barbershop))) {
     throw new ForbiddenError('Sem permissão para gerenciar a agenda deste barbeiro');
   }
+  if (barber.Branch) await assertWritable(user, barber.Branch.barbershop_id, options);
   return barber;
 };
 
 /** Serviço de uma barbearia que o usuário gerencia. */
-const assertCanManageService = async (user, serviceId) => {
+const assertCanManageService = async (user, serviceId, options) => {
   const service = await Service.findByPk(serviceId, { include: [{ model: Barbershop }] });
   if (!service) throw new NotFoundError('Serviço não encontrado');
   if (!ownsBarbershop(user, service.Barbershop)) {
     throw new ForbiddenError('Sem permissão para gerenciar este serviço');
   }
+  await assertWritable(user, service.barbershop_id, options);
   return service;
 };
 
@@ -123,10 +150,13 @@ const assertCanViewAppointment = async (user, appointmentId) => {
 };
 
 /** Ações de equipe (pagamento, concluir, falta): barbeiro que atende, dono ou admin. */
-const assertCanOperateAppointment = async (user, appointmentId) => {
+const assertCanOperateAppointment = async (user, appointmentId, options) => {
   const appointment = await loadAppointmentContext(appointmentId);
   if (!appointment) throw new NotFoundError('Agendamento não encontrado');
-  if (isAppointmentStaff(user, appointment)) return appointment;
+  if (isAppointmentStaff(user, appointment)) {
+    if (appointment.Branch) await assertWritable(user, appointment.Branch.barbershop_id, options);
+    return appointment;
+  }
   if (isAppointmentClient(user, appointment)) {
     throw new ForbiddenError('Apenas a barbearia pode realizar esta ação');
   }
@@ -135,6 +165,7 @@ const assertCanOperateAppointment = async (user, appointmentId) => {
 
 module.exports = {
   isAdmin,
+  assertWritable,
   ownsBarbershop,
   assertCanManageBarbershop,
   assertCanManageBranch,

@@ -104,11 +104,25 @@ const attachUser = async ({ user, branchId, bio, display_name, photo_url }) => {
   return barberRepository.findById(barberId);
 };
 
+/**
+ * BE-35: vaga de barbeiro no plano. Quem já é barbeiro ativo da barbearia (ex.: mudando de filial)
+ * não ocupa vaga nova.
+ */
+const assertBarberSeat = async (barbershopId, userId) => {
+  const { Branch, Barber } = require('../../models');
+  const already = await Barber.count({
+    where: { user_id: userId, active: true },
+    include: [{ model: Branch, attributes: [], where: { barbershop_id: barbershopId }, required: true }],
+  });
+  if (!already) await require('../subscription/subscriptionService').assertWithinLimit(barbershopId, 'barbers');
+};
+
 const create = async (data, currentUser) => {
   // A filial é checada primeiro para não revelar ids de usuários a quem não gerencia a filial.
-  await assertCanManageBranch(currentUser, data.branch_id);
+  const branch = await assertCanManageBranch(currentUser, data.branch_id);
   const user = await User.findByPk(data.user_id);
   if (!user) throw new NotFoundError('Usuário não encontrado', CODES.USER_NOT_FOUND);
+  await assertBarberSeat(branch.barbershop_id, user.id);
   return toPublicBarber(await attachUser({ user, branchId: data.branch_id, ...data }));
 };
 
@@ -117,7 +131,7 @@ const create = async (data, currentUser) => {
  * Se o e-mail ainda não tem conta, `onUnknownEmail` (convite — BE-22) assume.
  */
 const createInBranch = async (branchId, data, currentUser, { onUnknownEmail } = {}) => {
-  await assertCanManageBranch(currentUser, branchId);
+  const branch = await assertCanManageBranch(currentUser, branchId);
 
   let user = null;
   if (data.user_id) {
@@ -129,6 +143,7 @@ const createInBranch = async (branchId, data, currentUser, { onUnknownEmail } = 
     }
   }
   if (!user) throw new NotFoundError('Usuário não encontrado', CODES.USER_NOT_FOUND);
+  await assertBarberSeat(branch.barbershop_id, user.id);
 
   return { barber: toPublicBarber(await attachUser({ user, branchId, ...data })) };
 };
@@ -169,7 +184,7 @@ const update = async (id, data, currentUser) => {
  * `force=cancel`: nesse caso os agendamentos são cancelados (e os clientes notificados — BE-16).
  */
 const remove = async (id, currentUser, { force } = {}) => {
-  const barber = await assertCanManageBarber(currentUser, id);
+  const barber = await assertCanManageBarber(currentUser, id, { access: 'read' });
   const future = await barberRepository.findFutureAppointments(id);
 
   if (future.length && force !== 'cancel') {

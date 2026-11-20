@@ -211,12 +211,20 @@ const compute = async ({ branches, period, appointmentFilter = {}, barberIds }) 
 /** GET /api/dashboard/summary — dono/admin da barbearia; branch_id opcional restringe a uma filial. */
 const summary = async (query, user, now = new Date()) => {
   const period = resolvePeriod(query, now);
-  await assertCanManageBarbershop(user, query.barbershop_id);
+  await assertCanManageBarbershop(user, query.barbershop_id, { access: 'read' });
   const where = { barbershop_id: query.barbershop_id };
   if (query.branch_id) where.id = query.branch_id;
   const branches = await Branch.findAll({ where, attributes: ['id', 'name', 'timezone'], order: [['id', 'ASC']] });
   if (query.branch_id && !branches.length) throw new NotFoundError('Filial não encontrada');
-  return compute({ branches, period });
+  const result = await compute({ branches, period });
+  // BE-35: no plano sem financial_reports o resumo vem sem o detalhamento financeiro.
+  if (!(await require('../subscription/accessControl').hasFeature(query.barbershop_id, 'financial_reports'))) {
+    delete result.revenue_by_branch;
+    delete result.revenue_by_barber;
+    delete result.top_services;
+    result.locked_features = ['financial_reports'];
+  }
+  return result;
 };
 
 /** GET /api/dashboard/barber — barbeiro logado (todos os perfis dele, em qualquer filial). */

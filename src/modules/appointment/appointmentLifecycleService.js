@@ -3,7 +3,7 @@
 // histórico. A linha do agendamento é travada (FOR UPDATE) e a regra é conferida de novo dentro da
 // transação, então duas ações simultâneas não passam as duas.
 const { Barber, Appointment, AppointmentEvent } = require('../../models');
-const { assertCanViewAppointment } = require('../../shared/authz');
+const { assertCanViewAppointment, assertWritable } = require('../../shared/authz');
 const { performsService } = require('../barber/barberRepository');
 const availability = require('../availability/availabilityService');
 const booking = require('./bookingService');
@@ -85,6 +85,11 @@ const applyReschedule = async (row, context, role, input, now, transaction) => {
 const transition = async (id, action, currentUser, input = {}, now = new Date()) => {
   const context = await assertCanViewAppointment(currentUser, id);
   const role = roleFor(currentUser, context);
+  // BE-35: em modo leitura a equipe não conclui/marca falta/reagenda (cancelar continua permitido
+  // para avisar os clientes).
+  if (role === stateMachine.ROLES.STAFF && action !== ACTIONS.CANCEL && context.Branch) {
+    await assertWritable(currentUser, context.Branch.barbershop_id);
+  }
   // Falha rápido fora da transação; a mesma regra é conferida de novo com a linha travada.
   stateMachine.assertAction(context, role, action, now);
 

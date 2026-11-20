@@ -321,10 +321,11 @@
 - **Fazer:** `POST /api/uploads/presign {kind: logo|cover|barber_photo, content_type, size}` → valida tipo (`image/jpeg|png|webp`, **sem SVG**), tamanho (≤ 2 MB), tenant; chave `tenants/<barbershop_id>/<kind>/<uuid>.<ext>`; `POST /api/uploads/confirm` verifica o objeto (HEAD + magic bytes) antes de gravar a URL.
 - **Aceite:** upload de SVG/HTML recusado; chave nunca derivada do nome do arquivo do usuário.
 
-### [ ] BE-35 — Aplicação de limites do plano e bloqueio por inadimplência
+### [x] BE-35 — Aplicação de limites do plano e bloqueio por inadimplência
 - **Depende de:** BE-31, BE-33
 - **Fazer:** middleware `requireEntitlement('branches.create')` etc. em criação de filial/barbeiro/convite; `402 PLAN_LIMIT_REACHED` com `{limit, used, upgrade_to}`. Regras de status: `trialing/active` → tudo; `past_due` → 7 dias de carência com banner (campo `billing_banner` em `/api/me`); após carência ou `expired/canceled` → painel em modo leitura, agendamento público desligado (página pública 404/“indisponível”), **dados preservados** 90 dias. Job diário: trials vencidos → `expired` + e-mails D-3, D-1, D0.
 - **Aceite:** testes de cada transição; agendamentos existentes não são apagados.
+- **Feito (2026-11-19):** `entitlements.accessLevel` (full / grace / read_only) é a regra única. Escrita do painel passa por `authz.assertWritable` dentro dos `assertCanManage*` (402 `SUBSCRIPTION_INACTIVE`; leitura, cobrança e exclusões continuam liberadas; equipe ainda pode cancelar atendimentos). Limites: filiais e barbeiros (402 `PLAN_LIMIT_REACHED` com `upgrade_to`). Recursos: `clients_crm` (detalhe/estatísticas de clientes) e `financial_reports` (detalhamento do dashboard; `locked_features`). `/api/me` ganhou `billing_banner` e `billing_banners[]`. Ciclo diário de trials roda no job `billing.daily`. **Pendente:** expurgo de dados após 90 dias (decidir com o responsável).
 
 ### [ ] BE-36 — Auditoria e soft delete
 - **Depende de:** BE-15

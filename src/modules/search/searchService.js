@@ -7,6 +7,7 @@
 const { Op, literal } = require('sequelize');
 const { Branch, Barbershop, Address, Service, Subscription } = require('../../models');
 const { likeMatch } = require('../../shared/query');
+const entitlements = require('../../shared/entitlements');
 const { publicAddress } = require('../barbershop/barbershopPublicService');
 
 const MAX_PAGE_SIZE = 50;
@@ -23,8 +24,13 @@ const parsePage = (query) => {
 /** Mesma regra de entitlements.isPubliclyVisible, em SQL. */
 const visibleSubscriptionWhere = (now) => ({
   [Op.or]: [
-    { status: { [Op.in]: ['active', 'past_due'] } },
+    { status: 'active' },
     { status: 'trialing', trial_ends_at: { [Op.gt]: now } },
+    // BE-35: em atraso só dentro da carência de 7 dias.
+    {
+      status: 'past_due',
+      [Op.or]: [{ past_due_since: null }, { past_due_since: { [Op.gt]: new Date(now.getTime() - entitlements.GRACE_DAYS * 86400000) } }],
+    },
   ],
 });
 

@@ -174,6 +174,8 @@ const loadBookingContext = async ({ branchId, serviceId, transaction }) => {
   if (!branch || !branch.active || !branch.Barbershop || branch.Barbershop.status !== 'active') {
     throw new NotFoundError('Filial não encontrada');
   }
+  // BE-35: assinatura inativa → agendamento desligado (dados preservados).
+  await require('../subscription/accessControl').assertBookable(branch.barbershop_id);
   const service = await Service.findByPk(serviceId, { transaction });
   if (!service) throw new NotFoundError('Serviço não encontrado');
   if (String(service.barbershop_id) !== String(branch.barbershop_id)) {

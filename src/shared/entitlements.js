@@ -41,14 +41,53 @@ const checkLimit = (subscription, resource, used, catalog) => {
   return { allowed, limit: max, used, upgrade_to: allowed ? null : upgradeFor(resource, used + 1, catalog) };
 };
 
-/**
- * Assinatura que mantém a barbearia visível ao público (busca — BE-25): ativa, em atraso (carência
- * definida no BE-35) ou trial ainda não vencido.
- */
-const isPubliclyVisible = (subscription, now = new Date()) => {
-  if (!subscription) return false;
-  if (['active', 'past_due'].includes(subscription.status)) return true;
-  return subscription.status === 'trialing' && Boolean(subscription.trial_ends_at) && new Date(subscription.trial_ends_at) > now;
+// BE-35: carência após falha de cobrança.
+const GRACE_DAYS = 7;
+const DAY_MS = 86400000;
+
+/** Fim da carência de uma assinatura em atraso (past_due_since + 7 dias). */
+const graceEndsAt = (subscription) => {
+  if (!subscription || subscription.status !== 'past_due') return null;
+  const since = subscription.past_due_since ? new Date(subscription.past_due_since) : null;
+  return since ? new Date(since.getTime() + GRACE_DAYS * DAY_MS) : null;
 };
 
-module.exports = { findPlan, effectivePlan, can, limit, checkLimit, upgradeFor, isPubliclyVisible };
+/**
+ * Nível de acesso da barbearia (BE-35):
+ *   'full'      → trial válido ou ativa (inclusive com cancelamento agendado);
+ *   'grace'     → em atraso dentro dos 7 dias de carência (tudo funciona, com aviso);
+ *   'read_only' → trial vencido, carência esgotada, pendente de pagamento, cancelada ou expirada:
+ *                 painel só leitura, agendamento público desligado, dados preservados.
+ */
+const accessLevel = (subscription, now = new Date()) => {
+  if (!subscription) return 'read_only';
+  switch (subscription.status) {
+    case 'active':
+      return 'full';
+    case 'trialing':
+      return subscription.trial_ends_at && new Date(subscription.trial_ends_at) > now ? 'full' : 'read_only';
+    case 'past_due': {
+      const ends = graceEndsAt(subscription);
+      // Sem data de início do atraso: concede a carência (não bloqueia por dado ausente).
+      return !ends || ends > now ? 'grace' : 'read_only';
+    }
+    default:
+      return 'read_only';
+  }
+};
+
+/** Barbearia visível ao público (busca, página, agendamento): tudo menos read_only. */
+const isPubliclyVisible = (subscription, now = new Date()) => accessLevel(subscription, now) !== 'read_only';
+
+module.exports = {
+  findPlan,
+  effectivePlan,
+  can,
+  limit,
+  checkLimit,
+  upgradeFor,
+  isPubliclyVisible,
+  accessLevel,
+  graceEndsAt,
+  GRACE_DAYS,
+};

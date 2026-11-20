@@ -105,7 +105,8 @@ const MATRIX = {
   'POST /api/billing/cancel': ['admin', 'owner'],
   'POST /api/billing/resume': ['admin', 'owner'],
   'POST /api/billing/portal': ['admin', 'owner'],
-  'POST /api/webhooks/abacatepay': 'public',
+  // Sem login, autenticada pelo segredo do webhook (testes em billing/webhooks.test.js).
+  'POST /api/webhooks/abacatepay': 'webhook',
 };
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
@@ -140,7 +141,7 @@ describe('SEC-23 — matriz de autorização', () => {
     expect(declared.filter((route) => !registered.includes(route))).toEqual([]);
   });
 
-  describe.each(entries.filter((entry) => entry.access !== 'public'))('$route', ({ method, url, access }) => {
+  describe.each(entries.filter((entry) => !['public', 'webhook'].includes(entry.access)))('$route', ({ method, url, access }) => {
     it('anônimo → 401', async () => {
       const res = await send(method, url);
       expect(res.status).toBe(401);

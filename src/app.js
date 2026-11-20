@@ -15,6 +15,8 @@ require("./models/index");
 require("./modules/notification/appointmentNotifications").register();
 // BE-33: processamento dos webhooks da AbacatePay e reconciliação diária da cobrança.
 require("./modules/billing/billingWebhookService").register();
+// BE-35: página pública, aviso de cobrança no /api/me e ciclo diário dos trials.
+require("./modules/subscription/accessControl").register();
 const app = express();
 
 // Middleware

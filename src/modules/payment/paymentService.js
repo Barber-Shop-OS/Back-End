@@ -107,12 +107,12 @@ const resolveListScope = async (query, currentUser) => {
     if (currentUser.role === 'barbeiro') {
       where.branch_id = query.branch_id;
     } else {
-      const branch = await assertCanManageBranch(currentUser, query.branch_id);
+      const branch = await assertCanManageBranch(currentUser, query.branch_id, { access: 'read' });
       where.branch_id = branch.id;
     }
   }
   if (query.barbershop_id) {
-    if (currentUser.role !== 'barbeiro') await assertCanManageBarbershop(currentUser, query.barbershop_id);
+    if (currentUser.role !== 'barbeiro') await assertCanManageBarbershop(currentUser, query.barbershop_id, { access: 'read' });
     where.barbershop_id = query.barbershop_id;
   }
 

@@ -60,7 +60,7 @@ const usage = async (barbershopId) => {
 
 /** GET /api/barbershop/:id/subscription (dono). */
 const getForBarbershop = async (barbershopId, currentUser) => {
-  await assertCanManageBarbershop(currentUser, barbershopId);
+  await assertCanManageBarbershop(currentUser, barbershopId, { access: 'read' });
   const subscription = await findByBarbershop(barbershopId);
   if (!subscription) throw new NotFoundError('Assinatura não encontrada');
   const plan = entitlements.effectivePlan(subscription);

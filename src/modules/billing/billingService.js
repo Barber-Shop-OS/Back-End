@@ -37,7 +37,7 @@ const provider = async (fn) => {
 };
 
 const loadContext = async (barbershopId, user) => {
-  const barbershop = await assertCanManageBarbershop(user, barbershopId);
+  const barbershop = await assertCanManageBarbershop(user, barbershopId, { access: 'read' });
   const subscription = await subscriptionService.findByBarbershop(barbershop.id);
   if (!subscription) throw new NotFoundError('Assinatura não encontrada');
   return { barbershop, subscription };

@@ -3,13 +3,14 @@
 // Escopo estrito: cliente da barbearia A nunca aparece para B (consultas sempre por barbershop_id).
 const { Op } = require('sequelize');
 const { sequelize, BarbershopClient, Barbershop, Barber, Branch, User, Appointment, Payment } = require('../../models');
-const { ownsBarbershop } = require('../../shared/authz');
+const { ownsBarbershop, assertWritable } = require('../../shared/authz');
 const { normalizePhone } = require('../../shared/phone');
 const { parsePagination, likeMatch } = require('../../shared/query');
 const { pickFields } = require('../../shared/pickFields');
 const { NotFoundError, ForbiddenError, ConflictError, CODES } = require('../../utils/errorHandler');
 
 const HISTORY_LIMIT = 50;
+const accessControl = () => require('../subscription/accessControl');
 
 /** Dono/admin ou barbeiro ativo da barbearia. 404 se a barbearia não existe, 403 para os demais. */
 const assertStaffOfBarbershop = async (user, barbershopId) => {
@@ -87,6 +88,9 @@ const searchCondition = (search) => {
 
 const list = async (barbershopId, query = {}, user) => {
   await assertStaffOfBarbershop(user, barbershopId);
+  // BE-35: sem o recurso clients_crm (plano Essencial) a lista serve só para achar o cliente no
+  // balcão — sem estatísticas.
+  const crm = await accessControl().hasFeature(barbershopId, 'clients_crm');
   const { page, pageSize, offset, limit } = parsePagination(query);
   const conditions = [{ barbershop_id: barbershopId }];
   if (query.search) {
@@ -98,13 +102,14 @@ const list = async (barbershopId, query = {}, user) => {
     BarbershopClient.count({ where }),
     BarbershopClient.findAll({
       where,
-      attributes: { include: statAttributes() },
-      order: [...(SORTS[query.sortBy] || SORTS.name), ['id', 'ASC']],
+      attributes: crm ? { include: statAttributes() } : undefined,
+      order: [...((crm && SORTS[query.sortBy]) || SORTS.name), ['id', 'ASC']],
       offset,
       limit,
     }),
   ]);
-  return { items: rows.map(present), page, pageSize, total, totalPages: Math.ceil(total / pageSize) };
+  const items = rows.map(present).map((item) => (crm ? item : { ...item, visits: null, no_shows: null, last_visit: null, total_spent: null }));
+  return { items, page, pageSize, total, totalPages: Math.ceil(total / pageSize), crm };
 };
 
 const findInBarbershop = async (barbershopId, clientId, options = {}) => {
@@ -119,6 +124,7 @@ const findInBarbershop = async (barbershopId, clientId, options = {}) => {
 /** Cliente + estatísticas + histórico (últimos 50 agendamentos, com pagamento). */
 const getById = async (barbershopId, clientId, user) => {
   await assertStaffOfBarbershop(user, barbershopId);
+  await accessControl().assertFeature(barbershopId, 'clients_crm');
   const client = await findInBarbershop(barbershopId, clientId, { attributes: { include: statAttributes() } });
   const appointments = await Appointment.findAll({
     where: { client_id: client.id },
@@ -179,6 +185,7 @@ const assertNoDuplicate = async (barbershopId, { phone, email }, exceptId) => {
 
 const create = async (barbershopId, input, user) => {
   await assertStaffOfBarbershop(user, barbershopId);
+  await assertWritable(user, barbershopId);
   const data = normalizeContact(pickFields(input, ['name', 'phone', 'email', 'notes']));
   await assertNoDuplicate(barbershopId, data);
   // Se já existe conta com esse e-mail/telefone, o cliente nasce vinculado.
@@ -203,11 +210,13 @@ const create = async (barbershopId, input, user) => {
 
 const update = async (barbershopId, clientId, input, user) => {
   await assertStaffOfBarbershop(user, barbershopId);
+  await assertWritable(user, barbershopId);
   const client = await findInBarbershop(barbershopId, clientId);
   const data = normalizeContact(pickFields(input, ['name', 'phone', 'email', 'notes']));
   await assertNoDuplicate(barbershopId, data, client.id);
   await client.update(data);
-  return getById(barbershopId, client.id, user);
+  if (await accessControl().hasFeature(barbershopId, 'clients_crm')) return getById(barbershopId, client.id, user);
+  return present(client);
 };
 
 /**

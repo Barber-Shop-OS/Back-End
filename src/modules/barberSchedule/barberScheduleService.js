@@ -91,7 +91,7 @@ const serializeTimeOff = (row) => ({
 });
 
 const listTimeOff = async (barberId, { from, to } = {}, currentUser) => {
-  await assertCanManageBarberAgenda(currentUser, barberId);
+  await assertCanManageBarberAgenda(currentUser, barberId, { access: 'read' });
   const where = { barber_id: barberId };
   if (from) where.end_at = { [Op.gt]: new Date(from) };
   if (to) where.start_at = { [Op.lt]: new Date(to) };

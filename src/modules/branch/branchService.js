@@ -81,6 +81,8 @@ const create = async (branchData, addressData, currentUser) => {
   }
 
   await assertCanManageBarbershop(currentUser, branchData.barbershop_id);
+  // BE-35: limite de filiais do plano (402 PLAN_LIMIT_REACHED).
+  await require('../subscription/subscriptionService').assertWithinLimit(branchData.barbershop_id, 'branches');
 
   // Endereço e filial juntos: falha em um não deixa endereço órfão.
   const branchId = await sequelize.transaction(async (transaction) => {
@@ -125,7 +127,7 @@ const update = async (id, branchData, addressData, currentUser) => {
 };
 
 const remove = async (id, currentUser) => {
-  await assertCanManageBranch(currentUser, id);
+  await assertCanManageBranch(currentUser, id, { access: 'read' });
   await branchRepository.delete(id);
   return true;
 };
