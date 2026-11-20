@@ -100,6 +100,11 @@ const MATRIX = {
 
   'PATCH /api/admin/users/:id/role': ['admin'],
   'GET /api/plans': 'public',
+  'POST /api/billing/checkout': ['admin', 'owner'],
+  'POST /api/billing/change-plan': ['admin', 'owner'],
+  'POST /api/billing/cancel': ['admin', 'owner'],
+  'POST /api/billing/resume': ['admin', 'owner'],
+  'POST /api/billing/portal': ['admin', 'owner'],
 };
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];

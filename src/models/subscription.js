@@ -17,6 +17,10 @@ const Subscription = sequelize.define('Subscription', {
   abacatepay_customer_id: { type: DataTypes.STRING(100), allowNull: true },
   abacatepay_subscription_id: { type: DataTypes.STRING(100), allowNull: true },
   abacatepay_checkout_id: { type: DataTypes.STRING(100), allowNull: true },
+  // BE-32
+  billing_tax_id: { type: DataTypes.STRING(14), allowNull: true },
+  pending_plan_code: { type: DataTypes.STRING(30), allowNull: true },
+  cancel_requested_at: { type: DataTypes.DATE, allowNull: true },
   created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, allowNull: true },
 }, {

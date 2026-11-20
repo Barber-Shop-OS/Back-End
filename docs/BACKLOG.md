@@ -288,7 +288,7 @@
 - **Fazer:** tabelas `plans (code, name, price_cents, interval='MONTHLY', limits JSON, features JSON, abacatepay_product_id, active)` (seed via migration), `subscriptions (barbershop_id unique, plan_code, status ENUM(trialing, pending, active, past_due, canceled, expired), trial_ends_at, current_period_start, current_period_end, cancel_at_period_end, abacatepay_customer_id, abacatepay_subscription_id, abacatepay_checkout_id)`, `subscription_events` (histórico). `GET /api/plans` público. `GET /api/barbershop/:id/subscription` (owner). Serviço `entitlements.js`: `can(barbershop, 'branches.create')`, `limit(barbershop, 'barbers')`.
 - **Aceite:** preços servidos pela API (o front não tem preço fixo); testes de `entitlements` por plano.
 
-### [ ] BE-32 — Integração AbacatePay: cliente e checkout de assinatura
+### [x] BE-32 — Integração AbacatePay: cliente e checkout de assinatura
 - **Depende de:** BE-31
 - **Referência:** API v2 (`https://api.abacatepay.com/v2`, `Authorization: Bearer <ABACATEPAY_API_KEY>`). Endpoints relevantes: `POST /v2/customers/create`, `POST /v2/products/create` (com `cycle: MONTHLY`), `POST /v2/subscriptions/create` (gera checkout `bill_...`), `GET /v2/subscriptions/get?externalId=`, `POST /v2/subscriptions/cancel`, `POST /v2/subscriptions/change-plan` (vale a partir do próximo ciclo), `POST /v2/customer-portal/create`. Métodos: cartão; PIX recorrente exige **Pix Automático** habilitado na conta. **Confirmar payloads na doc oficial antes de implementar** (docs.abacatepay.com, seletor v2) — a API mudou bastante em 2026.
 - **Fazer:**
@@ -301,6 +301,7 @@
   - **Nunca** ativar assinatura pelo retorno do navegador; só webhook (BE-33).
 - **Testes:** cliente HTTP mockado com `nock`; contrato dos payloads em fixtures.
 - **Aceite:** fluxo completo em `devMode` documentado em `docs/billing.md`.
+- **Feito (2026-11-19):** payloads conferidos na doc v2. Cliente HTTP com `fetch` nativo (sem axios/nock; testes com fetch falso). `POST /api/billing/{checkout,change-plan,cancel,resume,portal}`; checkout mantém o trial até o webhook; `cancel` só marca (a chamada à API acontece no job do BE-33). Sem `ABACATEPAY_API_KEY` as rotas respondem 503 `BILLING_UNAVAILABLE`. **Pendente:** validar com chave real de modo teste (`abc_dev_...`).
 
 ### [ ] BE-33 — Webhooks AbacatePay e máquina de estados da assinatura `[SEC-13]`
 - **Depende de:** BE-32
