@@ -109,6 +109,8 @@ const MATRIX = {
   'GET /api/payment': ['admin', 'owner', 'barbeiro'],
   'GET /api/dashboard/summary': ['admin', 'owner'],
   'GET /api/audit-logs': ['admin', 'owner'],
+  'POST /api/uploads/presign': ['admin', 'owner'],
+  'POST /api/uploads/confirm': ['admin', 'owner'],
   'GET /api/dashboard/barber': ['admin', 'owner', 'barbeiro'],
   'POST /api/payment': 'auth',
   'GET /api/payment/appointment/:appointment_id': 'auth',

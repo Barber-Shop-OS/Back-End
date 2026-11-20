@@ -320,11 +320,12 @@
 - **Aceite:** testes com payloads reais de exemplo assinados; replay e assinatura inválida → 401 sem efeito.
 - **Feito (2026-11-19):** conforme a doc v2 a assinatura **não** tem timestamp (`X-Webhook-Signature` = base64 HMAC-SHA256 do corpo cru com a chave pública fixa da AbacatePay) — verificada quando `ABACATEPAY_WEBHOOK_PUBLIC_KEY` estiver configurada; a origem é provada pelo segredo (`?webhookSecret=`/`X-Webhook-Secret`). Replay coberto pela idempotência por `id`. Corpo cru via `express.json({ verify })`. Job `billing.daily` (agendado pelo worker, um por dia): reconciliação de `pending/past_due` e cancelamento no fim do período. `externalId` do checkout é autoritativo para achar a barbearia. **Pendente:** copiar a chave pública da página de segurança da doc para o `.env` de produção.
 
-### [ ] BE-34 — Upload de imagens (logo, capa, foto do barbeiro) `[SEC-22]`
+### [x] BE-34 — Upload de imagens (logo, capa, foto do barbeiro) `[SEC-22]`
 - **Depende de:** BE-18
 - **Recomendação:** Cloudflare R2 (front já está na Cloudflare; API compatível com S3 via `@aws-sdk/client-s3`) com URL pré-assinada.
 - **Fazer:** `POST /api/uploads/presign {kind: logo|cover|barber_photo, content_type, size}` → valida tipo (`image/jpeg|png|webp`, **sem SVG**), tamanho (≤ 2 MB), tenant; chave `tenants/<barbershop_id>/<kind>/<uuid>.<ext>`; `POST /api/uploads/confirm` verifica o objeto (HEAD + magic bytes) antes de gravar a URL.
 - **Aceite:** upload de SVG/HTML recusado; chave nunca derivada do nome do arquivo do usuário.
+- **Feito:** `@aws-sdk/client-s3` + presigner (tipo e tamanho assinados, 5 min); tabela `uploads` (pendente → confirmado/rejeitado); confirmação com HEAD + magic bytes, arquivo inválido é apagado. Validado de ponta a ponta com S3 local (adobe/s3mock) e a API em produção. **Pendente:** criar bucket R2 + domínio público e preencher `R2_*`.
 
 ### [x] BE-35 — Aplicação de limites do plano e bloqueio por inadimplência
 - **Depende de:** BE-31, BE-33

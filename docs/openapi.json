@@ -5457,6 +5457,121 @@
         ]
       }
     },
+    "/uploads/confirm": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "upload_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "upload_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ url, kind, target_id }"
+          },
+          "400": {
+            "description": "INVALID_FILE (arquivo apagado)"
+          },
+          "409": {
+            "description": "Já processado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Confirma o envio (confere tamanho, tipo e magic bytes) e grava a URL",
+        "tags": [
+          "Uploads"
+        ]
+      }
+    },
+    "/uploads/presign": {
+      "post": {
+        "description": "Só JPEG, PNG ou WebP (SVG/HTML recusados), até 2 MB. Envie o arquivo com PUT na upload_url usando exatamente o Content-Type informado e depois chame /uploads/confirm.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "barber_id": {
+                    "description": "foto de barbeiro",
+                    "type": "integer"
+                  },
+                  "barbershop_id": {
+                    "description": "logo/capa",
+                    "type": "integer"
+                  },
+                  "content_type": {
+                    "enum": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "logo",
+                      "cover",
+                      "barber_photo"
+                    ],
+                    "type": "string"
+                  },
+                  "size": {
+                    "maximum": 2097152,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "content_type",
+                  "size"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "{ upload_id, upload_url, method, headers, expires_in }"
+          },
+          "400": {
+            "description": "INVALID_FILE (tipo/tamanho)"
+          },
+          "403": {
+            "description": "Outro tenant"
+          },
+          "503": {
+            "description": "UPLOADS_UNAVAILABLE"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "URL pré-assinada (PUT, 5 min) para enviar logo, capa ou foto de barbeiro direto ao R2",
+        "tags": [
+          "Uploads"
+        ]
+      }
+    },
     "/user": {
       "get": {
         "parameters": [

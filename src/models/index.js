@@ -26,6 +26,7 @@ const UserToken = require('./userToken');
 const UserIdentity = require('./userIdentity');
 const RefreshToken = require('./refreshToken');
 const AuditLog = require('./auditLog');
+const Upload = require('./upload');
 
 // ============================================
 // User associations
@@ -195,6 +196,7 @@ AuditLog.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
 
 module.exports = {
   sequelize,
+  Upload,
   AuditLog,
   RefreshToken,
   UserIdentity,
