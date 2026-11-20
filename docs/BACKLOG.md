@@ -410,6 +410,12 @@
 - **Fazer:** prefixo `/api/v1` (manter `/api` como alias por 1 release); resposta paginada padrão `{items, page, pageSize, total, totalPages}` em todos os list; `ETag`/`Cache-Control` nas rotas públicas (`/slug/:slug`, `/availability` 30 s). `GET /api/app-config` público (`min_app_version`, flags) para MOB-18.
 - **Feito:** `/api/v1/*` reescrito para as mesmas rotas de `/api/*` (alias mantido; o cookie de refresh continua em `/api/auth`). Listas já seguiam `{items, page, pageSize, total, totalPages}` (teste garante). `Cache-Control: public, max-age=30` + ETag/304 na página pública e na disponibilidade. `GET /api/app-config`: versões do app, manutenção, recursos ligados (Google, cobrança, uploads) e versão dos termos.
 
+### [x] BE-49 — Papel recepcionista (Atendimento / Front Desk)
+- **Depende de:** BE-47
+- **Fazer:** novo papel `receptionist` em `barbershop_members` (sem mexer em `users.role`), vinculado a UMA filial. Adicionado pelo dono (qualquer filial) ou pelo gerente (só filiais dele) em `POST /api/barbershop/:id/members` com `role: receptionist` + `branch_id`. Opera o balcão da filial: agenda (listar/criar/cancelar/reagendar/concluir/falta), disponibilidade, clientes (listar/criar/editar), pagamento presencial (`POST /api/payment`, `PUT /api/payment/:id/status`). Sem financeiro, filiais, barbeiros, serviços, equipe, assinatura ou configurações. `/api/me` e `/api/auth/me` expõem o papel para o front rotear `/atendimento`.
+- **Aceite:** recepcionista de outra filial/tenant → 403/404.
+- **Feito:** `authz.canOperateBranch` (gerência ∪ recepção da filial) usado na agenda, no balcão e nos pagamentos; `membershipFor`/`managedBranchIds` ignoram recepcionistas (nunca gerenciam); `roleMiddleware` só deixa o recepcionista passar em rotas que declaram `receptionist` (clientes e status de pagamento). Gerente lista/adiciona/move/remove recepcionistas das filiais dele (não adiciona gerentes). Sem limite de membros nos planos → recepcionista não consome limite nem exige o plano Rede. `/api/me`: `roles` inclui `receptionist` e `front_desk[]` (`membership_id, role, barbershop_id, branch_id, barbershop, branch`); recepcionista não entra em `barbershops[]`. Seed: `recepcao@barberos.dev` (filial Centro da Navalha de Ouro).
+
 ---
 
 ## Sequência recomendada (sprints)

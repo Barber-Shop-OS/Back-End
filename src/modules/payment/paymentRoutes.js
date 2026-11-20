@@ -170,6 +170,6 @@ router.get('/:id', authMiddleware, schemas.byId, paymentController.getById);
  *       404:
  *         description: Pagamento não encontrado
  */
-router.put('/:id/status', paymentLimiter, authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro']), schemas.updateStatus, paymentController.updateStatus);
+router.put('/:id/status', paymentLimiter, authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro', 'receptionist']), schemas.updateStatus, paymentController.updateStatus);
 
 module.exports = router;

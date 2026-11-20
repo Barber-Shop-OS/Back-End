@@ -14,7 +14,7 @@ const { User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey, Bar
 const clientService = require('../client/clientService');
 const availability = require('../availability/availabilityService');
 const { performsService } = require('../barber/barberRepository');
-const { canManageBranch } = require('../../shared/authz');
+const { canOperateBranch } = require('../../shared/authz');
 const { present } = require('./appointmentPresenter');
 const { lockingTransaction } = require('../../shared/transaction');
 const time = require('../../shared/time');
@@ -161,7 +161,7 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
   const { chosen, candidates } = await resolveCandidates({ barberId: payload.barber_id, branch, service });
 
   const actsAsStaff =
-    canManageBranch(currentUser, branch) ||
+    canOperateBranch(currentUser, branch) ||
     Boolean(chosen && String(chosen.user_id) === String(currentUser.id));
 
   // clientId = usuário com conta (pode ser null para cliente rápido); customerId = barbershop_clients (BE-23).

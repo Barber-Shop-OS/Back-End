@@ -15,9 +15,20 @@ const sameId = (a, b) => a !== null && a !== undefined && String(a) === String(b
 
 const ownsBarbershop = (user, barbershop) => isAdmin(user) || sameId(barbershop.owner_id, user && user.id);
 
-/** BE-47: gerência do usuário nesta barbearia (ou undefined). */
-const membershipFor = (user, barbershopId) =>
-  user && Array.isArray(user.memberships) ? user.memberships.find((item) => sameId(item.barbershop_id, barbershopId)) : undefined;
+// BE-47/BE-49: papéis por barbearia em barbershop_members.
+const MEMBER_ROLES = Object.freeze({ MANAGER: 'manager', RECEPTIONIST: 'receptionist' });
+const allMemberships = (user) => (user && Array.isArray(user.memberships) ? user.memberships : []);
+/** Gerências (manager). Linhas antigas sem role contam como gerente. */
+const managerMemberships = (user) => allMemberships(user).filter((item) => item.role !== MEMBER_ROLES.RECEPTIONIST);
+/** BE-49: vínculos de atendimento (recepcionista). */
+const receptionistMemberships = (user) => allMemberships(user).filter((item) => item.role === MEMBER_ROLES.RECEPTIONIST);
+
+/** BE-47: gerência do usuário nesta barbearia (ou undefined). Recepcionista não conta como gerente. */
+const membershipFor = (user, barbershopId) => managerMemberships(user).find((item) => sameId(item.barbershop_id, barbershopId));
+
+/** BE-49: vínculo de recepcionista nesta barbearia (ou undefined). */
+const receptionistMembershipFor = (user, barbershopId) =>
+  receptionistMemberships(user).find((item) => sameId(item.barbershop_id, barbershopId));
 
 /**
  * Filiais que o usuário administra numa barbearia: null = todas (dono, admin ou gerente geral),
@@ -37,6 +48,16 @@ const canManageBranch = (user, branch) => {
   return ids === null || ids.includes(Number(branch.id));
 };
 
+/** BE-49: o recepcionista atende esta filial? (só a filial do vínculo). */
+const isReceptionistOfBranch = (user, branch) => {
+  if (!branch) return false;
+  const barbershopId = branch.barbershop_id !== undefined && branch.barbershop_id !== null ? branch.barbershop_id : branch.Barbershop && branch.Barbershop.id;
+  const membership = receptionistMembershipFor(user, barbershopId);
+  return Boolean(membership && Array.isArray(membership.branch_ids) && membership.branch_ids.map(Number).includes(Number(branch.id)));
+};
+
+/** BE-49: operação de balcão (agenda, atendimentos, pagamentos presenciais): quem gerencia a filial ou o recepcionista dela. */
+const canOperateBranch = (user, branch) => canManageBranch(user, branch) || isReceptionistOfBranch(user, branch);
 
 /**
  * BE-35: escrita no painel exige assinatura com acesso (trial válido, ativa ou em carência).
@@ -156,7 +177,7 @@ const isAppointmentStaff = (user, appointment) => {
   const barber = appointmentBarber(appointment);
   return (
     isAdmin(user) ||
-    Boolean(appointment.Branch && canManageBranch(user, appointment.Branch)) ||
+    Boolean(appointment.Branch && canOperateBranch(user, appointment.Branch)) ||
     Boolean(barber && sameId(barber.user_id, user && user.id))
   );
 };
@@ -188,6 +209,12 @@ const assertCanOperateAppointment = async (user, appointmentId, options) => {
 
 module.exports = {
   isAdmin,
+  MEMBER_ROLES,
+  managerMemberships,
+  receptionistMemberships,
+  receptionistMembershipFor,
+  isReceptionistOfBranch,
+  canOperateBranch,
   membershipFor,
   managedBranchIds,
   canManageBranch,

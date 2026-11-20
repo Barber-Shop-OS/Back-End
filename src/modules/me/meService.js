@@ -20,13 +20,40 @@ const listBarbershops = async (userId) => {
   // BE-47: barbearias onde a pessoa é gerente (com as filiais que administra).
   const { BarbershopMember } = require('../../models');
   const memberships = await BarbershopMember.findAll({
-    where: { user_id: userId },
+    // BE-49: recepcionista não entra em `barbershops` (não é área de gestão) — ver front_desk.
+    where: { user_id: userId, role: { [Op.ne]: 'receptionist' } },
     include: [{ model: Barbershop, attributes: ['id', 'name', 'slug', 'status', 'logo_url'], where: { status: { [Op.ne]: 'deleted' } } }],
   });
   return [
     ...rows.map((row) => ({ ...row.toJSON(), membership: 'owner', branch_ids: null })),
     ...memberships.map((row) => ({ ...row.Barbershop.toJSON(), membership: row.role, branch_ids: row.branch_ids || null })),
   ];
+};
+
+/** BE-49: filiais onde a pessoa atende no balcão (área /atendimento). */
+const listFrontDesk = async (userId) => {
+  const { BarbershopMember } = require('../../models');
+  const rows = await BarbershopMember.findAll({
+    where: { user_id: userId, role: 'receptionist' },
+    include: [{ model: Barbershop, attributes: ['id', 'name', 'slug', 'status', 'logo_url'], where: { status: { [Op.ne]: 'deleted' } } }],
+    order: [['id', 'ASC']],
+  });
+  const branchIds = rows.flatMap((row) => (row.branch_ids || []).map(Number));
+  const branches = branchIds.length ? await Branch.findAll({ where: { id: branchIds }, attributes: ['id', 'name', 'timezone', 'barbershop_id'] }) : [];
+  const byId = new Map(branches.map((branch) => [branch.id, branch]));
+  return rows.flatMap((row) =>
+    (row.branch_ids || [])
+      .map((id) => byId.get(Number(id)))
+      .filter((branch) => branch && String(branch.barbershop_id) === String(row.barbershop_id))
+      .map((branch) => ({
+        membership_id: row.id,
+        role: 'receptionist',
+        barbershop_id: row.barbershop_id,
+        branch_id: branch.id,
+        barbershop: row.Barbershop.toJSON(),
+        branch: { id: branch.id, name: branch.name, timezone: branch.timezone },
+      }))
+  );
 };
 
 const listBarberProfiles = async (userId) => {
@@ -47,12 +74,17 @@ const listBarberProfiles = async (userId) => {
 const getMe = async (userId) => {
   const user = await User.findByPk(userId, { attributes: { exclude: PRIVATE_USER_FIELDS } });
   if (!user) throw new NotFoundError('Usuário não encontrado');
-  const [barbershops, barberProfiles] = await Promise.all([listBarbershops(userId), listBarberProfiles(userId)]);
+  const [barbershops, barberProfiles, frontDesk] = await Promise.all([listBarbershops(userId), listBarberProfiles(userId), listFrontDesk(userId)]);
   const profile = {
     ...user.toJSON(),
-    roles: [user.role, ...(barberProfiles.length && user.role !== 'barbeiro' ? ['barbeiro'] : [])],
+    roles: [
+      user.role,
+      ...(barberProfiles.length && user.role !== 'barbeiro' ? ['barbeiro'] : []),
+      ...(frontDesk.length ? ['receptionist'] : []),
+    ],
     barbershops,
     barber_profiles: barberProfiles,
+    front_desk: frontDesk,
   };
   for (const extend of profileExtensions) {
     Object.assign(profile, await extend(user, profile));

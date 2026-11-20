@@ -2944,7 +2944,7 @@
     },
     "/barbershop/{id}/clients": {
       "get": {
-        "description": "Dono/admin ou barbeiro ativo da barbearia. Busca por nome, e-mail ou parte do telefone.",
+        "description": "Dono/admin, gerente, recepcionista (BE-49) ou barbeiro ativo da barbearia. Busca por nome, e-mail ou parte do telefone.",
         "parameters": [
           {
             "in": "path",
@@ -3151,6 +3151,7 @@
     },
     "/barbershop/{id}/members": {
       "get": {
+        "description": "Dono vê todos (filtro opcional role). Gerente vê só os recepcionistas das filiais dele.",
         "parameters": [
           {
             "in": "path",
@@ -3159,11 +3160,22 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "enum": [
+                "manager",
+                "receptionist"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "{ items: [{ id, user, role, branch_ids }] }"
+            "description": "{ items: [{ id, user: { id, name, email }, role, branch_ids, branch_id, created_at }] }"
           }
         },
         "security": [
@@ -3171,13 +3183,13 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Gerentes da barbearia (dono)",
+        "summary": "Equipe de gestão e atendimento (gerentes e recepcionistas)",
         "tags": [
           "Members"
         ]
       },
       "post": {
-        "description": "branch_ids nulo/ausente = todas as filiais. Recurso branch_managers (402 FEATURE_NOT_IN_PLAN fora do plano Rede).",
+        "description": "role manager (padrão): branch_ids nulo/ausente = todas as filiais; recurso branch_managers (402 FEATURE_NOT_IN_PLAN fora do plano Rede). role receptionist: branch_id obrigatório (uma filial); gerente só nas filiais dele (403); disponível em todos os planos.\n",
         "parameters": [
           {
             "in": "path",
@@ -3193,6 +3205,9 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "branch_id": {
+                    "type": "integer"
+                  },
                   "branch_ids": {
                     "items": {
                       "type": "integer"
@@ -3201,6 +3216,14 @@
                     "type": "array"
                   },
                   "email": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "default": "manager",
+                    "enum": [
+                      "manager",
+                      "receptionist"
+                    ],
                     "type": "string"
                   }
                 },
@@ -3215,16 +3238,19 @@
         },
         "responses": {
           "201": {
-            "description": "Gerente adicionado"
+            "description": "{ member: { id, user, role, branch_ids, branch_id, created_at } }"
           },
           "402": {
             "description": "FEATURE_NOT_IN_PLAN"
+          },
+          "403": {
+            "description": "Gerente tentando adicionar gerente ou filial fora do escopo"
           },
           "404": {
             "description": "USER_NOT_FOUND"
           },
           "409": {
-            "description": "Já é gerente"
+            "description": "Já faz parte da equipe"
           }
         },
         "security": [
@@ -3232,7 +3258,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Adicionar gerente (conta existente, por e-mail) — plano Rede",
+        "summary": "Adicionar gerente (dono, plano Rede) ou recepcionista (dono ou gerente da filial) — conta existente, por e-mail",
         "tags": [
           "Members"
         ]
@@ -3268,7 +3294,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Remover gerente",
+        "summary": "Remover gerente (dono) ou recepcionista (dono ou gerente da filial)",
         "tags": [
           "Members"
         ]
@@ -3302,7 +3328,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Alterar filiais do gerente",
+        "summary": "Alterar filiais do gerente (branch_ids) ou a filial do recepcionista (branch_id)",
         "tags": [
           "Members"
         ]
@@ -4612,6 +4638,7 @@
         ]
       },
       "get": {
+        "description": "roles inclui 'barbeiro' (perfil de barbeiro) e 'receptionist' (BE-49, quando há front_desk). barbershops[] = dono/gerente (membership owner|manager, branch_ids). front_desk[] = filiais onde a pessoa é recepcionista: { membership_id, role, barbershop_id, branch_id, barbershop, branch }.\n",
         "responses": {
           "200": {
             "description": "Perfil"
@@ -4625,7 +4652,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Meu perfil, papéis, barbearias que gerencio e perfis de barbeiro",
+        "summary": "Meu perfil, papéis, barbearias que gerencio, perfis de barbeiro e filiais de atendimento",
         "tags": [
           "Me"
         ]

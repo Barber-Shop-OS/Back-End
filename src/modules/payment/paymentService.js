@@ -12,6 +12,7 @@ const {
   assertCanOperateAppointment,
   assertCanManageBarbershop,
   assertCanManageBranch,
+  managerMemberships,
   isAdmin,
 } = require('../../shared/authz');
 const { parsePagination, paginated } = require('../../shared/query');
@@ -124,7 +125,7 @@ const resolveListScope = async (query, currentUser) => {
     }
   }
   if (query.barbershop_id) {
-    const membership = (currentUser.memberships || []).find((item) => String(item.barbershop_id) === String(query.barbershop_id));
+    const membership = managerMemberships(currentUser).find((item) => String(item.barbershop_id) === String(query.barbershop_id));
     if (membership && membership.branch_ids && !query.branch_id) {
       where.branch_id = { [Op.in]: membership.branch_ids.map(Number) };
     } else if (!membership && currentUser.role !== 'barbeiro') {
@@ -136,7 +137,8 @@ const resolveListScope = async (query, currentUser) => {
   if (isAdmin(currentUser)) return { where, barberUserId };
 
   // BE-47: gerente — só as filiais que administra (somadas às barbearias próprias, se houver).
-  const memberships = currentUser.memberships || [];
+  // BE-49: recepcionista registra pagamento presencial, mas não consulta o financeiro.
+  const memberships = managerMemberships(currentUser);
   if (currentUser.role === 'owner' || memberships.length) {
     if (!where.barbershop_id && !where.branch_id) {
       const owned = await Barbershop.findAll({ where: { owner_id: currentUser.id }, attributes: ['id'] });

@@ -24,7 +24,11 @@ const schemas = {
  * @swagger
  * /me:
  *   get:
- *     summary: Meu perfil, papéis, barbearias que gerencio e perfis de barbeiro
+ *     summary: Meu perfil, papéis, barbearias que gerencio, perfis de barbeiro e filiais de atendimento
+ *     description: >
+ *       roles inclui 'barbeiro' (perfil de barbeiro) e 'receptionist' (BE-49, quando há front_desk).
+ *       barbershops[] = dono/gerente (membership owner|manager, branch_ids). front_desk[] = filiais onde
+ *       a pessoa é recepcionista: { membership_id, role, barbershop_id, branch_id, barbershop, branch }.
  *     tags: [Me]
  *     security:
  *       - bearerAuth: []

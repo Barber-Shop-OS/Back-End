@@ -7,6 +7,7 @@
 //   dono.bigode@barberos.dev              owner — "Bigode Grosso", trial (Essencial), 1 filial
 //   barbeiro1..6@barberos.dev             barbeiros (4 na Navalha, 2 no Bigode)
 //   cliente1..8@barberos.dev              clientes com conta
+//   recepcao@barberos.dev                 recepcionista (BE-49) da filial Centro da Navalha de Ouro
 const bcrypt = require('bcryptjs');
 const models = require('../models');
 const time = require('../shared/time');
@@ -29,6 +30,7 @@ const {
   Appointment,
   Payment,
   BarbershopClient,
+  BarbershopMember,
 } = models;
 
 const assertNotProduction = () => {
@@ -37,16 +39,44 @@ const assertNotProduction = () => {
   }
 };
 
+/**
+ * BE-49: conta de recepcionista na filial Centro da Navalha de Ouro. Também roda em bancos já
+ * semeados antes do BE-49 (idempotente).
+ */
+const ensureReceptionist = async ({ now = new Date(), log = () => {} } = {}) => {
+  const shop = await Barbershop.findOne({ where: { slug: 'navalha-de-ouro' } });
+  const branch = shop && (await Branch.findOne({ where: { barbershop_id: shop.id, name: 'Centro' } }));
+  if (!branch) return null;
+  let account = await User.findOne({ where: { email: 'recepcao@barberos.dev' }, paranoid: false });
+  if (!account) {
+    account = await User.create({
+      email: 'recepcao@barberos.dev',
+      name: 'Rita Recepção',
+      role: 'cliente',
+      phone: '+5511990000009',
+      password: await bcrypt.hash(SEED_PASSWORD, 10),
+      email_verified_at: now,
+    });
+  }
+  const existing = await BarbershopMember.findOne({ where: { barbershop_id: shop.id, user_id: account.id } });
+  if (!existing) {
+    await BarbershopMember.create({ barbershop_id: shop.id, user_id: account.id, role: 'receptionist', branch_ids: [branch.id] });
+    log('Recepcionista recepcao@barberos.dev vinculada à filial Centro (Navalha de Ouro).');
+  }
+  return account;
+};
+
 const seed = async ({ now = new Date(), log = () => {} } = {}) => {
   assertNotProduction();
   if (await User.findOne({ where: { email: 'admin@barberos.dev' }, paranoid: false })) {
     log('Seed já aplicado (admin@barberos.dev existe) — nada a fazer.');
+    await ensureReceptionist({ now, log });
     return { skipped: true };
   }
   const password = await bcrypt.hash(SEED_PASSWORD, 10);
   const verified = now;
 
-  return sequelize.transaction(async (transaction) => {
+  const result = await sequelize.transaction(async (transaction) => {
     const opts = { transaction };
     const user = (email, name, role, extra = {}) =>
       User.create({ email, name, role, password, email_verified_at: verified, ...extra }, opts);
@@ -192,6 +222,8 @@ const seed = async ({ now = new Date(), log = () => {} } = {}) => {
     log(`Seed aplicado: 2 barbearias, 3 filiais, 6 barbeiros, ${services.length} serviços, ${created} agendamentos.`);
     return { skipped: false, appointments: created };
   });
+  await ensureReceptionist({ now, log });
+  return result;
 };
 
-module.exports = { seed, SEED_PASSWORD, assertNotProduction };
+module.exports = { seed, ensureReceptionist, SEED_PASSWORD, assertNotProduction };

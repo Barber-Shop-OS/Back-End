@@ -32,14 +32,15 @@ const schemas = {
   update: validate({ params: clientParams, body: Joi.object(fields).min(1) }),
 };
 
-const staff = [authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro'])];
+// BE-49: recepcionista atende clientes no balcão.
+const staff = [authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro', 'receptionist'])];
 
 /**
  * @swagger
  * /barbershop/{id}/clients:
  *   get:
  *     summary: Clientes da barbearia com visitas, última visita, total gasto e faltas
- *     description: Dono/admin ou barbeiro ativo da barbearia. Busca por nome, e-mail ou parte do telefone.
+ *     description: Dono/admin, gerente, recepcionista (BE-49) ou barbeiro ativo da barbearia. Busca por nome, e-mail ou parte do telefone.
  *     tags: [Clients]
  *     security:
  *       - bearerAuth: []

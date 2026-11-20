@@ -29,6 +29,14 @@ describe('BE-39 — seed', () => {
     expect((await request(app).get('/api/barbershop/slug/navalha-de-ouro')).status).toBe(200);
   });
 
+  it('BE-49: recepcionista semeada entra e vê a filial de atendimento', async () => {
+    const login = await request(app).post('/api/auth/login').send({ email: 'recepcao@barberos.dev', password: SEED_PASSWORD });
+    expect(login.status).toBe(200);
+    const me = await request(app).get('/api/me').set('Authorization', `Bearer ${login.body.token}`);
+    expect(me.body.roles).toContain('receptionist');
+    expect(me.body.front_desk).toEqual([expect.objectContaining({ branch: expect.objectContaining({ name: 'Centro' }) })]);
+  });
+
   it('bloqueado em produção', () => {
     const previous = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';

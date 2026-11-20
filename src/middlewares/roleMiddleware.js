@@ -6,8 +6,15 @@ const roleMiddleware = (allowedRoles = []) => (req, res, next) => {
     return next(new UnauthorizedError('Usuário não autenticado'));
   }
   // BE-47: gerente de filial passa nas rotas de dono; o authz limita às filiais dele.
-  const isManager = Array.isArray(req.user.memberships) && req.user.memberships.length > 0;
-  if (!allowedRoles.includes(req.user.role) && !(isManager && allowedRoles.includes('owner'))) {
+  // BE-49: recepcionista só passa nas rotas que declaram 'receptionist' (balcão).
+  const memberships = Array.isArray(req.user.memberships) ? req.user.memberships : [];
+  const isManager = memberships.some((item) => item.role !== 'receptionist');
+  const isReceptionist = memberships.some((item) => item.role === 'receptionist');
+  const allowed =
+    allowedRoles.includes(req.user.role) ||
+    (isManager && allowedRoles.includes('owner')) ||
+    (isReceptionist && allowedRoles.includes('receptionist'));
+  if (!allowed) {
     return next(new ForbiddenError(`Acesso restrito. Permissão necessária: ${allowedRoles.join(', ')}`));
   }
   return next();

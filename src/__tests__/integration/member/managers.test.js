@@ -68,7 +68,12 @@ describe('BE-47 — gerente de filial', () => {
   it('gerente não mexe em cobrança, configurações da barbearia nem em outros gerentes', async () => {
     expect((await request(app).post('/api/billing/cancel').set(bearer(managerToken)).send({ barbershop_id: tenant.barbershop.id })).status).toBe(403);
     expect((await request(app).put(`/api/barbershop/${tenant.barbershop.id}`).set(bearer(managerToken)).send({ description: 'x' })).status).toBe(403);
-    expect((await request(app).get(`/api/barbershop/${tenant.barbershop.id}/members`).set(bearer(managerToken))).status).toBe(403);
+    // BE-49: o gerente vê a equipe de atendimento (recepcionistas) das filiais dele, mas não adiciona gerentes.
+    const team = await request(app).get(`/api/barbershop/${tenant.barbershop.id}/members`).set(bearer(managerToken));
+    expect(team.status).toBe(200);
+    expect(team.body.items.every((item) => item.role === 'receptionist')).toBe(true);
+    const promote = await request(app).post(`/api/barbershop/${tenant.barbershop.id}/members`).set(bearer(managerToken)).send({ email: (await createUser()).email, role: 'manager' });
+    expect(promote.status).toBe(403);
   });
 
   it('/api/me lista a barbearia gerenciada; remover o gerente corta o acesso na hora', async () => {
