@@ -78,4 +78,54 @@ router.get(
   handle(async (req, res) => success(res, await dashboardService.barber(req.query, req.user)))
 );
 
+/**
+ * @swagger
+ * /dashboard/front-desk:
+ *   get:
+ *     summary: Resumo do dia da filial para o atendimento (balcão)
+ *     description: >
+ *       Dono, gerente da filial ou recepcionista da filial (BE-49). date = dia local da filial (padrão hoje).
+ *       total_today = agendamentos do dia exceto cancelados; attended = concluídos; pending = confirmados;
+ *       upcoming = confirmados que ainda não terminaram, por horário (máx. 50).
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: branch_id, required: true, schema: { type: integer } }
+ *       - { in: query, name: date, schema: { type: string, example: '2026-11-20' } }
+ *     responses:
+ *       200:
+ *         description: Resumo
+ *         content:
+ *           application/json:
+ *             example:
+ *               date: '2026-11-20'
+ *               timezone: America/Sao_Paulo
+ *               branch: { id: 1, name: Centro }
+ *               total_today: 12
+ *               attended: 5
+ *               pending: 6
+ *               cancelled: 1
+ *               no_show: 1
+ *               upcoming:
+ *                 - id: 42
+ *                   start_at: '2026-11-20T17:00:00.000Z'
+ *                   end_at: '2026-11-20T17:30:00.000Z'
+ *                   time: '14:00'
+ *                   status: confirmado
+ *                   client: { id: 7, user_id: 3, name: Ana, phone: '+5511999990000' }
+ *                   services: [{ id: 1, name: Corte, duration_min: 30, price: '55.00' }]
+ *                   barber: { id: 2, name: Zé Navalha }
+ *                   allowed_actions: [cancel, reschedule]
+ *       403: { description: Filial de outro tenant ou fora do vínculo }
+ *       404: { description: Filial não encontrada }
+ */
+router.get(
+  '/front-desk',
+  authMiddleware,
+  roleMiddleware(['admin', 'owner', 'receptionist']),
+  validate({ query: Joi.object({ branch_id: id().required(), date: localDate() }) }),
+  handle(async (req, res) => success(res, await dashboardService.frontDesk(req.query, req.user)))
+);
+
 module.exports = router;

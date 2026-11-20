@@ -13,8 +13,9 @@ const {
   BarberWorkingHour,
   BarberTimeOff,
 } = require('../../models');
-const { assertCanManageBarbershop, membershipFor, ownsBarbershop } = require('../../shared/authz');
-const { Barbershop } = require('../../models');
+const { assertCanManageBarbershop, membershipFor, ownsBarbershop, canOperateBranch } = require('../../shared/authz');
+const { Barbershop, BarbershopClient } = require('../../models');
+const stateMachine = require('../appointment/appointmentStateMachine');
 const { ForbiddenError } = require('../../utils/errorHandler');
 const time = require('../../shared/time');
 const metrics = require('./metrics');
@@ -256,4 +257,66 @@ const barber = async (query, user, now = new Date()) => {
   return result;
 };
 
-module.exports = { summary, barber, resolvePeriod };
+/**
+ * BE-50: GET /api/dashboard/front-desk — resumo do dia da filial para o atendimento (balcão).
+ * Dono, gerente da filial ou recepcionista da filial. `date` (YYYY-MM-DD, fuso da filial) padrão = hoje.
+ *   total_today = agendamentos do dia exceto cancelados; attended = concluídos;
+ *   pending = confirmados (ainda não concluídos/cancelados/falta); upcoming = confirmados que ainda
+ *   não terminaram (end_at > agora), em ordem de horário.
+ */
+const UPCOMING_LIMIT = 50;
+const frontDesk = async (query, user, now = new Date()) => {
+  const branch = await Branch.findByPk(query.branch_id, { include: [{ model: Barbershop }] });
+  if (!branch) throw new NotFoundError('Filial não encontrada');
+  if (!canOperateBranch(user, branch)) throw new ForbiddenError('Sem permissão para esta filial');
+  const tz = branch.timezone || time.DEFAULT_TIMEZONE;
+  const date = query.date || time.todayIn(tz, now);
+  const range = time.localDayRange(date, tz);
+  const rows = await Appointment.findAll({
+    where: { branch_id: branch.id, start_at: { [Op.gte]: range.start, [Op.lt]: range.end } },
+    include: [
+      { model: User, as: 'client', attributes: ['id', 'name', 'phone'] },
+      { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'phone'] },
+      { model: Barber, attributes: ['id', 'display_name', 'user_id'], include: [{ model: User, attributes: ['name'] }] },
+    ],
+    order: [['start_at', 'ASC'], ['id', 'ASC']],
+  });
+  const count = (status) => rows.filter((row) => row.status === status).length;
+  const upcoming = rows
+    .filter((row) => row.status === STATUS.CONFIRMED && new Date(row.end_at) > now)
+    .slice(0, UPCOMING_LIMIT)
+    .map((row) => {
+      const barberRow = row.barber || row.Barber;
+      const customer = row.customer;
+      const account = row.client;
+      return {
+        id: row.id,
+        start_at: row.start_at,
+        end_at: row.end_at,
+        time: time.toLocalParts(row.start_at, tz).time,
+        status: row.status,
+        client: {
+          id: row.client_id || null,
+          user_id: row.user_id || null,
+          name: (customer && customer.name) || (account && account.name) || null,
+          phone: (customer && customer.phone) || (account && account.phone) || null,
+        },
+        services: [{ id: row.service_id, name: row.service_name_snapshot, duration_min: row.duration_min, price: row.price_snapshot }],
+        barber: barberRow ? { id: barberRow.id, name: barberLabel(barberRow) } : null,
+        allowed_actions: stateMachine.allowedActions(row, stateMachine.ROLES.STAFF, now),
+      };
+    });
+  return {
+    date,
+    timezone: tz,
+    branch: { id: branch.id, name: branch.name },
+    total_today: rows.filter((row) => row.status !== STATUS.CANCELLED).length,
+    attended: count(STATUS.COMPLETED),
+    pending: count(STATUS.CONFIRMED),
+    cancelled: count(STATUS.CANCELLED),
+    no_show: count(STATUS.NO_SHOW),
+    upcoming,
+  };
+};
+
+module.exports = { summary, barber, frontDesk, resolvePeriod };

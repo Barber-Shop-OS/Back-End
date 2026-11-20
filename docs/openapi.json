@@ -4396,6 +4396,97 @@
         ]
       }
     },
+    "/dashboard/front-desk": {
+      "get": {
+        "description": "Dono, gerente da filial ou recepcionista da filial (BE-49). date = dia local da filial (padrão hoje). total_today = agendamentos do dia exceto cancelados; attended = concluídos; pending = confirmados; upcoming = confirmados que ainda não terminaram, por horário (máx. 50).\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "schema": {
+              "example": "2026-11-20",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "attended": 5,
+                  "branch": {
+                    "id": 1,
+                    "name": "Centro"
+                  },
+                  "cancelled": 1,
+                  "date": "2026-11-20",
+                  "no_show": 1,
+                  "pending": 6,
+                  "timezone": "America/Sao_Paulo",
+                  "total_today": 12,
+                  "upcoming": [
+                    {
+                      "allowed_actions": [
+                        "cancel",
+                        "reschedule"
+                      ],
+                      "barber": {
+                        "id": 2,
+                        "name": "Zé Navalha"
+                      },
+                      "client": {
+                        "id": 7,
+                        "name": "Ana",
+                        "phone": "+5511999990000",
+                        "user_id": 3
+                      },
+                      "end_at": "2026-11-20T17:30:00.000Z",
+                      "id": 42,
+                      "services": [
+                        {
+                          "duration_min": 30,
+                          "id": 1,
+                          "name": "Corte",
+                          "price": "55.00"
+                        }
+                      ],
+                      "start_at": "2026-11-20T17:00:00.000Z",
+                      "status": "confirmado",
+                      "time": "14:00"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Resumo"
+          },
+          "403": {
+            "description": "Filial de outro tenant ou fora do vínculo"
+          },
+          "404": {
+            "description": "Filial não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Resumo do dia da filial para o atendimento (balcão)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
     "/dashboard/summary": {
       "get": {
         "description": "Período em datas locais (fuso de cada filial), inclusive; padrão = últimos 30 dias; máximo 366. Receita = pagamentos PAID pela data do pagamento. Ocupação = minutos agendados (confirmado, concluído, falta) ÷ minutos disponíveis (horário da filial ∩ jornada − fechamentos − bloqueios).\n",

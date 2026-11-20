@@ -118,6 +118,7 @@ const MATRIX = {
   'POST /api/uploads/presign': ['admin', 'owner'],
   'POST /api/uploads/confirm': ['admin', 'owner'],
   'GET /api/dashboard/barber': ['admin', 'owner', 'barbeiro'],
+  'GET /api/dashboard/front-desk': ['admin', 'owner', 'receptionist'],
   'POST /api/payment': 'auth',
   'GET /api/payment/appointment/:appointment_id': 'auth',
   'GET /api/payment/:id': 'auth',

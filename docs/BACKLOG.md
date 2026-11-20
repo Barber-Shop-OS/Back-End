@@ -416,6 +416,11 @@
 - **Aceite:** recepcionista de outra filial/tenant → 403/404.
 - **Feito:** `authz.canOperateBranch` (gerência ∪ recepção da filial) usado na agenda, no balcão e nos pagamentos; `membershipFor`/`managedBranchIds` ignoram recepcionistas (nunca gerenciam); `roleMiddleware` só deixa o recepcionista passar em rotas que declaram `receptionist` (clientes e status de pagamento). Gerente lista/adiciona/move/remove recepcionistas das filiais dele (não adiciona gerentes). Sem limite de membros nos planos → recepcionista não consome limite nem exige o plano Rede. `/api/me`: `roles` inclui `receptionist` e `front_desk[]` (`membership_id, role, barbershop_id, branch_id, barbershop, branch`); recepcionista não entra em `barbershops[]`. Seed: `recepcao@barberos.dev` (filial Centro da Navalha de Ouro).
 
+### [x] BE-50 — Resumo do dia para o atendimento
+- **Depende de:** BE-49
+- **Fazer:** `GET /api/dashboard/front-desk?branch_id=&date=` (dono, gerente ou recepcionista da filial): `{ date, timezone, branch, total_today, attended, pending, cancelled, no_show, upcoming[] }`.
+- **Feito:** dia local no fuso da filial (padrão hoje). `total_today` exclui cancelados; `attended` = concluídos; `pending` = confirmados; `upcoming` = confirmados ainda não terminados (máx. 50) com `time`, `client {id, user_id, name, phone}`, `services[]`, `barber {id, name}`, `allowed_actions`. Outra filial/tenant → 403; filial inexistente → 404.
+
 ---
 
 ## Sequência recomendada (sprints)
