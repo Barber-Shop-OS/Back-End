@@ -52,7 +52,31 @@ const bookingLimiter = rateLimit({
   skip: (req) => isTestEnv || !req.user || req.user.role !== 'cliente',
 });
 
+// BE-26/27: pedidos que disparam e-mail (redefinição de senha, reenvio de verificação).
+// Por IP: 5 a cada 15 min. Por e-mail/usuário: 3 por hora — evita bombardear a caixa de alguém.
+const emailIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { code: 'RATE_LIMITED', message: 'Muitas solicitações. Tente novamente em alguns minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv,
+});
+
+const emailTargetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  keyGenerator: (req) =>
+    req.user ? `user:${req.user.id}` : `email:${String((req.body && req.body.email) || '').trim().toLowerCase()}`,
+  message: { code: 'RATE_LIMITED', message: 'Muitas solicitações para esta conta. Tente novamente mais tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv,
+});
+
 module.exports = {
+  emailIpLimiter,
+  emailTargetLimiter,
   bookingLimiter,
   authLimiter,
   apiLimiter,

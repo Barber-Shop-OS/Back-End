@@ -249,10 +249,11 @@
 
 ## Fase P2 — Autenticação completa e monetização (AbacatePay)
 
-### [ ] BE-26 — Recuperação de senha `[SEC-26]`
+### [x] BE-26 — Recuperação de senha `[SEC-26]`
 - **Depende de:** BE-16
 - **Fazer:** `POST /api/auth/forgot-password {email}` → sempre 202 com mensagem neutra; token 32 bytes (hash SHA-256 no banco, expira 1 h, uso único) em `password_reset_tokens`; `POST /api/auth/reset-password {token, password}` → troca senha, incrementa `token_version` (derruba sessões), invalida outros tokens. Rate limit por e-mail e IP.
 - **Aceite:** token reutilizado → 410; resposta idêntica para e-mail existente ou não.
+- **Feito:** tabela genérica `user_tokens (purpose)` em vez de `password_reset_tokens` — reaproveitada no BE-27/BE-29. Link `APP_URL/recuperar-senha?token=` (FE-25). Envio fora do caminho da resposta (tempo não revela a conta).
 
 ### [ ] BE-27 — Verificação de e-mail
 - **Depende de:** BE-16

@@ -32,4 +32,9 @@ module.exports = {
       password: Joi.string().max(72).required(),
     }),
   }),
+  // BE-26
+  forgotPassword: validate({ body: Joi.object({ email: email().required() }) }),
+  resetPassword: validate({
+    body: Joi.object({ token: Joi.string().max(200).required(), password: password().required() }),
+  }),
 };

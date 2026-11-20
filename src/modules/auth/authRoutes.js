@@ -2,7 +2,8 @@
 const express = require('express');
 const authController = require('./authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
-const { authLimiter } = require('../../middlewares/rateLimitMiddleware');
+const { authLimiter, emailIpLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
+const passwordResetService = require('./passwordResetService');
 const schemas = require('./authSchemas');
 
 const router = express.Router();
@@ -164,5 +165,55 @@ router.post('/login', authLimiter, schemas.login, authController.login);
  *               message: Usuário não encontrado
  */
 router.get('/me', authMiddleware, authController.getMe);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Pede o link de redefinição de senha (resposta sempre igual)
+ *     description: Sempre 202 com mensagem neutra, exista ou não a conta. Link de uso único, válido por 1 h. Limite por IP e por e-mail.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { type: object, required: [email], properties: { email: { type: string } } }
+ *     responses:
+ *       202: { description: "{ message }" }
+ *       429: { description: RATE_LIMITED }
+ * /auth/reset-password:
+ *   post:
+ *     summary: Redefine a senha com o token do e-mail
+ *     description: Derruba todas as sessões (token_version) e invalida outros links pendentes.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties: { token: { type: string }, password: { type: string, minLength: 8 } }
+ *     responses:
+ *       200: { description: Senha redefinida }
+ *       400: { description: Senha fraca (WEAK_PASSWORD) }
+ *       410: { description: TOKEN_INVALID_OR_EXPIRED (inexistente, expirado ou já usado) }
+ */
+router.post('/forgot-password', emailIpLimiter, schemas.forgotPassword, emailTargetLimiter, async (req, res, next) => {
+  try {
+    return res.status(202).json(await passwordResetService.forgotPassword(req.body.email));
+  } catch (error) {
+    return next(error);
+  }
+});
+router.post('/reset-password', authLimiter, schemas.resetPassword, async (req, res, next) => {
+  try {
+    return res.status(200).json(await passwordResetService.resetPassword(req.body));
+  } catch (error) {
+    return next(error);
+  }
+});
 
 module.exports = router;
