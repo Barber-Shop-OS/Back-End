@@ -430,6 +430,11 @@
 - **Fazer:** garantir 14 dias no `register-owner`/assinatura a partir de uma constante única, com teste.
 - **Feito:** já era `TRIAL_DAYS = 14` em `src/shared/plans.js`, usado por `subscriptionService.startTrial` (register-owner, nova barbearia), pela migration de planos e pelo e-mail de boas-vindas — nenhum valor fixo duplicado. Agora também exposto ao front: `GET /api/plans` → `trial: { days, plan_code }` e `GET /api/app-config` → `trial_days`. Testes: unitário da constante e integração do `register-owner` (`trial_ends_at` ≈ agora + 14 d).
 
+### [x] BE-53 — Lacunas para as telas do Figma (dashboards)
+- **Fazer:** verificar e completar: (a) clientes do barbeiro; (b) séries de receita (gráfico "Receita Semanal") e variação vs período anterior (cards "+12%") no dashboard do dono e do barbeiro; (c) receita por barbeiro e por serviço de uma filial.
+- **Já existia:** `revenue_by_day` (série diária de qualquer período — semana = `from` segunda, `to` domingo) em `/api/dashboard/summary` e `/api/dashboard/barber`; `revenue_by_barber` e `top_services` (top 5) no summary com `branch_id`.
+- **Feito:** (a) `GET /api/dashboard/barber/clients` (barbeiro logado; atendimentos concluídos com ele: `client_id, user_id, name, phone, visits, last_visit, total_spent`; busca, `sortBy` e paginação padrão); (b) `comparison` no summary e no dashboard do barbeiro (`previous_period`, e `{ previous, change_pct }` para `revenue`, `payments`, `average_ticket`, `appointments`; período anterior de mesmo tamanho; `change_pct` nulo quando o anterior é zero); (c) `revenue_by_service` (todos os serviços, com `appointments` e `revenue`) no summary (sujeito ao recurso `financial_reports`) e no dashboard do barbeiro.
+
 ---
 
 ## Sequência recomendada (sprints)

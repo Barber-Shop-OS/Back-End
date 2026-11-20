@@ -18,6 +18,7 @@ const { Barbershop, BarbershopClient } = require('../../models');
 const stateMachine = require('../appointment/appointmentStateMachine');
 const { ForbiddenError } = require('../../utils/errorHandler');
 const time = require('../../shared/time');
+const { parsePagination } = require('../../shared/query');
 const metrics = require('./metrics');
 const { ValidationError, NotFoundError } = require('../../utils/errorHandler');
 
@@ -189,6 +190,21 @@ const compute = async ({ branches, period, appointmentFilter = {}, barberIds }) 
     return { ...rest, revenue: metrics.fromCents(cents) };
   };
 
+  // BE-53: receita e atendimentos por serviço (todos, não só o top 5) — "Rendimentos da Filial".
+  const serviceTotals = new Map();
+  const serviceEntry = (id, name) => {
+    if (!serviceTotals.has(id)) serviceTotals.set(id, { service_id: id, name, appointments: 0, cents: 0 });
+    return serviceTotals.get(id);
+  };
+  appointments
+    .filter((row) => BOOKED_STATUSES.includes(row.status))
+    .forEach((row) => {
+      serviceEntry(row.service_id, row.service_name_snapshot).appointments += 1;
+    });
+  payments.forEach(({ row, appointment }) => {
+    serviceEntry(appointment.service_id, appointment.service_name_snapshot).cents += metrics.toCents(row.amount);
+  });
+
   const paidCount = payments.length;
   return {
     period: { from: period.from, to: period.to },
@@ -208,6 +224,55 @@ const compute = async ({ branches, period, appointmentFilter = {}, barberIds }) 
     ),
     revenue_by_branch: [...branchTotals.values()].map(finish),
     revenue_by_barber: [...barberTotals.values()].map(finish).sort((a, b) => Number(b.revenue) - Number(a.revenue) || a.barber_id - b.barber_id),
+    revenue_by_service: [...serviceTotals.values()]
+      .map(finish)
+      .sort((a, b) => Number(b.revenue) - Number(a.revenue) || b.appointments - a.appointments || a.service_id - b.service_id),
+  };
+};
+
+/** BE-53: período imediatamente anterior, com o mesmo número de dias. */
+const previousPeriod = (period) => {
+  const to = time.addDays(period.from, -1);
+  const from = time.addDays(to, -(period.days.length - 1));
+  return { from, to, days: metrics.daysBetween(from, to) };
+};
+
+/** Variação percentual (1 casa); null quando o período anterior é zero. */
+const changePct = (current, previous) => (previous ? Math.round(((current - previous) / previous) * 1000) / 10 : null);
+
+/**
+ * BE-53: totais leves (sem ocupação) do período anterior e a variação — os cards "+12%".
+ * Mesmas regras do compute: receita = pagamentos PAID pela data do pagamento; agendamentos pela data.
+ */
+const comparison = async ({ branches, period, appointmentFilter = {}, current }) => {
+  const previous = previousPeriod(period);
+  const branchIds = branches.map((branch) => branch.id);
+  const tzByBranch = new Map(branches.map((branch) => [branch.id, branch.timezone || time.DEFAULT_TIMEZONE]));
+  const tzOf = (branchId) => tzByBranch.get(branchId) || time.DEFAULT_TIMEZONE;
+  const range = utcRange(previous, [...new Set(tzByBranch.values()), time.DEFAULT_TIMEZONE]);
+  const [appointmentRows, paymentRows] = await Promise.all([
+    Appointment.findAll({
+      where: { branch_id: { [Op.in]: branchIds }, start_at: { [Op.gte]: range.start, [Op.lt]: range.end }, ...appointmentFilter },
+      attributes: ['id', 'branch_id', 'start_at'],
+    }),
+    Payment.findAll({
+      where: { status: 'PAID', paid_at: { [Op.gte]: range.start, [Op.lt]: range.end } },
+      attributes: ['id', 'amount', 'paid_at'],
+      include: [{ model: Appointment, required: true, where: { branch_id: { [Op.in]: branchIds }, ...appointmentFilter }, attributes: ['id', 'branch_id'] }],
+    }),
+  ]);
+  const appointmentsCount = appointmentRows.filter((row) => inPeriod(row.start_at, tzOf(row.branch_id), previous)).length;
+  const payments = paymentRows.filter((row) => inPeriod(row.paid_at, tzOf((row.appointment || row.Appointment).branch_id), previous));
+  const revenueCents = payments.reduce((sum, row) => sum + metrics.toCents(row.amount), 0);
+  const ticketCents = payments.length ? Math.round(revenueCents / payments.length) : 0;
+  const currentRevenue = metrics.toCents(current.revenue.total);
+  const currentTicket = metrics.toCents(current.revenue.average_ticket);
+  return {
+    previous_period: { from: previous.from, to: previous.to },
+    revenue: { previous: metrics.fromCents(revenueCents), change_pct: changePct(currentRevenue, revenueCents) },
+    payments: { previous: payments.length, change_pct: changePct(current.revenue.payments, payments.length) },
+    average_ticket: { previous: metrics.fromCents(ticketCents), change_pct: changePct(currentTicket, ticketCents) },
+    appointments: { previous: appointmentsCount, change_pct: changePct(current.appointments.total, appointmentsCount) },
   };
 };
 
@@ -231,10 +296,12 @@ const summary = async (query, user, now = new Date()) => {
   const branches = await Branch.findAll({ where, attributes: ['id', 'name', 'timezone'], order: [['id', 'ASC']] });
   if (query.branch_id && !branches.length) throw new NotFoundError('Filial não encontrada');
   const result = await compute({ branches, period });
+  result.comparison = await comparison({ branches, period, current: result });
   // BE-35: no plano sem financial_reports o resumo vem sem o detalhamento financeiro.
   if (!(await require('../subscription/accessControl').hasFeature(query.barbershop_id, 'financial_reports'))) {
     delete result.revenue_by_branch;
     delete result.revenue_by_barber;
+    delete result.revenue_by_service;
     delete result.top_services;
     result.locked_features = ['financial_reports'];
   }
@@ -252,9 +319,66 @@ const barber = async (query, user, now = new Date()) => {
     attributes: ['id', 'name', 'timezone'],
     order: [['id', 'ASC']],
   });
-  const result = await compute({ branches, period, appointmentFilter: { barber_id: { [Op.in]: barberIds } }, barberIds });
+  const appointmentFilter = { barber_id: { [Op.in]: barberIds } };
+  const result = await compute({ branches, period, appointmentFilter, barberIds });
   delete result.revenue_by_barber;
+  result.comparison = await comparison({ branches, period, appointmentFilter, current: result });
   return result;
+};
+
+/**
+ * BE-53: GET /api/dashboard/barber/clients — clientes atendidos pelo barbeiro logado (todos os perfis
+ * dele): atendimentos concluídos com ele, último atendimento e total pago nesses atendimentos.
+ */
+const CLIENT_SORTS = {
+  last_visit: (a, b) => String(b.last_visit).localeCompare(String(a.last_visit)),
+  visits: (a, b) => b.visits - a.visits,
+  total_spent: (a, b) => Number(b.total_spent) - Number(a.total_spent),
+  name: (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'),
+};
+const barberClients = async (query, user) => {
+  const profiles = await Barber.findAll({ where: { user_id: user.id }, attributes: ['id'] });
+  if (!profiles.length) throw new NotFoundError('Perfil de barbeiro não encontrado');
+  const rows = await Appointment.findAll({
+    where: { barber_id: { [Op.in]: profiles.map((profile) => profile.id) }, status: STATUS.COMPLETED },
+    attributes: ['id', 'user_id', 'client_id', 'start_at'],
+    include: [
+      { model: User, as: 'client', attributes: ['id', 'name', 'phone'] },
+      { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'phone'] },
+      { model: Payment, attributes: ['amount', 'status'], required: false },
+    ],
+  });
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row.client_id ? `c${row.client_id}` : row.user_id ? `u${row.user_id}` : null;
+    if (!key) continue;
+    const entry = groups.get(key) || {
+      client_id: row.client_id || null,
+      user_id: row.user_id || null,
+      name: (row.customer && row.customer.name) || (row.client && row.client.name) || null,
+      phone: (row.customer && row.customer.phone) || (row.client && row.client.phone) || null,
+      visits: 0,
+      last_visit: null,
+      cents: 0,
+    };
+    entry.visits += 1;
+    const start = new Date(row.start_at).toISOString();
+    if (!entry.last_visit || start > entry.last_visit) entry.last_visit = start;
+    const payment = row.Payment || row.payment;
+    if (payment && payment.status === 'PAID') entry.cents += metrics.toCents(payment.amount);
+    groups.set(key, entry);
+  }
+  let items = [...groups.values()].map(({ cents, ...rest }) => ({ ...rest, total_spent: metrics.fromCents(cents) }));
+  if (query.search) {
+    const term = String(query.search).trim().toLowerCase();
+    const digits = term.replace(/\D/g, '');
+    items = items.filter(
+      (item) => String(item.name || '').toLowerCase().includes(term) || (digits.length >= 3 && String(item.phone || '').includes(digits))
+    );
+  }
+  items.sort((a, b) => (CLIENT_SORTS[query.sortBy] || CLIENT_SORTS.last_visit)(a, b) || CLIENT_SORTS.name(a, b));
+  const { page, pageSize, offset } = parsePagination(query);
+  return { items: items.slice(offset, offset + pageSize), page, pageSize, total: items.length, totalPages: Math.ceil(items.length / pageSize) };
 };
 
 /**
@@ -319,4 +443,4 @@ const frontDesk = async (query, user, now = new Date()) => {
   };
 };
 
-module.exports = { summary, barber, frontDesk, resolvePeriod };
+module.exports = { summary, barber, barberClients, frontDesk, resolvePeriod, previousPeriod, changePct };

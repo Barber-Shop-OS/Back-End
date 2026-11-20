@@ -122,6 +122,7 @@ const MATRIX = {
   'POST /api/uploads/confirm': ['admin', 'owner'],
   'GET /api/dashboard/barber': ['admin', 'owner', 'barbeiro'],
   'GET /api/dashboard/front-desk': ['admin', 'owner', 'receptionist'],
+  'GET /api/dashboard/barber/clients': ['admin', 'owner', 'barbeiro'],
   'POST /api/payment': 'auth',
   'GET /api/payment/appointment/:appointment_id': 'auth',
   'GET /api/payment/:id': 'auth',

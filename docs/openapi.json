@@ -4379,8 +4379,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Mesmas métricas do summary",
-            "sem revenue_by_barber": null
+            "description": "Mesmas métricas do summary (inclui revenue_by_day, revenue_by_service e comparison), sem revenue_by_barber"
           },
           "404": {
             "description": "Usuário sem perfil de barbeiro"
@@ -4392,6 +4391,88 @@
           }
         ],
         "summary": "Métricas do barbeiro logado (próprios atendimentos, receita e ocupação)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/barber/clients": {
+      "get": {
+        "description": "visits = atendimentos concluídos com o barbeiro; last_visit = último deles; total_spent = pagamentos PAID desses atendimentos.",
+        "parameters": [
+          {
+            "description": "Nome ou dígitos do telefone (mín. 3)",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "default": "last_visit",
+              "enum": [
+                "last_visit",
+                "visits",
+                "total_spent",
+                "name"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "items": [
+                    {
+                      "client_id": 7,
+                      "last_visit": "2026-11-18T13:00:00.000Z",
+                      "name": "Ana",
+                      "phone": "+5511999990000",
+                      "total_spent": "220.00",
+                      "user_id": 3,
+                      "visits": 4
+                    }
+                  ],
+                  "page": 1,
+                  "pageSize": 10,
+                  "total": 1,
+                  "totalPages": 1
+                }
+              }
+            },
+            "description": "Lista paginada"
+          },
+          "404": {
+            "description": "Usuário sem perfil de barbeiro"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Clientes atendidos pelo barbeiro logado (atendimentos concluídos com ele)",
         "tags": [
           "Dashboard"
         ]
@@ -4490,7 +4571,7 @@
     },
     "/dashboard/summary": {
       "get": {
-        "description": "Período em datas locais (fuso de cada filial), inclusive; padrão = últimos 30 dias; máximo 366. Receita = pagamentos PAID pela data do pagamento. Ocupação = minutos agendados (confirmado, concluído, falta) ÷ minutos disponíveis (horário da filial ∩ jornada − fechamentos − bloqueios).\n",
+        "description": "Período em datas locais (fuso de cada filial), inclusive; padrão = últimos 30 dias; máximo 366. Receita = pagamentos PAID pela data do pagamento. Ocupação = minutos agendados (confirmado, concluído, falta) ÷ minutos disponíveis (horário da filial ∩ jornada − fechamentos − bloqueios). BE-53: revenue_by_service (todos os serviços) e comparison (período anterior de mesmo tamanho; change_pct em %, 1 casa, null se o anterior for zero). Para o gráfico semanal, pedir from=segunda e to=domingo e usar revenue_by_day. revenue_by_branch/barber/service e top_services só com financial_reports.\n",
         "parameters": [
           {
             "in": "query",
@@ -4538,6 +4619,28 @@
                     },
                     "total": 30
                   },
+                  "comparison": {
+                    "appointments": {
+                      "change_pct": 25,
+                      "previous": 24
+                    },
+                    "average_ticket": {
+                      "change_pct": 0,
+                      "previous": "50.00"
+                    },
+                    "payments": {
+                      "change_pct": 25,
+                      "previous": 20
+                    },
+                    "previous_period": {
+                      "from": "2026-10-02",
+                      "to": "2026-10-31"
+                    },
+                    "revenue": {
+                      "change_pct": 25,
+                      "previous": "1000.00"
+                    }
+                  },
                   "occupancy": {
                     "available_minutes": 14400,
                     "booked_minutes": 870,
@@ -4577,6 +4680,14 @@
                     {
                       "amount": "0.00",
                       "date": "2026-11-01"
+                    }
+                  ],
+                  "revenue_by_service": [
+                    {
+                      "appointments": 20,
+                      "name": "Corte",
+                      "revenue": "1000.00",
+                      "service_id": 1
                     }
                   ],
                   "top_services": [
