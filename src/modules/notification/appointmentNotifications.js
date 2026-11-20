@@ -90,7 +90,7 @@ const loadForEmail = (appointmentId) =>
       { model: User, as: 'client', attributes: ['id', 'name', 'email'] },
       // BE-23: cliente rápido (sem conta) recebe no e-mail cadastrado pela barbearia, se houver.
       { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'email'] },
-      { model: Barber, attributes: ['id', 'display_name'], include: [{ model: User, attributes: ['name'] }] },
+      { model: Barber, attributes: ['id', 'display_name', 'user_id'], include: [{ model: User, attributes: ['name'] }] },
       {
         model: Branch,
         attributes: ['id', 'name', 'timezone'],
@@ -114,6 +114,44 @@ const barberName = (appointment) => {
   const barber = appointment.barber || appointment.Barber;
   if (!barber) return 'a equipe';
   return barber.display_name || (barber.User && barber.User.name) || 'a equipe';
+};
+
+const PUSH_TITLES = {
+  [KINDS.CONFIRMATION]: 'Agendamento confirmado',
+  [KINDS.CANCELLATION]: 'Agendamento cancelado',
+  [KINDS.RESCHEDULE]: 'Agendamento remarcado',
+  [KINDS.REMINDER_24H]: 'Lembrete: seu horário é amanhã',
+  [KINDS.REMINDER_2H]: 'Lembrete: seu horário é daqui a pouco',
+};
+
+/** BE-45: push ao cliente com conta e, em novo/cancelado, ao barbeiro. Falhas só vão para o log. */
+const sendPush = async (appointment, payload) => {
+  try {
+    const push = require('./pushService');
+    if (isReminder(payload) && (appointment.status !== Appointment.STATUS.CONFIRMED || new Date(appointment.start_at).toISOString() !== payload.start_at)) return;
+    const tz = appointment.Branch.timezone || time.DEFAULT_TIMEZONE;
+    const when = `${formatDate(appointment.start_at, tz)} às ${formatTime(appointment.start_at, tz)}`;
+    const shop = appointment.Branch.Barbershop ? appointment.Branch.Barbershop.name : '';
+    const data = { appointment_id: appointment.id, kind: payload.kind };
+    if (appointment.user_id) {
+      await push.sendToUsers([appointment.user_id], {
+        title: PUSH_TITLES[payload.kind] || 'BarberOS',
+        body: `${appointment.service_name_snapshot} — ${when} · ${shop}`,
+        data,
+      });
+    }
+    const barber = appointment.barber || appointment.Barber;
+    if (barber && barber.user_id && [KINDS.CONFIRMATION, KINDS.CANCELLATION].includes(payload.kind)) {
+      const who = (appointment.client && appointment.client.name) || (appointment.customer && appointment.customer.name) || 'Cliente';
+      await push.sendToUsers([barber.user_id], {
+        title: payload.kind === KINDS.CONFIRMATION ? 'Novo agendamento' : 'Agendamento cancelado',
+        body: `${who} — ${appointment.service_name_snapshot} · ${when}`,
+        data,
+      });
+    }
+  } catch (error) {
+    require('../../utils/logger').warn('[push] falha ao montar notificação', { appointment_id: appointment.id, message: error.message });
+  }
 };
 
 /** Destinatário: conta do cliente ou, sem conta, o cliente da barbearia com e-mail. */
@@ -173,7 +211,10 @@ const calendarAttachment = async (appointment, { cancelled = false } = {}) => ({
  */
 const handle = async (payload, now = new Date()) => {
   const appointment = await loadForEmail(payload.appointment_id);
-  if (!appointment || !recipient(appointment)) return null;
+  if (!appointment) return null;
+  // BE-45: push para o app (cliente e, em novo/cancelado, o barbeiro) — independe do e-mail.
+  await sendPush(appointment, payload);
+  if (!recipient(appointment)) return null;
 
   if (isReminder(payload)) {
     if (appointment.status !== Appointment.STATUS.CONFIRMED) return null;

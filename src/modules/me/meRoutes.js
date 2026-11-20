@@ -7,6 +7,7 @@ const { authLimiter, emailTargetLimiter } = require('../../middlewares/rateLimit
 const accountSecurityService = require('./accountSecurityService');
 const sessionService = require('../auth/sessionService');
 const privacyService = require('./privacyService');
+const pushService = require('../notification/pushService');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
@@ -223,5 +224,54 @@ const deleteSchema = validate({ body: Joi.object({ password: Joi.string().max(72
  */
 router.delete('/', authLimiter, deleteSchema, deleteAccount);
 router.post('/delete', authLimiter, deleteSchema, deleteAccount);
+
+/**
+ * @swagger
+ * /me/push-tokens:
+ *   post:
+ *     summary: Registrar o token de push (Expo) deste aparelho
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties: { token: { type: string, example: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]' }, platform: { type: string, enum: [android, ios, web] } }
+ *     responses:
+ *       201: { description: Registrado }
+ *       400: { description: Token inválido }
+ *   delete:
+ *     summary: Remover o token de push deste aparelho (logout no app)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { type: object, required: [token], properties: { token: { type: string } } }
+ *     responses:
+ *       204: { description: Removido }
+ */
+router.post(
+  '/push-tokens',
+  validate({ body: Joi.object({ token: Joi.string().max(200).required(), platform: Joi.string().valid('android', 'ios', 'web') }) }),
+  handle(async (req, res) => {
+    await pushService.register(req.user.id, req.body);
+    return res.status(201).json({ registered: true });
+  })
+);
+router.delete(
+  '/push-tokens',
+  validate({ body: Joi.object({ token: Joi.string().max(200).required() }) }),
+  handle(async (req, res) => {
+    await pushService.unregister(req.user.id, req.body.token);
+    return res.status(204).end();
+  })
+);
 
 module.exports = router;

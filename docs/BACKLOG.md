@@ -389,10 +389,11 @@
 - **Aceite:** deploy em staging reproduzível a partir do README.
 - **Feito:** Dockerfile multi-stage (`node:22-alpine`, `npm ci --omit=dev`, usuário `node`, `HEALTHCHECK /health`); `npm run migrate:release` com `GET_LOCK`; `MIGRATE_ON_BOOT=false` só valida o schema; encerramento gracioso (SIGTERM); TLS do banco com CA (`DB_SSL_CA`, `rejectUnauthorized` ligado). `docs/runbook.md`: ambientes, usuário de banco sem DROP/GRANT, deploy, rollback, backup/restore, rotação de segredos, incidente de webhook. Validado com a imagem nova (healthy, não-root, release + boot sem migrations). **Pendente:** provisionar staging/produção reais e o backup gerenciado.
 
-### [ ] BE-45 — Push notifications (app mobile)
+### [x] BE-45 — Push notifications (app mobile)
 - **Depende de:** BE-16 (consumido por MOB-11)
 - **Fazer:** tabela `push_tokens (user_id, expo_token, platform, last_seen)`; `POST/DELETE /api/me/push-tokens`; canal `push` no worker de notificações (Expo Push API) para confirmação, lembrete, cancelamento e "novo agendamento" para o barbeiro. Remover tokens inválidos ao receber `DeviceNotRegistered`.
 - **Aceite:** lembrete 2 h chega por push e e-mail; token inválido é removido.
+- **Feito:** `push_tokens` + `POST/DELETE /api/me/push-tokens` (formato Expo validado; token muda de dono no login de outra conta); push no mesmo job do e-mail (confirmação, cancelamento, remarcação, lembretes ao cliente; novo/cancelado ao barbeiro); falha do Expo só vai para o log; `DeviceNotRegistered` remove o token. Validado com o worker em produção contra um Expo simulado.
 
 ### [ ] BE-46 — Lembretes por WhatsApp [FUTURO / DECISÃO PENDENTE]
 - **Depende de:** BE-16

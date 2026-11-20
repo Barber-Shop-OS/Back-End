@@ -23,6 +23,9 @@ services:
   app:
     build: .
     container_name: barberos-api
+    # Permite alcançar serviços do host (ex.: simuladores locais) em host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     depends_on:
       db:
@@ -46,6 +49,12 @@ services:
       MAIL_PASS: ${MAIL_PASS:-}
       JOBS_WORKER: ${JOBS_WORKER:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      EXPO_PUSH_URL: ${EXPO_PUSH_URL:-}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      MIN_APP_VERSION: ${MIN_APP_VERSION:-1.0.0}
+      LATEST_APP_VERSION: ${LATEST_APP_VERSION:-1.0.0}
+      MAINTENANCE_MESSAGE: ${MAINTENANCE_MESSAGE:-}
+      TERMS_VERSION: ${TERMS_VERSION:-2026-11}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       TRUST_PROXY: ${TRUST_PROXY:-0}
       MIGRATE_ON_BOOT: ${MIGRATE_ON_BOOT:-true}

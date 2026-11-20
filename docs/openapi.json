@@ -4854,6 +4854,88 @@
         ]
       }
     },
+    "/me/push-tokens": {
+      "delete": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Removido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remover o token de push deste aparelho (logout no app)",
+        "tags": [
+          "Me"
+        ]
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "platform": {
+                    "enum": [
+                      "android",
+                      "ios",
+                      "web"
+                    ],
+                    "type": "string"
+                  },
+                  "token": {
+                    "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Registrado"
+          },
+          "400": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Registrar o token de push (Expo) deste aparelho",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
     "/me/sessions": {
       "get": {
         "responses": {

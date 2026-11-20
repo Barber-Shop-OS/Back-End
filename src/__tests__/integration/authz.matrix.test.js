@@ -30,6 +30,8 @@ const MATRIX = {
   'POST /api/me/email': 'auth',
   'GET /api/me/sessions': 'auth',
   'GET /api/me/export': 'auth',
+  'POST /api/me/push-tokens': 'auth',
+  'DELETE /api/me/push-tokens': 'auth',
   'DELETE /api/me': 'auth',
   'POST /api/me/delete': 'auth',
   'DELETE /api/me/sessions/:id': 'auth',
