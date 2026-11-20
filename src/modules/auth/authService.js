@@ -39,8 +39,8 @@ const register = async (data = {}) => {
     password: hashedPassword,
     role: 'cliente',
   });
-  // BE-23: clientes de balcão com o mesmo e-mail passam a apontar para a conta.
-  await require('../client/clientService').linkAccount(user);
+  // BE-27: link de confirmação (o vínculo com clientes de balcão acontece ao confirmar — BE-23).
+  await require('./emailVerificationService').afterSignup(user);
 
   return sanitizeUser(user);
 };

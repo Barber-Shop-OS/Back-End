@@ -4,6 +4,7 @@ const authController = require('./authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const { authLimiter, emailIpLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
 const passwordResetService = require('./passwordResetService');
+const emailVerificationService = require('./emailVerificationService');
 const schemas = require('./authSchemas');
 
 const router = express.Router();
@@ -211,6 +212,46 @@ router.post('/forgot-password', emailIpLimiter, schemas.forgotPassword, emailTar
 router.post('/reset-password', authLimiter, schemas.resetPassword, async (req, res, next) => {
   try {
     return res.status(200).json(await passwordResetService.resetPassword(req.body));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /auth/verify-email:
+ *   post:
+ *     summary: Confirma o e-mail com o token do link
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { type: object, required: [token], properties: { token: { type: string } } }
+ *     responses:
+ *       200: { description: "{ message, email_verified_at }" }
+ *       410: { description: TOKEN_INVALID_OR_EXPIRED — oferecer reenviar (POST /auth/resend-verification) }
+ * /auth/resend-verification:
+ *   post:
+ *     summary: Reenvia o link de confirmação de e-mail (usuário logado)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       202: { description: "{ already_verified, message }" }
+ *       429: { description: RATE_LIMITED }
+ */
+router.post('/verify-email', authLimiter, schemas.verifyEmail, async (req, res, next) => {
+  try {
+    return res.status(200).json(await emailVerificationService.verify(req.body.token));
+  } catch (error) {
+    return next(error);
+  }
+});
+router.post('/resend-verification', emailIpLimiter, authMiddleware, emailTargetLimiter, async (req, res, next) => {
+  try {
+    return res.status(202).json(await emailVerificationService.resend(req.user.id));
   } catch (error) {
     return next(error);
   }

@@ -18,7 +18,7 @@ const { ownsBarbershop } = require('../../shared/authz');
 const { present } = require('./appointmentPresenter');
 const { lockingTransaction } = require('../../shared/transaction');
 const time = require('../../shared/time');
-const { ValidationError, NotFoundError, ConflictError, CODES } = require('../../utils/errorHandler');
+const { ValidationError, NotFoundError, ConflictError, AppError, CODES } = require('../../utils/errorHandler');
 
 const MAX_ACTIVE_PER_BARBERSHOP = 3;
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -181,6 +181,10 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
   } else {
     // Modo cliente: a identidade vem do token, nunca do body (SEC-04).
     clientId = currentUser.id;
+    // BE-27: agendamento online só depois que o dono confirmar o e-mail.
+    if (!(await require('../auth/emailVerificationService').ownerVerified(branch.Barbershop))) {
+      throw new AppError('Esta barbearia ainda não está recebendo agendamentos online', 404, CODES.BARBERSHOP_UNAVAILABLE);
+    }
   }
 
   const requestHash = hashRequest({

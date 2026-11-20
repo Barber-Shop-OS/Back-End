@@ -32,13 +32,14 @@ const resetDatabase = async () => {
   await Plan.bulkCreate(PLANS.map((plan) => ({ ...plan })));
 };
 
-const createUser = async ({ role = 'cliente', name, email, password = DEFAULT_PASSWORD } = {}) => {
+const createUser = async ({ role = 'cliente', name, email, password = DEFAULT_PASSWORD, verified = true } = {}) => {
   const n = next();
   return User.create({
     name: name || `Usuário ${n}`,
     email: email || `user${n}@test.com`,
     password: await bcrypt.hash(password, 4),
     role,
+    email_verified_at: verified ? new Date() : null,
   });
 };
 

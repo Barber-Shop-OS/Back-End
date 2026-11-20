@@ -17,6 +17,8 @@ require("./modules/notification/appointmentNotifications").register();
 require("./modules/billing/billingWebhookService").register();
 // BE-35: página pública, aviso de cobrança no /api/me e ciclo diário dos trials.
 require("./modules/subscription/accessControl").register();
+// BE-27: verificação de e-mail no cadastro do dono.
+require("./modules/auth/emailVerificationService").register();
 const app = express();
 
 // Middleware

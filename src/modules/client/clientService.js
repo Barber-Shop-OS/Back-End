@@ -226,15 +226,18 @@ const update = async (barbershopId, clientId, input, user) => {
 const ensureForUser = async (barbershopId, userId, { transaction } = {}) => {
   const linked = await BarbershopClient.findOne({ where: { barbershop_id: barbershopId, user_id: userId }, transaction });
   if (linked) return linked;
-  const user = await User.findByPk(userId, { attributes: ['id', 'name', 'email', 'phone'], transaction });
+  const user = await User.findByPk(userId, { attributes: ['id', 'name', 'email', 'phone', 'email_verified_at'], transaction });
   if (!user) throw new NotFoundError('Cliente não encontrado');
   const or = [{ email: String(user.email).toLowerCase() }];
   if (user.phone) or.push({ phone: user.phone });
-  const quick = await BarbershopClient.findOne({
-    where: { barbershop_id: barbershopId, user_id: null, [Op.or]: or },
-    order: [['id', 'ASC']],
-    transaction,
-  });
+  // BE-27: só conta com e-mail confirmado assume o histórico de um cliente de balcão.
+  const quick = user.email_verified_at
+    ? await BarbershopClient.findOne({
+        where: { barbershop_id: barbershopId, user_id: null, [Op.or]: or },
+        order: [['id', 'ASC']],
+        transaction,
+      })
+    : null;
   if (quick) return quick.update({ user_id: user.id }, { transaction });
   return BarbershopClient.create(
     { barbershop_id: barbershopId, user_id: user.id, name: user.name, email: user.email, phone: user.phone || null },
@@ -244,6 +247,7 @@ const ensureForUser = async (barbershopId, userId, { transaction } = {}) => {
 
 /** Ao criar conta: vincula clientes rápidos (de qualquer barbearia) com o mesmo e-mail/telefone. */
 const linkAccount = async (user, { transaction } = {}) => {
+  if (!user.email_verified_at) return 0;
   const or = [{ email: String(user.email).toLowerCase() }];
   if (user.phone) or.push({ phone: user.phone });
   const quick = await BarbershopClient.findAll({ where: { user_id: null, [Op.or]: or }, order: [['id', 'ASC']], transaction });

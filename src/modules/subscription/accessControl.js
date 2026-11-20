@@ -141,7 +141,8 @@ const register = () => {
   registered = true;
   require('../barbershop/barbershopPublicService').setVisibilityCheck(async (barbershop) => {
     const subscription = await Subscription.findOne({ where: { barbershop_id: barbershop.id } });
-    return entitlements.isPubliclyVisible(subscription);
+    // BE-27: dono com e-mail não confirmado usa o trial, mas a página não é publicada.
+    return entitlements.isPubliclyVisible(subscription) && (await require('../auth/emailVerificationService').ownerVerified(barbershop));
   });
   require('../me/meService').addProfileExtension(meExtension);
   require('../billing/billingWebhookService').onDaily(runTrialCycle);

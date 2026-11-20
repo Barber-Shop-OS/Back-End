@@ -162,6 +162,11 @@ describe('BE-23 — clientes da barbearia', () => {
       const reg = await request(app).post('/api/auth/register').send({ name: 'Ana', email: 'ana@balcao.com', password: DEFAULT_PASSWORD });
       expect(reg.status).toBe(201);
       const user = await User.findOne({ where: { email: 'ana@balcao.com' } });
+      // BE-27: antes de confirmar o e-mail, nada é vinculado.
+      expect((await BarbershopClient.findByPk(created.body.client.id)).user_id).toBeNull();
+      await require('../../../modules/auth/emailVerificationService').verify(
+        require('../../../shared/mailer').outbox().map((mail) => /verify-email\?token=([A-Za-z0-9_-]+)/.exec(mail.html)).filter(Boolean).pop()[1]
+      );
       const linked = await BarbershopClient.findByPk(created.body.client.id);
       expect(linked.user_id).toBe(user.id);
     });

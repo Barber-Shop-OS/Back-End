@@ -29,6 +29,11 @@ const User = sequelize.define("users", {
       type: DataTypes.ENUM("cliente", "barbeiro", "owner", "admin"),
       defaultValue: "cliente",
     },
+    // BE-27: null = e-mail ainda não confirmado.
+    email_verified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     token_version: {
       type: DataTypes.INTEGER,
       allowNull: false,

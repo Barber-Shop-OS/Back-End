@@ -175,6 +175,8 @@ const accept = async (token, data, currentUser) => {
       email: invitation.email,
       password: await bcrypt.hash(data.password, BCRYPT_ROUNDS),
       role: 'cliente',
+      // BE-27: o link do convite chegou neste e-mail — já está comprovado.
+      email_verified_at: new Date(),
     });
     issuedToken = true;
   }

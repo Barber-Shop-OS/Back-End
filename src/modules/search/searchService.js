@@ -5,7 +5,7 @@
 // Com lat/lng ordena por distância (Haversine em SQL); filiais sem coordenadas vão para o fim.
 // LIKE sempre com curingas escapados [SEC-09].
 const { Op, literal } = require('sequelize');
-const { Branch, Barbershop, Address, Service, Subscription } = require('../../models');
+const { Branch, Barbershop, Address, Service, Subscription, User } = require('../../models');
 const { likeMatch } = require('../../shared/query');
 const entitlements = require('../../shared/entitlements');
 const { publicAddress } = require('../barbershop/barbershopPublicService');
@@ -121,7 +121,11 @@ const searchBranches = async (query = {}, now = new Date()) => {
         required: true,
         where: { status: 'active' },
         attributes: ['id', 'name', 'slug', 'logo_url'],
-        include: [{ model: Subscription, required: true, attributes: [], where: visibleSubscriptionWhere(now) }],
+        include: [
+          { model: Subscription, required: true, attributes: [], where: visibleSubscriptionWhere(now) },
+          // BE-27: dono precisa ter confirmado o e-mail.
+          { model: User, as: 'owner', required: true, attributes: [], where: { email_verified_at: { [Op.ne]: null } } },
+        ],
       },
       { model: Address, required: false },
     ],

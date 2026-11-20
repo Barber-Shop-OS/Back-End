@@ -255,10 +255,11 @@
 - **Aceite:** token reutilizado → 410; resposta idêntica para e-mail existente ou não.
 - **Feito:** tabela genérica `user_tokens (purpose)` em vez de `password_reset_tokens` — reaproveitada no BE-27/BE-29. Link `APP_URL/recuperar-senha?token=` (FE-25). Envio fora do caminho da resposta (tempo não revela a conta).
 
-### [ ] BE-27 — Verificação de e-mail
+### [x] BE-27 — Verificação de e-mail
 - **Depende de:** BE-16
 - **Fazer:** `users.email_verified_at`; `POST /api/auth/verify-email {token}`, `POST /api/auth/resend-verification` (rate limit). Owner não verificado pode usar o trial, mas não publica a página (`status` público) até verificar [DECISÃO PENDENTE — recomendação].
 - **Aceite:** token expirado → 410 com opção de reenviar.
+- **Feito:** link `APP_URL/verify-email?token=` (48 h, `user_tokens`); contas existentes marcadas como verificadas na migration; convite aceito já verifica. Dono não verificado: painel e trial normais, mas página pública, busca e agendamento online (modo cliente) desligados. Vínculo de clientes de balcão (BE-23) só após confirmar.
 
 ### [ ] BE-28 — Login com Google
 - **Depende de:** BE-02
