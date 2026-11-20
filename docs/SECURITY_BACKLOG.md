@@ -109,10 +109,11 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 
 ## 2. Controles que precisam existir antes do lançamento
 
-### [ ] SEC-13 — Webhook e checkout AbacatePay seguros — **Crítico** → BE-32, BE-33
+### [x] SEC-13 — Webhook e checkout AbacatePay seguros — **Crítico** → BE-32, BE-33
 - **Ataque:** chamar o webhook com payload `subscription.completed` forjado → plano grátis; reenviar evento antigo; trocar `externalId` para ativar outra barbearia; ativar pela URL de retorno do checkout.
 - **Controles:** secret na URL **e** HMAC do corpo cru com `timingSafeEqual`; janela de timestamp de 5 min; idempotência por `event.id`; ativação só via webhook (nunca pelo `returnUrl`); conferir `externalId`, produto e valor contra o banco; reconciliação diária via API; chave `ABACATEPAY_API_KEY` só no backend, separada por ambiente (devMode/produção); logs sem dados de cartão/CPF completos.
 - **Teste:** assinatura inválida, timestamp velho, evento repetido, valor divergente → nenhuma mudança de status.
+- **Fechado (2026-11-19):** segredo em tempo constante + HMAC do corpo cru (quando a chave pública está configurada); a AbacatePay v2 não envia timestamp, então o replay é barrado pela idempotência por `event.id`; ativação só via webhook; produto e valor conferidos contra o plano (divergência → `rejected`, sem mudança); externalId autoritativo; reconciliação diária. Testes em `src/__tests__/integration/billing/webhooks.test.js`.
 
 ### [ ] SEC-16 — Cadeia de dependências — **Alto**
 - **Parcial (2026-11-07, Back-End):** `npm audit fix` (18 → 1 vulnerabilidade de produção, só moderada: `uuid` interno do Sequelize), nodemailer 10, CI com `npm audit --audit-level=high`, Dependabot, gitleaks, deps sem uso removidas, `engines`. **Falta:** Front-End e Mobile.

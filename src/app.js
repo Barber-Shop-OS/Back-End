@@ -13,6 +13,8 @@ const { swaggerUi, specs } = require('./config/swagger');
 require("./models/index");
 // BE-16: e-mails de agendamento e handlers da fila de jobs.
 require("./modules/notification/appointmentNotifications").register();
+// BE-33: processamento dos webhooks da AbacatePay e reconciliação diária da cobrança.
+require("./modules/billing/billingWebhookService").register();
 const app = express();
 
 // Middleware
@@ -29,7 +31,15 @@ app.use(
 );
 app.use(requestLoggerMiddleware);
 app.use(apiLimiter);
-app.use(express.json({ limit: '100kb' }));
+app.use(
+	express.json({
+		limit: '100kb',
+		// BE-33: webhooks precisam do corpo cru (bytes exatos) para conferir a assinatura HMAC.
+		verify: (req, res, buf) => {
+			if (req.originalUrl.startsWith('/api/webhooks/')) req.rawBody = Buffer.from(buf);
+		},
+	})
+);
 
 if (!config.isProduction) {
 	// Especificação OpenAPI em JSON (consumida pelo scan do OWASP ZAP — SEC-23 — e pelos geradores de tipos).

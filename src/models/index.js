@@ -21,6 +21,7 @@ const IdempotencyKey = require('./idempotencyKey');
 const AppointmentEvent = require('./appointmentEvent');
 const Job = require('./job');
 const BarbershopClient = require('./barbershopClient');
+const WebhookEvent = require('./webhookEvent');
 
 // ============================================
 // User associations
@@ -179,6 +180,7 @@ BarbershopClient.hasMany(Appointment, { foreignKey: 'client_id', as: 'appointmen
 
 module.exports = {
   sequelize,
+  WebhookEvent,
   BarbershopClient,
   Job,
   AppointmentEvent,

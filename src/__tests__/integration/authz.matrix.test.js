@@ -105,6 +105,7 @@ const MATRIX = {
   'POST /api/billing/cancel': ['admin', 'owner'],
   'POST /api/billing/resume': ['admin', 'owner'],
   'POST /api/billing/portal': ['admin', 'owner'],
+  'POST /api/webhooks/abacatepay': 'public',
 };
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];

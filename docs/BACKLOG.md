@@ -303,7 +303,7 @@
 - **Aceite:** fluxo completo em `devMode` documentado em `docs/billing.md`.
 - **Feito (2026-11-19):** payloads conferidos na doc v2. Cliente HTTP com `fetch` nativo (sem axios/nock; testes com fetch falso). `POST /api/billing/{checkout,change-plan,cancel,resume,portal}`; checkout mantém o trial até o webhook; `cancel` só marca (a chamada à API acontece no job do BE-33). Sem `ABACATEPAY_API_KEY` as rotas respondem 503 `BILLING_UNAVAILABLE`. **Pendente:** validar com chave real de modo teste (`abc_dev_...`).
 
-### [ ] BE-33 — Webhooks AbacatePay e máquina de estados da assinatura `[SEC-13]`
+### [x] BE-33 — Webhooks AbacatePay e máquina de estados da assinatura `[SEC-13]`
 - **Depende de:** BE-32
 - **Fazer:**
   - `POST /api/webhooks/abacatepay` com `express.raw()` nessa rota (precisa do corpo cru para HMAC). Validar: secret na URL (`?webhookSecret=` comparado com `crypto.timingSafeEqual`) **e** assinatura HMAC do header (formato `t=TIMESTAMP,v1=SIGNATURE`; rejeitar timestamp > 5 min) — confirmar nome do header e algoritmo na doc v2.
@@ -313,6 +313,7 @@
   - Responder 200 rápido; processamento pesado via job (BE-16). Nunca retornar `410` (desativa o webhook na AbacatePay).
   - Job diário de reconciliação: `GET /v2/subscriptions/get` para assinaturas `pending/past_due` (cobre webhook perdido).
 - **Aceite:** testes com payloads reais de exemplo assinados; replay e assinatura inválida → 401 sem efeito.
+- **Feito (2026-11-19):** conforme a doc v2 a assinatura **não** tem timestamp (`X-Webhook-Signature` = base64 HMAC-SHA256 do corpo cru com a chave pública fixa da AbacatePay) — verificada quando `ABACATEPAY_WEBHOOK_PUBLIC_KEY` estiver configurada; a origem é provada pelo segredo (`?webhookSecret=`/`X-Webhook-Secret`). Replay coberto pela idempotência por `id`. Corpo cru via `express.json({ verify })`. Job `billing.daily` (agendado pelo worker, um por dia): reconciliação de `pending/past_due` e cancelamento no fim do período. `externalId` do checkout é autoritativo para achar a barbearia. **Pendente:** copiar a chave pública da página de segurança da doc para o `.env` de produção.
 
 ### [ ] BE-34 — Upload de imagens (logo, capa, foto do barbeiro) `[SEC-22]`
 - **Depende de:** BE-18

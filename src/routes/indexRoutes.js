@@ -17,6 +17,7 @@ const mounts = [
   ['/api/payment', require('../modules/payment/paymentRoutes')],
   ['/api/dashboard', require('../modules/dashboard/dashboardRoutes')],
   ['/api/billing', require('../modules/billing/billingRoutes')],
+  ['/api/webhooks', require('../modules/billing/webhookRoutes')],
   ['/api/admin', require('../modules/admin/adminRoutes')],
   ['/api/invitations', require('../modules/invitation/invitationRoutes')],
   ['/api/plans', require('../modules/subscription/subscriptionRoutes').plansRouter],
