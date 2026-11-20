@@ -6,7 +6,7 @@
 // Os jobs são enfileirados dentro da transação do agendamento: rollback não deixa e-mail órfão.
 // O e-mail é montado na hora do envio com os dados atuais; lembrete de horário que mudou é ignorado.
 require('dayjs/locale/pt-br');
-const { Appointment, User, Barber, Branch, Barbershop, Address, AppointmentEvent } = require('../../models');
+const { Appointment, User, Barber, Branch, Barbershop, Address, AppointmentEvent, BarbershopClient } = require('../../models');
 const queue = require('../../jobs/queue');
 const worker = require('../../jobs/worker');
 const mailer = require('../../shared/mailer');
@@ -88,6 +88,8 @@ const loadForEmail = (appointmentId) =>
   Appointment.findByPk(appointmentId, {
     include: [
       { model: User, as: 'client', attributes: ['id', 'name', 'email'] },
+      // BE-23: cliente rápido (sem conta) recebe no e-mail cadastrado pela barbearia, se houver.
+      { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'email'] },
       { model: Barber, attributes: ['id', 'display_name'], include: [{ model: User, attributes: ['name'] }] },
       {
         model: Branch,
@@ -114,6 +116,13 @@ const barberName = (appointment) => {
   return barber.display_name || (barber.User && barber.User.name) || 'a equipe';
 };
 
+/** Destinatário: conta do cliente ou, sem conta, o cliente da barbearia com e-mail. */
+const recipient = (appointment) => {
+  if (appointment.client && appointment.client.email) return appointment.client;
+  if (appointment.customer && appointment.customer.email) return appointment.customer;
+  return null;
+};
+
 /** Dados comuns a todos os templates de agendamento. */
 const buildData = (appointment, extra = {}, now = new Date()) => {
   const tz = appointment.Branch.timezone || time.DEFAULT_TIMEZONE;
@@ -121,7 +130,7 @@ const buildData = (appointment, extra = {}, now = new Date()) => {
   const until = stateMachine.canCancelUntil(appointment);
   return {
     app_url: appUrl(),
-    client_name: appointment.client.name.split(' ')[0],
+    client_name: recipient(appointment).name.split(' ')[0],
     barbershop_name: shop.name,
     branch_name: appointment.Branch.name,
     service_name: appointment.service_name_snapshot,
@@ -164,7 +173,7 @@ const calendarAttachment = async (appointment, { cancelled = false } = {}) => ({
  */
 const handle = async (payload, now = new Date()) => {
   const appointment = await loadForEmail(payload.appointment_id);
-  if (!appointment || !appointment.client) return null;
+  if (!appointment || !recipient(appointment)) return null;
 
   if (isReminder(payload)) {
     if (appointment.status !== Appointment.STATUS.CONFIRMED) return null;
@@ -192,7 +201,7 @@ const handle = async (payload, now = new Date()) => {
     attachments.push(await calendarAttachment(appointment, { cancelled: true }));
   }
 
-  return mailer.send({ to: appointment.client.email, subject, html, text, attachments });
+  return mailer.send({ to: recipient(appointment).email, subject, html, text, attachments });
 };
 
 /** Job genérico: { template, to, data }. Para e-mails sem token sensível (o token não vai para o banco). */

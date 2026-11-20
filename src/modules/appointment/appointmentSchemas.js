@@ -28,8 +28,10 @@ module.exports = {
       appointment_date: isoDate(),
       notes: text(500).allow(''),
       source: Joi.string().valid(...SOURCES),
-      // Só usado quando a barbearia agenda para um cliente (ver appointmentService).
+      // Só usados quando a barbearia agenda para um cliente (ver bookingService):
+      // user_id = cliente com conta; client_id = cliente da barbearia, inclusive rápido (BE-23).
       user_id: id(),
+      client_id: id(),
     }).or('start_at', 'appointment_date'),
   }),
   cancel: validate({

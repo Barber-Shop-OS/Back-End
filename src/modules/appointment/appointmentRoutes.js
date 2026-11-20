@@ -75,7 +75,8 @@ router.get('/:id', authMiddleware, schemas.byId, appointmentController.getAppoin
  *     summary: Criar um novo agendamento
  *     description: >
  *       Cliente agenda para si (user_id do body é ignorado). Dono/admin da filial ou o próprio
- *       barbeiro agendam para um cliente e devem informar user_id. O status inicial é sempre
+ *       barbeiro agendam para um cliente e devem informar client_id (cliente da barbearia, inclusive
+ *       "cliente rápido" sem conta — BE-23) ou user_id. O status inicial é sempre
  *       `confirmado`; o campo status do body é ignorado.
  *       O horário é revalidado na transação com as mesmas regras de GET /availability (BE-14):
  *       fora da agenda → 400 SLOT_UNAVAILABLE; já reservado → 409 SLOT_TAKEN. Sem barber_id
@@ -103,7 +104,11 @@ router.get('/:id', authMiddleware, schemas.byId, appointmentController.getAppoin
  *             properties:
  *               user_id:
  *                 type: integer
- *                 description: Obrigatório apenas quando a barbearia agenda para um cliente
+ *                 description: Cliente com conta — só quando a barbearia agenda (alternativa a client_id)
+ *                 example: 1
+ *               client_id:
+ *                 type: integer
+ *                 description: Cliente da barbearia (GET /barbershop/{id}/clients) — só quando a barbearia agenda
  *                 example: 1
  *               barber_id:
  *                 type: integer

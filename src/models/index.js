@@ -20,6 +20,7 @@ const Invitation = require('./invitation');
 const IdempotencyKey = require('./idempotencyKey');
 const AppointmentEvent = require('./appointmentEvent');
 const Job = require('./job');
+const BarbershopClient = require('./barbershopClient');
 
 // ============================================
 // User associations
@@ -167,8 +168,18 @@ Invitation.belongsTo(Branch, { foreignKey: 'branch_id' });
 Invitation.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
 Branch.hasMany(Invitation, { foreignKey: 'branch_id', onDelete: 'CASCADE' });
 
+// ============================================
+// Clientes da barbearia (BE-23)
+// ============================================
+Barbershop.hasMany(BarbershopClient, { foreignKey: 'barbershop_id', onDelete: 'CASCADE' });
+BarbershopClient.belongsTo(Barbershop, { foreignKey: 'barbershop_id' });
+BarbershopClient.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Appointment.belongsTo(BarbershopClient, { foreignKey: 'client_id', as: 'customer' });
+BarbershopClient.hasMany(Appointment, { foreignKey: 'client_id', as: 'appointments' });
+
 module.exports = {
   sequelize,
+  BarbershopClient,
   Job,
   AppointmentEvent,
   IdempotencyKey,

@@ -10,7 +10,8 @@
 // SQLite (testes) serializa escritas sozinho e ignora FOR UPDATE.
 const crypto = require('crypto');
 const { Op } = require('sequelize');
-const { User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey } = require('../../models');
+const { User, Barber, Branch, Appointment, AppointmentEvent, IdempotencyKey, BarbershopClient } = require('../../models');
+const clientService = require('../client/clientService');
 const availability = require('../availability/availabilityService');
 const { performsService } = require('../barber/barberRepository');
 const { ownsBarbershop } = require('../../shared/authz');
@@ -163,12 +164,20 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
     ownsBarbershop(currentUser, branch.Barbershop) ||
     Boolean(chosen && String(chosen.user_id) === String(currentUser.id));
 
+  // clientId = usuário com conta (pode ser null para cliente rápido); customerId = barbershop_clients (BE-23).
   let clientId;
+  let customerId = null;
   if (actsAsStaff) {
-    if (!isPositiveInt(payload.user_id)) {
-      throw new ValidationError("Campo 'user_id' (cliente) é obrigatório ao agendar pela barbearia");
+    if (isPositiveInt(payload.client_id)) {
+      // Cliente da barbearia (com ou sem conta) — precisa ser desta barbearia.
+      const customer = await clientService.findInBarbershop(branch.barbershop_id, payload.client_id);
+      customerId = customer.id;
+      clientId = customer.user_id || null;
+    } else if (isPositiveInt(payload.user_id)) {
+      clientId = Number(payload.user_id);
+    } else {
+      throw new ValidationError("Informe 'client_id' ou 'user_id' (cliente) ao agendar pela barbearia");
     }
-    clientId = Number(payload.user_id);
   } else {
     // Modo cliente: a identidade vem do token, nunca do body (SEC-04).
     clientId = currentUser.id;
@@ -180,6 +189,7 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
     barber_id: chosen ? chosen.id : null,
     start_at: start.toISOString(),
     user_id: clientId,
+    client_id: customerId,
     notes: payload.notes || null,
     source: payload.source || null,
   });
@@ -193,8 +203,16 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
   const policy = actsAsStaff ? STAFF_POLICY : availability.POLICY;
 
   return lockingTransaction(async (transaction) => {
-    const client = await User.findByPk(clientId, { attributes: ['id'], lock: transaction.LOCK.UPDATE, transaction });
-    if (!client) throw new NotFoundError('Cliente não encontrado');
+    if (clientId) {
+      const client = await User.findByPk(clientId, { attributes: ['id'], lock: transaction.LOCK.UPDATE, transaction });
+      if (!client) throw new NotFoundError('Cliente não encontrado');
+      // BE-23: todo agendamento aponta para o cliente da barbearia (cria/vincula se preciso).
+      if (!customerId) {
+        customerId = (await clientService.ensureForUser(branch.barbershop_id, clientId, { transaction })).id;
+      }
+    } else {
+      await BarbershopClient.findByPk(customerId, { attributes: ['id'], lock: transaction.LOCK.UPDATE, transaction });
+    }
 
     // Requisição idêntica que estava esperando o lock do cliente: devolve a mesma resposta.
     if (idempotencyKey) {
@@ -225,6 +243,7 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
     const created = await Appointment.create(
       {
         user_id: clientId,
+        client_id: customerId,
         barber_id: barberId,
         service_id: service.id,
         branch_id: branch.id,

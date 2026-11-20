@@ -18,10 +18,16 @@ const Appointment = sequelize.define('appointments', {
     autoIncrement: true,
     primaryKey: true,
   },
+  // NULL = cliente rápido sem conta (BE-23); nesse caso client_id identifica a pessoa.
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: { model: 'users', key: 'id' },
+  },
+  client_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'barbershop_clients', key: 'id' },
   },
   barber_id: {
     type: DataTypes.INTEGER,
@@ -106,6 +112,7 @@ const Appointment = sequelize.define('appointments', {
     { name: 'appointments_barber_start_idx', fields: ['barber_id', 'start_at'] },
     { name: 'appointments_branch_start_idx', fields: ['branch_id', 'start_at'] },
     { name: 'appointments_user_idx', fields: ['user_id'] },
+    { name: 'appointments_client_idx', fields: ['client_id'] },
   ],
 });
 

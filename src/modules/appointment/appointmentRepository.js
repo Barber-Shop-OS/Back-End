@@ -1,8 +1,10 @@
 // Appointment repository. Includes com allowlist de atributos: nunca expõe senha/token_version.
-const { Appointment, User, Barber, Service, Branch, Barbershop } = require('../../models');
+const { Appointment, User, Barber, Service, Branch, Barbershop, BarbershopClient } = require('../../models');
 
 const defaultInclude = () => [
   { model: User, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
+  // BE-23: cliente da barbearia (inclui cliente rápido sem conta).
+  { model: BarbershopClient, as: 'customer', attributes: ['id', 'name', 'phone', 'email', 'user_id'] },
   {
     model: Barber,
     attributes: ['id', 'user_id', 'branch_id', 'bio'],

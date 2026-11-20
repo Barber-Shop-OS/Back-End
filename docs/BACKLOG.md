@@ -227,11 +227,12 @@
 - **Fazer:** tabela `invitations (barbershop_id, branch_id, email, role='barbeiro', token_hash, expires_at 7d, accepted_at, invited_by)`. `POST /api/branch/:id/invitations` (owner), `GET /api/invitations/:token` (público: nome da barbearia/filial), `POST /api/invitations/:token/accept` (logado com mesmo e-mail, ou cria conta com nome+senha). Token aleatório 32 bytes, guardado como SHA-256 `[SEC-26]`. Reenviar/revogar. Respeita limite de barbeiros do plano (BE-35).
 - **Aceite:** token usado/expirado → 410; e-mail diferente do convite → 403.
 
-### [ ] BE-23 — Clientes da barbearia [DECISÃO PENDENTE: cliente rápido sem conta]
+### [x] BE-23 — Clientes da barbearia (cliente rápido sem conta — aprovado 2026-11-14)
 - **Depende de:** BE-12
 - **Recomendação:** permitir "cliente rápido" para agendamento de balcão: tabela `barbershop_clients (barbershop_id, user_id NULL, name, phone, email NULL, notes)`; quando a pessoa criar conta com o mesmo telefone/e-mail, vincular. `appointments.client_id` → `barbershop_clients.id` (manter `user_id` para quem tem conta).
 - **Fazer:** `GET /api/barbershop/:id/clients?search&page` (nome, telefone, visitas, última visita, total gasto, faltas), `GET /clients/:clientId` (histórico), `POST /clients` (rápido). Escopo de tenant estrito: cliente de A nunca aparece para B.
 - **Aceite:** busca por telefone parcial funciona; dados de outro tenant inacessíveis.
+- **Feito:** `PATCH /clients/:clientId` (observações/contato); acesso de dono/admin e barbeiros ativos da barbearia; agendamento de balcão com `client_id` (`appointments.user_id` pode ser nulo); e-mails do agendamento vão para o e-mail do cliente rápido quando não há conta. Vínculo automático por e-mail no cadastro e por e-mail/telefone no primeiro agendamento. **Pendências:** BE-27 deve restringir o vínculo a e-mails verificados; o gate do recurso `clients_crm` por plano entra no BE-35.
 
 ### [ ] BE-24 — Métricas: dashboard, financeiro e barbeiro
 - **Depende de:** BE-07, BE-15
