@@ -14,6 +14,7 @@ const MATRIX = {
   'POST /api/auth/forgot-password': 'public',
   'POST /api/auth/reset-password': 'public',
   'POST /api/auth/verify-email': 'public',
+  'POST /api/auth/google': 'public',
   'POST /api/auth/resend-verification': 'auth',
   'GET /api/auth/me': 'auth',
 

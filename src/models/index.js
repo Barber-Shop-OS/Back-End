@@ -23,6 +23,7 @@ const Job = require('./job');
 const BarbershopClient = require('./barbershopClient');
 const WebhookEvent = require('./webhookEvent');
 const UserToken = require('./userToken');
+const UserIdentity = require('./userIdentity');
 
 // ============================================
 // User associations
@@ -182,8 +183,12 @@ BarbershopClient.hasMany(Appointment, { foreignKey: 'client_id', as: 'appointmen
 UserToken.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(UserToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
 
+UserIdentity.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(UserIdentity, { foreignKey: 'user_id', as: 'identities', onDelete: 'CASCADE' });
+
 module.exports = {
   sequelize,
+  UserIdentity,
   UserToken,
   WebhookEvent,
   BarbershopClient,

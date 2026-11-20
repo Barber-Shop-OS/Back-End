@@ -54,8 +54,21 @@ const registerOwner = async (input) => {
   }
 
   const password = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+  return createOwnerAccount({ name, email, password, phone, shopName, slug: data.barbershop.slug, planCode: data.plan_code });
+};
+
+/**
+ * Cria dono + barbearia + trial numa transação e dispara os e-mails pós-cadastro.
+ * `password` nulo = conta só-Google (BE-28); `emailVerifiedAt` vem do Google quando aplicável.
+ */
+const createOwnerAccount = async ({ name, email, password, phone, shopName, slug, planCode, emailVerifiedAt = null, identity }) => {
+  const data = { barbershop: { slug }, plan_code: planCode };
   const { user, barbershop, subscription } = await sequelize.transaction(async (transaction) => {
-    const createdUser = await User.create({ name, email, password, phone, role: 'owner' }, { transaction });
+    const createdUser = await User.create(
+      { name, email, password, phone, role: 'owner', email_verified_at: emailVerifiedAt },
+      { transaction }
+    );
+    if (identity) await identity(createdUser, transaction);
     const createdShop = await Barbershop.create(
       { name: shopName, owner_id: createdUser.id, ...(data.barbershop.slug ? { slug: data.barbershop.slug } : {}) },
       { transaction }
@@ -85,4 +98,4 @@ const registerOwner = async (input) => {
   };
 };
 
-module.exports = { registerOwner, onOwnerRegistered };
+module.exports = { registerOwner, createOwnerAccount, onOwnerRegistered };

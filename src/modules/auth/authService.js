@@ -57,6 +57,11 @@ const login = async (rawEmail, password) => {
     throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);
   }
 
+  // BE-28: conta criada só com Google não tem senha — mesma resposta de credencial inválida.
+  if (!user.password) {
+    await bcrypt.compare(String(password), DUMMY_HASH);
+    throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);
+  }
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) {
     throw new UnauthorizedError('Credenciais inválidas', CODES.INVALID_CREDENTIALS);

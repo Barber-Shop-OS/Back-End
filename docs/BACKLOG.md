@@ -261,10 +261,11 @@
 - **Aceite:** token expirado → 410 com opção de reenviar.
 - **Feito:** link `APP_URL/verify-email?token=` (48 h, `user_tokens`); contas existentes marcadas como verificadas na migration; convite aceito já verifica. Dono não verificado: painel e trial normais, mas página pública, busca e agendamento online (modo cliente) desligados. Vínculo de clientes de balcão (BE-23) só após confirmar.
 
-### [ ] BE-28 — Login com Google
+### [x] BE-28 — Login com Google
 - **Depende de:** BE-02
 - **Fazer:** `POST /api/auth/google {id_token, intent: 'login'|'signup-owner'|'signup-client'}`; validar com `google-auth-library` (`audience = GOOGLE_CLIENT_ID`, `email_verified=true`); vincular por e-mail (tabela `user_identities (user_id, provider, provider_user_id)`). Usuário só-Google tem `password` nulo (migration `password NULL`).
 - **Aceite:** token de outro `aud` → 401.
+- **Feito:** `login`/`signup-client` criam cliente se não houver conta; `signup-owner` exige `phone` e `barbershop.name` e reaproveita o cadastro do dono (trial). Conta existente com o mesmo e-mail é vinculada e marcada como verificada. Conta só-Google recebe 401 genérico no login por senha (pode definir senha via recuperação). **Pendente:** configurar `GOOGLE_CLIENT_ID` nos ambientes.
 
 ### [ ] BE-29 — Trocar senha e e-mail
 - **Depende de:** BE-01, BE-27

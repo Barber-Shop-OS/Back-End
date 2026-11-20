@@ -32,6 +32,17 @@ module.exports = {
       password: Joi.string().max(72).required(),
     }),
   }),
+  // BE-28
+  google: validate({
+    body: Joi.object({
+      id_token: Joi.string().max(4096).required(),
+      intent: Joi.string().valid('login', 'signup-owner', 'signup-client').default('login'),
+      name: text(120).min(2),
+      phone: text(20),
+      barbershop: Joi.object({ name: text(120).min(2).required(), slug: Joi.string().trim().lowercase().min(3).max(60) }),
+      plan_code: Joi.string().valid(...PLAN_CODES),
+    }),
+  }),
   // BE-27
   verifyEmail: validate({ body: Joi.object({ token: Joi.string().max(200).required() }) }),
   // BE-26

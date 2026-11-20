@@ -5,6 +5,7 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 const { authLimiter, emailIpLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
 const passwordResetService = require('./passwordResetService');
 const emailVerificationService = require('./emailVerificationService');
+const googleAuthService = require('./googleAuthService');
 const schemas = require('./authSchemas');
 
 const router = express.Router();
@@ -252,6 +253,46 @@ router.post('/verify-email', authLimiter, schemas.verifyEmail, async (req, res, 
 router.post('/resend-verification', emailIpLimiter, authMiddleware, emailTargetLimiter, async (req, res, next) => {
   try {
     return res.status(202).json(await emailVerificationService.resend(req.user.id));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /auth/google:
+ *   post:
+ *     summary: Entrar ou cadastrar com Google (ID token do Google Identity Services)
+ *     description: >
+ *       Valida o id_token (audience = GOOGLE_CLIENT_ID, e-mail verificado). Conta existente com o mesmo
+ *       e-mail é vinculada. intent=login/signup-client cria conta de cliente se não existir;
+ *       signup-owner exige barbershop.name e phone e cria dono + barbearia + trial.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [id_token]
+ *             properties:
+ *               id_token: { type: string }
+ *               intent: { type: string, enum: [login, signup-owner, signup-client] }
+ *               phone: { type: string }
+ *               barbershop: { type: object, properties: { name: { type: string }, slug: { type: string } } }
+ *               plan_code: { type: string, enum: [essencial, profissional, rede] }
+ *     responses:
+ *       200: { description: "{ token, user, created }" }
+ *       201: { description: "Conta criada: { token, user, created: true, barbershop?, subscription? }" }
+ *       401: { description: GOOGLE_TOKEN_INVALID (assinatura, audience, expirado ou e-mail não verificado) }
+ *       409: { description: EMAIL_IN_USE (cadastro de dono com e-mail de conta existente) }
+ *       503: { description: GOOGLE_LOGIN_UNAVAILABLE (GOOGLE_CLIENT_ID ausente) }
+ */
+router.post('/google', authLimiter, schemas.google, async (req, res, next) => {
+  try {
+    const result = await googleAuthService.authenticate(req.body);
+    return res.status(result.created ? 201 : 200).json(result);
   } catch (error) {
     return next(error);
   }
