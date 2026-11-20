@@ -1,25 +1,38 @@
-// Payment service: pagamento presencial de um agendamento (BE-03; regras completas em BE-07).
+// Payment service: pagamento presencial (PIX, dinheiro, cartão na maquininha) de um agendamento (BE-07).
 // Criar/alterar: equipe da barbearia (dono, barbeiro que atendeu) ou admin.
 // Ler: os mesmos + o cliente do agendamento. Qualquer outro usuário recebe 404.
-const { Appointment } = require('../../models');
+// Listar (financeiro): dono (barbearias dele), barbeiro (próprios atendimentos) ou admin.
+const { Op } = require('sequelize');
+const { Appointment, Barbershop } = require('../../models');
+const { METHODS } = require('../../models/payment');
 const paymentRepository = require('./paymentRepository');
-const { assertCanViewAppointment, assertCanOperateAppointment } = require('../../shared/authz');
-const { NotFoundError, ValidationError, ConflictError, CODES } = require('../../utils/errorHandler');
+const {
+  assertCanViewAppointment,
+  assertCanOperateAppointment,
+  assertCanManageBarbershop,
+  assertCanManageBranch,
+  isAdmin,
+} = require('../../shared/authz');
+const { parsePagination, paginated } = require('../../shared/query');
+const { NotFoundError, ValidationError, ConflictError, ForbiddenError, CODES } = require('../../utils/errorHandler');
+
+const toCents = (value) => Math.round(Number(value || 0) * 100);
+const fromCents = (cents) => (cents / 100).toFixed(2);
 
 const create = async (data, currentUser) => {
-  const { appointment_id, amount, method } = data;
+  const { appointment_id, method } = data;
+  const status = data.status === 'PAID' ? 'PAID' : 'PENDING';
 
-  if (!Number.isInteger(Number(appointment_id)) || Number(appointment_id) <= 0) {
-    throw new ValidationError('appointment_id deve ser um inteiro positivo');
+  if (!METHODS.includes(method)) {
+    throw new ValidationError(`Método inválido. Use ${METHODS.join(', ')}`);
   }
+
+  const appointment = await assertCanOperateAppointment(currentUser, appointment_id);
+
+  const amount = data.amount === undefined || data.amount === null ? appointment.price_snapshot : data.amount;
   if (isNaN(Number(amount)) || Number(amount) <= 0) {
     throw new ValidationError('amount deve ser um número positivo');
   }
-  if (!['PIX', 'CASH'].includes(method)) {
-    throw new ValidationError('Método inválido. Use PIX ou CASH');
-  }
-
-  await assertCanOperateAppointment(currentUser, appointment_id);
 
   const existingPayment = await paymentRepository.findByAppointmentId(appointment_id);
   if (existingPayment) {
@@ -28,9 +41,13 @@ const create = async (data, currentUser) => {
 
   return paymentRepository.create({
     appointment_id: Number(appointment_id),
-    amount,
+    amount: fromCents(toCents(amount)),
     method,
-    status: 'PENDING',
+    status,
+    paid_at: status === 'PAID' ? new Date() : null,
+    recorded_by: currentUser.id,
+    branch_id: appointment.branch_id,
+    barbershop_id: appointment.Branch ? appointment.Branch.barbershop_id : null,
   });
 };
 
@@ -81,9 +98,101 @@ const findByAppointmentId = async (appointmentId, currentUser) => {
   return payment;
 };
 
+/** Escopo de tenant da listagem: monta o `where` e, para barbeiro, o filtro pelos próprios atendimentos. */
+const resolveListScope = async (query, currentUser) => {
+  const where = {};
+  let barberUserId = null;
+
+  if (query.branch_id) {
+    if (currentUser.role === 'barbeiro') {
+      where.branch_id = query.branch_id;
+    } else {
+      const branch = await assertCanManageBranch(currentUser, query.branch_id);
+      where.branch_id = branch.id;
+    }
+  }
+  if (query.barbershop_id) {
+    if (currentUser.role !== 'barbeiro') await assertCanManageBarbershop(currentUser, query.barbershop_id);
+    where.barbershop_id = query.barbershop_id;
+  }
+
+  if (isAdmin(currentUser)) return { where, barberUserId };
+
+  if (currentUser.role === 'owner') {
+    if (!where.barbershop_id && !where.branch_id) {
+      const owned = await Barbershop.findAll({ where: { owner_id: currentUser.id }, attributes: ['id'] });
+      where.barbershop_id = { [Op.in]: owned.map((shop) => shop.id) };
+    }
+    return { where, barberUserId };
+  }
+
+  if (currentUser.role === 'barbeiro') {
+    barberUserId = currentUser.id;
+    return { where, barberUserId };
+  }
+
+  throw new ForbiddenError('Apenas a barbearia pode consultar pagamentos');
+};
+
+const buildTotals = (groups) => {
+  const totals = {
+    count: 0,
+    amount: '0.00',
+    paid: { count: 0, amount: '0.00' },
+    pending: { count: 0, amount: '0.00' },
+    failed: { count: 0, amount: '0.00' },
+    paid_by_method: Object.fromEntries(METHODS.map((method) => [method, '0.00'])),
+  };
+  const cents = { all: 0, PAID: 0, PENDING: 0, FAILED: 0 };
+  const methodCents = Object.fromEntries(METHODS.map((method) => [method, 0]));
+
+  for (const group of groups) {
+    const count = Number(group.count);
+    const sum = toCents(group.sum);
+    totals.count += count;
+    cents.all += sum;
+    cents[group.status] += sum;
+    const bucket = totals[group.status.toLowerCase()];
+    bucket.count += count;
+    if (group.status === 'PAID') methodCents[group.method] += sum;
+  }
+
+  totals.amount = fromCents(cents.all);
+  totals.paid.amount = fromCents(cents.PAID);
+  totals.pending.amount = fromCents(cents.PENDING);
+  totals.failed.amount = fromCents(cents.FAILED);
+  METHODS.forEach((method) => {
+    totals.paid_by_method[method] = fromCents(methodCents[method]);
+  });
+  return totals;
+};
+
+/** GET /api/payment — financeiro paginado com filtros e totais (FE-16). */
+const list = async (query, currentUser) => {
+  const { where, barberUserId } = await resolveListScope(query, currentUser);
+  if (query.status) where.status = query.status;
+  if (query.method) where.method = query.method;
+  if (query.from || query.to) {
+    where.created_at = {};
+    if (query.from) where.created_at[Op.gte] = new Date(query.from);
+    if (query.to) where.created_at[Op.lt] = new Date(query.to);
+  }
+
+  const pagination = parsePagination(query);
+  const { result, groups } = await paymentRepository.list({
+    where,
+    barberUserId,
+    offset: pagination.offset,
+    limit: pagination.limit,
+  });
+  return { ...paginated(result, pagination), totals: buildTotals(groups) };
+};
+
 module.exports = {
   create,
   findById,
   updateStatus,
   findByAppointmentId,
+  list,
+  buildTotals,
 };

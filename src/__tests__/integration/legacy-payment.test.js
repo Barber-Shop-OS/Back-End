@@ -118,7 +118,7 @@ describe('Payment integration', () => {
       const response = await request(app)
         .post('/api/payment')
         .set('Authorization', `Bearer ${ownerToken}`)
-        .send({ appointment_id: appointment.id, amount: 35, method: 'CARD' });
+        .send({ appointment_id: appointment.id, amount: 35, method: 'BOLETO' });
 
       expect(response.status).toBe(400);
     });

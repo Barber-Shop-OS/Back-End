@@ -224,7 +224,8 @@ describe('SEC-23 — mass assignment', () => {
     expect(new Date(fresh.start_at).getTime()).toBe(originalDate);
   });
 
-  it('POST /api/payment: status, paid_at e transaction_id do body são ignorados', async () => {
+  // BE-07: a equipe pode registrar o pagamento presencial já como PAID; paid_at é sempre do servidor.
+  it('POST /api/payment: paid_at e transaction_id do body são ignorados', async () => {
     const appointment = await createAppointment({ tenant, client });
     const res = await request(app)
       .post('/api/payment')
@@ -232,8 +233,8 @@ describe('SEC-23 — mass assignment', () => {
       .send({ appointment_id: appointment.id, amount: 50, method: 'PIX', status: 'PAID', paid_at: LONG_AGO, transaction_id: 'forjado' });
     expectSafe(res);
     const payment = await Payment.findOne({ where: { appointment_id: appointment.id } });
-    expect(payment.status).toBe('PENDING');
-    expect(payment.paid_at).toBeNull();
+    expect(payment.status).toBe('PAID');
+    expect(new Date(payment.paid_at).getTime()).toBeGreaterThan(Date.now() - 60000);
     expect(payment.transaction_id).toBeNull();
   });
 

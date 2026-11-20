@@ -11,6 +11,34 @@ const router = express.Router();
 /**
  * @swagger
  * /payment:
+ *   get:
+ *     summary: Listar pagamentos (financeiro) com filtros e totais
+ *     description: Dono vê as barbearias dele, barbeiro os próprios atendimentos, admin tudo. Cliente recebe 403.
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: query, name: barbershop_id, schema: { type: integer } }
+ *       - { in: query, name: branch_id, schema: { type: integer } }
+ *       - { in: query, name: status, schema: { type: string, enum: [PENDING, PAID, FAILED] } }
+ *       - { in: query, name: method, schema: { type: string, enum: [PIX, CASH, CARD] } }
+ *       - { in: query, name: from, schema: { type: string, format: date-time } }
+ *       - { in: query, name: to, schema: { type: string, format: date-time } }
+ *       - { in: query, name: page, schema: { type: integer } }
+ *       - { in: query, name: pageSize, schema: { type: integer, maximum: 100 } }
+ *     responses:
+ *       200:
+ *         description: "{ items, page, pageSize, total, totalPages, totals: { count, amount, paid, pending, failed, paid_by_method } }"
+ *       401:
+ *         description: Usuário não autenticado
+ *       403:
+ *         description: Cliente ou barbearia de outro dono
+ */
+router.get('/', authMiddleware, roleMiddleware(['admin', 'owner', 'barbeiro']), schemas.list, paymentController.list);
+
+/**
+ * @swagger
+ * /payment:
  *   post:
  *     summary: Registrar pagamento para um agendamento
  *     tags: [Payment]
@@ -22,7 +50,7 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [appointment_id, amount, method]
+ *             required: [appointment_id, method]
  *             properties:
  *               appointment_id:
  *                 type: integer
@@ -30,10 +58,15 @@ const router = express.Router();
  *               amount:
  *                 type: number
  *                 example: 80
+ *                 description: Opcional; padrão = preço registrado no agendamento.
  *               method:
  *                 type: string
- *                 enum: [PIX, CASH]
+ *                 enum: [PIX, CASH, CARD]
  *                 example: PIX
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, PAID]
+ *                 description: PAID registra o pagamento já recebido (presencial). Padrão PENDING.
  *     responses:
  *       201:
  *         description: Pagamento registrado com sucesso

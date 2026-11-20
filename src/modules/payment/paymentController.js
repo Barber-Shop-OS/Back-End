@@ -38,7 +38,16 @@ const getByAppointment = async (req, res, next) => {
   }
 };
 
+const list = async (req, res, next) => {
+  try {
+    return success(res, await paymentService.list(req.query, req.user));
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
+  list,
   create,
   getById,
   updateStatus,

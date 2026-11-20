@@ -86,6 +86,7 @@ const MATRIX = {
   'GET /api/address/:id': 'auth',
   'PUT /api/address/:id': ['admin', 'owner'],
 
+  'GET /api/payment': ['admin', 'owner', 'barbeiro'],
   'POST /api/payment': 'auth',
   'GET /api/payment/appointment/:appointment_id': 'auth',
   'GET /api/payment/:id': 'auth',

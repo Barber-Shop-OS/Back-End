@@ -117,7 +117,7 @@
 - **Fazer:** `barbershop_id` do body validado contra o tenant; `update` não permite trocar `barbershop_id`; validação `duration` ∈ [5, 480] múltiplo de 5, `price` ≥ 0 com 2 casas; listagem pública só `active`; filtro obrigatório por `barbershop_id` na rota pública (hoje lista serviços de todas as barbearias). Soft delete.
 - **Aceite:** preço `29.9` persiste e retorna `"29.90"`; owner A não edita serviço de B.
 
-### [ ] BE-07 — Pagamento presencial (PIX/dinheiro/cartão na maquininha) na agenda `[SEC-06]`
+### [x] BE-07 — Pagamento presencial (PIX/dinheiro/cartão na maquininha) na agenda `[SEC-06]`
 - **Depende de:** BE-03, BE-12
 - **Arquivos:** `src/modules/payment/*`, migration (`method` + `CARD`, `recorded_by`, `branch_id` desnormalizado, índice).
 - **Escopo:** é o registro do **pagamento do cliente final à barbearia** (não confundir com a assinatura SaaS — BE-31+).
