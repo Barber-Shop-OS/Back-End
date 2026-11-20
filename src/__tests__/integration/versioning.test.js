@@ -42,6 +42,7 @@ describe('BE-48 — versionamento, cache e app-config', () => {
   it('app-config público com versão mínima e recursos', async () => {
     process.env.MIN_APP_VERSION = '1.2.0';
     const res = await request(app).get('/api/app-config');
+    expect(res.body.trial_days).toBe(14); // BE-52
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ api_version: 'v1', min_app_version: '1.2.0', features: { billing: expect.any(Boolean), uploads: expect.any(Boolean), google_login: expect.any(Boolean) } });
     delete process.env.MIN_APP_VERSION;

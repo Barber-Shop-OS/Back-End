@@ -18,6 +18,8 @@ const config = () => ({
     uploads: Boolean(getStorage().configured),
   },
   terms_version: process.env.TERMS_VERSION || '2026-11',
+  // BE-52: duração do trial (fonte única: TRIAL_DAYS).
+  trial_days: require('../../shared/plans').TRIAL_DAYS,
 });
 
 /**
@@ -39,6 +41,7 @@ const config = () => ({
  *               maintenance: null
  *               features: { google_login: true, google_client_id: 'xxx.apps.googleusercontent.com', billing: true, uploads: true }
  *               terms_version: '2026-11'
+ *               trial_days: 14
  */
 router.get('/', (req, res) => {
   res.set('Cache-Control', 'public, max-age=60');

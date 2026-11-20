@@ -23,6 +23,7 @@ describe('BE-31 — planos e assinatura', () => {
       ['rede', 39900, '399.00'],
     ]);
     expect(res.body.items[0].limits).toEqual({ branches: 1, barbers: 3 });
+    expect(res.body.trial).toEqual({ days: 14, plan_code: 'profissional' }); // BE-52
   });
 
   it('nova barbearia nasce em trial de 14 dias com evento registrado', async () => {

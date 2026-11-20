@@ -7,6 +7,7 @@ const { idParams } = require('../../shared/schemas');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const subscriptionService = require('./subscriptionService');
+const { TRIAL_DAYS, TRIAL_PLAN_CODE } = require('../../shared/plans');
 
 const plansRouter = express.Router();
 
@@ -14,7 +15,8 @@ const plansRouter = express.Router();
  * @swagger
  * /plans:
  *   get:
- *     summary: Planos disponíveis com preço, limites e recursos (público)
+ *     summary: Planos disponíveis com preço, limites e recursos (público) + duração do trial
+ *     description: trial_days (BE-52) vem da constante única TRIAL_DAYS (src/shared/plans.js) — 14 dias.
  *     tags: [Billing]
  *     security: []
  *     responses:
@@ -24,8 +26,12 @@ const plansRouter = express.Router();
  *           application/json:
  *             example:
  *               items: [{ code: essencial, name: Essencial, price_cents: 9900, price: '99.00', currency: BRL, interval: MONTHLY, limits: { branches: 1, barbers: 3 }, features: [agenda] }]
+ *               trial: { days: 14, plan_code: profissional }
  */
-plansRouter.get('/', handle(async (req, res) => success(res, { items: await subscriptionService.listPlans() })));
+plansRouter.get(
+  '/',
+  handle(async (req, res) => success(res, { items: await subscriptionService.listPlans(), trial: { days: TRIAL_DAYS, plan_code: TRIAL_PLAN_CODE } }))
+);
 
 /**
  * @swagger

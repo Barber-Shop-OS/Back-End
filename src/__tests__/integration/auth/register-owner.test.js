@@ -30,6 +30,10 @@ describe('BE-21 — POST /api/auth/register-owner', () => {
     expect(res.body.user).not.toHaveProperty('password');
     expect(res.body.barbershop).toMatchObject({ name: 'Navalha de Ouro', slug: 'navalha-de-ouro' });
     expect(res.body.subscription).toMatchObject({ plan_code: 'essencial', status: 'trialing' });
+    // BE-52: trial de 14 dias (constante única TRIAL_DAYS).
+    const trialDays = (new Date(res.body.subscription.trial_ends_at).getTime() - Date.now()) / 86400000;
+    expect(trialDays).toBeGreaterThan(13.99);
+    expect(trialDays).toBeLessThanOrEqual(14);
 
     const me = await request(app).get('/api/me').set('Authorization', `Bearer ${res.body.token}`);
     expect(me.body.barbershops.map((b) => b.slug)).toEqual(['navalha-de-ouro']);

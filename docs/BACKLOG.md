@@ -426,6 +426,10 @@
 - **Fazer:** tabela `user_notifications` (id, user_id, type, title, body, link, data JSON, read_at, timestamps); notificações nos eventos de agendamento para cliente, barbeiro e equipe da filial (dono, gerentes, recepcionistas), sem avisar o autor; `GET /api/me/notifications?page=&pageSize=&unread=true` (paginado + `unread_count`), `PATCH /api/me/notifications/:id/read`, `POST /api/me/notifications/read-all`.
 - **Feito:** gravadas pelo mesmo job `appointment.email` que envia e-mail/push (criado, cancelado, remarcado; o payload leva `actor_id`). Falha na gravação só vai para o log (e-mail segue); `source_key` (job + destinatário, coluna interna) evita duplicar em reprocessamento. Tipos `appointment.created|cancelled|rescheduled`; `data = { appointment_id, branch_id, barbershop_id, start_at }`; `link` nulo (o front monta a rota a partir de `data`). Notificação de outro usuário → 404. Excluir a conta (LGPD) apaga as notificações. Conclusão/falta não geram notificação (só a equipe age nesses casos e o cliente não precisa de aviso).
 
+### [x] BE-52 — Trial de 14 dias (verificação)
+- **Fazer:** garantir 14 dias no `register-owner`/assinatura a partir de uma constante única, com teste.
+- **Feito:** já era `TRIAL_DAYS = 14` em `src/shared/plans.js`, usado por `subscriptionService.startTrial` (register-owner, nova barbearia), pela migration de planos e pelo e-mail de boas-vindas — nenhum valor fixo duplicado. Agora também exposto ao front: `GET /api/plans` → `trial: { days, plan_code }` e `GET /api/app-config` → `trial_days`. Testes: unitário da constante e integração do `register-owner` (`trial_ends_at` ≈ agora + 14 d).
+
 ---
 
 ## Sequência recomendada (sprints)

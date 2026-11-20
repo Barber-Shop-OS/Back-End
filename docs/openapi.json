@@ -875,7 +875,8 @@
                   "latest_app_version": "1.2.0",
                   "maintenance": null,
                   "min_app_version": "1.0.0",
-                  "terms_version": "2026-11"
+                  "terms_version": "2026-11",
+                  "trial_days": 14
                 }
               }
             },
@@ -5526,6 +5527,7 @@
     },
     "/plans": {
       "get": {
+        "description": "trial_days (BE-52) vem da constante única TRIAL_DAYS (src/shared/plans.js) — 14 dias.",
         "responses": {
           "200": {
             "content": {
@@ -5547,7 +5549,11 @@
                       "price": "99.00",
                       "price_cents": 9900
                     }
-                  ]
+                  ],
+                  "trial": {
+                    "days": 14,
+                    "plan_code": "profissional"
+                  }
                 }
               }
             },
@@ -5555,7 +5561,7 @@
           }
         },
         "security": [],
-        "summary": "Planos disponíveis com preço, limites e recursos (público)",
+        "summary": "Planos disponíveis com preço, limites e recursos (público) + duração do trial",
         "tags": [
           "Billing"
         ]
