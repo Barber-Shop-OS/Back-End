@@ -104,6 +104,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Onde:** `Front-End/src/store/index.ts` (`redux-persist`, whitelist `auth` → `localStorage`).
 - **Ataque:** qualquer XSS (inclusive via dependência) lê o JWT de 8 h e sequestra a sessão.
 - **Correção:** access token curto só em memória; refresh em cookie `httpOnly; Secure; SameSite=Strict`; CSP restritiva (SEC-17) para reduzir XSS. Até BE-30, reduzir validade e não persistir dados além do necessário.
+- **Back-end pronto (BE-30, 2026-11-19):** access 15 min + refresh rotativo em cookie httpOnly com detecção de reuso e CSRF. Fecha quando o FE-37 tirar o token do `localStorage`.
 
 ---
 

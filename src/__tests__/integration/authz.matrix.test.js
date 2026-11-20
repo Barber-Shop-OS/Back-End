@@ -16,6 +16,9 @@ const MATRIX = {
   'POST /api/auth/verify-email': 'public',
   'POST /api/auth/google': 'public',
   'POST /api/auth/confirm-email-change': 'public',
+  'POST /api/auth/refresh': 'credential',
+  'POST /api/auth/logout': 'public',
+  'POST /api/auth/logout-all': 'auth',
   'POST /api/auth/resend-verification': 'auth',
   'GET /api/auth/me': 'auth',
 
@@ -25,6 +28,8 @@ const MATRIX = {
   'GET /api/me/appointments': 'auth',
   'POST /api/me/password': 'auth',
   'POST /api/me/email': 'auth',
+  'GET /api/me/sessions': 'auth',
+  'DELETE /api/me/sessions/:id': 'auth',
   'GET /api/user': ['admin'],
   'GET /api/user/:id': 'auth',
   'PUT /api/user/:id': 'auth',
@@ -113,8 +118,9 @@ const MATRIX = {
   'POST /api/billing/cancel': ['admin', 'owner'],
   'POST /api/billing/resume': ['admin', 'owner'],
   'POST /api/billing/portal': ['admin', 'owner'],
-  // Sem login, autenticada pelo segredo do webhook (testes em billing/webhooks.test.js).
-  'POST /api/webhooks/abacatepay': 'webhook',
+  // 'credential': sem login, autenticada por outra credencial (segredo do webhook, refresh token) —
+  // testes próprios em billing/webhooks.test.js e auth/sessions.test.js.
+  'POST /api/webhooks/abacatepay': 'credential',
 };
 
 const ROLES = ['cliente', 'barbeiro', 'owner', 'admin'];
@@ -149,7 +155,7 @@ describe('SEC-23 — matriz de autorização', () => {
     expect(declared.filter((route) => !registered.includes(route))).toEqual([]);
   });
 
-  describe.each(entries.filter((entry) => !['public', 'webhook'].includes(entry.access)))('$route', ({ method, url, access }) => {
+  describe.each(entries.filter((entry) => !['public', 'credential'].includes(entry.access)))('$route', ({ method, url, access }) => {
     it('anônimo → 401', async () => {
       const res = await send(method, url);
       expect(res.status).toBe(401);

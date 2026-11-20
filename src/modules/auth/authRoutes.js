@@ -6,6 +6,7 @@ const { authLimiter, emailIpLimiter, emailTargetLimiter } = require('../../middl
 const passwordResetService = require('./passwordResetService');
 const emailVerificationService = require('./emailVerificationService');
 const googleAuthService = require('./googleAuthService');
+const sessionService = require('./sessionService');
 const schemas = require('./authSchemas');
 
 const router = express.Router();
@@ -292,7 +293,8 @@ router.post('/resend-verification', emailIpLimiter, authMiddleware, emailTargetL
 router.post('/google', authLimiter, schemas.google, async (req, res, next) => {
   try {
     const result = await googleAuthService.authenticate(req.body);
-    return res.status(result.created ? 201 : 200).json(result);
+    const session = await sessionService.start(req, res, await require('../../models').User.findByPk(result.user.id));
+    return res.status(result.created ? 201 : 200).json({ ...result, ...session });
   } catch (error) {
     return next(error);
   }
@@ -319,6 +321,62 @@ router.post('/google', authLimiter, schemas.google, async (req, res, next) => {
 router.post('/confirm-email-change', authLimiter, schemas.verifyEmail, async (req, res, next) => {
   try {
     return res.status(200).json(await require('../me/accountSecurityService').confirmEmailChange(req.body.token));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Renova o access token (rotação do refresh token)
+ *     description: >
+ *       Web: refresh no cookie httpOnly `bo_refresh` (Path=/api/auth) — exige header
+ *       `X-Requested-With: XMLHttpRequest` e Origin permitida. Mobile: `{ refresh_token }` no corpo e
+ *       header `X-Client-Type: mobile`. Cada refresh só vale uma vez; reapresentar um já usado revoga
+ *       a sessão inteira (401 REFRESH_REUSED).
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       200: { description: "{ token, access_token_expires_in, refresh_token? (mobile) }" }
+ *       401: { description: REFRESH_INVALID / REFRESH_REUSED }
+ *       403: { description: CSRF_REJECTED }
+ * /auth/logout:
+ *   post:
+ *     summary: Encerra esta sessão (revoga o refresh e limpa o cookie)
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       204: { description: Sessão encerrada }
+ * /auth/logout-all:
+ *   post:
+ *     summary: Encerra todas as sessões do usuário (todos os dispositivos)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       204: { description: Sessões encerradas }
+ */
+router.post('/refresh', authLimiter, async (req, res, next) => {
+  try {
+    return res.status(200).json(await sessionService.refresh(req, res));
+  } catch (error) {
+    return next(error);
+  }
+});
+router.post('/logout', async (req, res, next) => {
+  try {
+    await sessionService.logout(req, res);
+    return res.status(204).end();
+  } catch (error) {
+    return next(error);
+  }
+});
+router.post('/logout-all', authMiddleware, async (req, res, next) => {
+  try {
+    await sessionService.logoutAll(req.user.id, res);
+    return res.status(204).end();
   } catch (error) {
     return next(error);
   }

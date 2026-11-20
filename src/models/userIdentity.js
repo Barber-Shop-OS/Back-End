@@ -4,7 +4,7 @@ const sequelize = require('../config/sequelize');
 
 const UserIdentity = sequelize.define('UserIdentity', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'id' } },
+  user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
   provider: { type: DataTypes.STRING(30), allowNull: false },
   provider_user_id: { type: DataTypes.STRING(255), allowNull: false },
   email: { type: DataTypes.STRING(254), allowNull: true },

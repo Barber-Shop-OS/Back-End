@@ -20,7 +20,8 @@ const schema = Joi.object({
       'string.min': 'JWT_SECRET deve ter pelo menos 32 caracteres (gere com: openssl rand -base64 48)',
       'any.invalid': 'JWT_SECRET está com um valor de exemplo; gere um segredo aleatório',
     }),
-  JWT_EXPIRES_IN: Joi.string().default('8h'),
+  // BE-30: access token curto; a sessão continua pelo refresh token (30 dias, rotativo).
+  JWT_EXPIRES_IN: Joi.string().default('15m'),
 
   DB_HOST: Joi.string().when('NODE_ENV', { is: 'test', then: Joi.optional(), otherwise: Joi.required() }),
   DB_PORT: Joi.number().port().default(3306),

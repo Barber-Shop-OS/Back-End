@@ -5,6 +5,7 @@ const validate = require('../../middlewares/validate');
 const { Joi, pagination, email, password } = require('../../shared/schemas');
 const { authLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
 const accountSecurityService = require('./accountSecurityService');
+const sessionService = require('../auth/sessionService');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
@@ -119,7 +120,11 @@ router.post(
   '/password',
   authLimiter,
   validate({ body: Joi.object({ current_password: Joi.string().max(72), new_password: password().required() }) }),
-  handle(async (req, res) => success(res, await accountSecurityService.changePassword(req.user.id, req.body)))
+  handle(async (req, res) => {
+    const { user, ...result } = await accountSecurityService.changePassword(req.user.id, req.body);
+    // BE-30: as outras sessões caem (token_version); esta recebe refresh novo.
+    return success(res, { ...result, ...(await sessionService.start(req, res, user)) });
+  })
 );
 router.post(
   '/email',
@@ -127,6 +132,38 @@ router.post(
   emailTargetLimiter,
   validate({ body: Joi.object({ new_email: email().required(), password: Joi.string().max(72).required() }) }),
   handle(async (req, res) => success(res, await accountSecurityService.requestEmailChange(req.user.id, req.body), 202))
+);
+
+/**
+ * @swagger
+ * /me/sessions:
+ *   get:
+ *     summary: Minhas sessões ativas (dispositivos)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ items: [{ id, user_agent, ip, last_used_at, expires_at, current }] }" }
+ * /me/sessions/{id}:
+ *   delete:
+ *     summary: Encerrar uma sessão (dispositivo)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       204: { description: Encerrada }
+ *       404: { description: Sessão não encontrada }
+ */
+router.get('/sessions', handle(async (req, res) => success(res, { items: await sessionService.listSessions(req.user.id, req) })));
+router.delete(
+  '/sessions/:id',
+  validate({ params: Joi.object({ id: Joi.string().guid().required() }) }),
+  handle(async (req, res) => {
+    await sessionService.revokeSession(req.user.id, req.params.id);
+    return res.status(204).end();
+  })
 );
 
 module.exports = router;

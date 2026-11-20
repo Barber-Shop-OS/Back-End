@@ -56,7 +56,7 @@ const changePassword = async (userId, { current_password: currentPassword, new_p
   });
   await accountTokens.revokeAll(user.id, [PURPOSES.PASSWORD_RESET]);
   await notify(user.email, user, 'Sua senha foi alterada', 'A senha da sua conta BarberOS foi alterada agora. Todas as outras sessões foram encerradas.');
-  return { message: 'Senha alterada', token: signAccessToken(user) };
+  return { message: 'Senha alterada', token: signAccessToken(user), user };
 };
 
 /** POST /api/me/email — pede a troca; nada muda até a confirmação. */

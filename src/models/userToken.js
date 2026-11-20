@@ -11,7 +11,7 @@ const PURPOSES = Object.freeze({
 
 const UserToken = sequelize.define('UserToken', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'id' } },
+  user_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'users', key: 'id' }, onDelete: 'CASCADE' },
   purpose: { type: DataTypes.STRING(30), allowNull: false },
   token_hash: { type: DataTypes.STRING(64), allowNull: false, unique: true },
   payload: { type: DataTypes.JSON, allowNull: true, get: json('payload') },

@@ -273,10 +273,11 @@
 - **Aceite:** senha atual errada → 400 `INVALID_CURRENT_PASSWORD`; sessões antigas caem.
 - **Feito:** troca de senha devolve token novo para a sessão atual; conta só-Google define a primeira senha sem a atual. Confirmação da troca de e-mail em `POST /api/auth/confirm-email-change` (link `APP_URL/confirmar-email?token=`, 24 h). Avisos de segurança ao e-mail antigo (template `account-notice`).
 
-### [ ] BE-30 — Refresh token, logout e sessões `[SEC-15]`
+### [x] BE-30 — Refresh token, logout e sessões `[SEC-15]`
 - **Depende de:** BE-02
 - **Fazer:** access token 15 min + refresh token opaco (32 bytes, hash no banco, `refresh_tokens (user_id, token_hash, expires_at 30d, revoked_at, replaced_by, user_agent, ip)`), **rotação** a cada uso e detecção de reuso (reuso → revoga a família). Web: refresh em cookie `httpOnly; Secure; SameSite=Strict; Path=/api/auth`; mobile: no corpo, guardado em secure storage. `POST /api/auth/refresh`, `POST /api/auth/logout`, `POST /api/auth/logout-all`. Se cookie, proteção CSRF (checar `Origin` + header custom `X-Requested-With`).
 - **Aceite:** refresh reutilizado revoga todos; logout invalida o refresh.
+- **Feito:** cookie `bo_refresh` (Secure em produção; `REFRESH_COOKIE_SAMESITE` configurável); mobile via header `X-Client-Type: mobile`. Refresh também cai quando `token_version` muda (troca de senha/e-mail, logout-all). `GET/DELETE /api/me/sessions` lista e encerra dispositivos. `JWT_EXPIRES_IN` padrão agora 15 min — **o front precisa do FE-37 (refresh automático)**.
 
 ### [x] BE-31 — Planos e assinaturas (modelo de domínio)
 - **Depende de:** BE-03
