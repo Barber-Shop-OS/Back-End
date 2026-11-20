@@ -234,10 +234,11 @@
 - **Aceite:** busca por telefone parcial funciona; dados de outro tenant inacessíveis.
 - **Feito:** `PATCH /clients/:clientId` (observações/contato); acesso de dono/admin e barbeiros ativos da barbearia; agendamento de balcão com `client_id` (`appointments.user_id` pode ser nulo); e-mails do agendamento vão para o e-mail do cliente rápido quando não há conta. Vínculo automático por e-mail no cadastro e por e-mail/telefone no primeiro agendamento. **Pendências:** BE-27 deve restringir o vínculo a e-mails verificados; o gate do recurso `clients_crm` por plano entra no BE-35.
 
-### [ ] BE-24 — Métricas: dashboard, financeiro e barbeiro
+### [x] BE-24 — Métricas: dashboard, financeiro e barbeiro
 - **Depende de:** BE-07, BE-15
 - **Fazer:** `GET /api/dashboard/summary?barbershop_id&branch_id?&from&to` → receita (pagamentos `PAID`), nº agendamentos por status, ticket médio, taxa de ocupação (minutos agendados / minutos disponíveis), top serviços, receita por dia, receita por filial e por barbeiro. `GET /api/dashboard/barber?from&to` (barbeiro logado). Consultas agregadas no repository com índices de BE-08. Respeitar fuso da filial no agrupamento por dia.
 - **Aceite:** testes com fixture conhecida conferem cada número.
+- **Feito:** `from`/`to` são datas locais (YYYY-MM-DD, inclusive, padrão 30 dias, máx. 366); ocupação usa a mesma regra do motor de disponibilidade (filial ∩ jornada − fechamentos − bloqueios); `GET /api/dashboard/barber` agrega todos os perfis de barbeiro do usuário. Gate do recurso `financial_reports` por plano fica no BE-35.
 
 ### [x] BE-25 — Busca pública de filiais
 - **Depende de:** BE-17, BE-18
