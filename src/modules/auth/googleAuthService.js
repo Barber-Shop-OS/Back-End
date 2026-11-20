@@ -54,7 +54,7 @@ const linkIdentity = (user, google, transaction) =>
 
 const session = (user, extra = {}) => ({ token: signAccessToken(user), user: sanitizeUser(user), ...extra });
 
-const authenticate = async ({ id_token: idToken, intent = 'login', name, phone, barbershop, plan_code: planCode }) => {
+const authenticate = async ({ id_token: idToken, intent = 'login', name, phone, barbershop, plan_code: planCode, terms_version: termsVersion }) => {
   const google = await verifyToken(idToken);
   const displayName = String(name || google.name || google.email.split('@')[0]).trim().slice(0, 120);
 
@@ -99,6 +99,7 @@ const authenticate = async ({ id_token: idToken, intent = 'login', name, phone, 
       slug: barbershop.slug,
       planCode,
       emailVerifiedAt: new Date(),
+      termsVersion,
       identity: (user, transaction) => linkIdentity(user, google, transaction),
     });
     return { ...result, created: true };
@@ -113,6 +114,7 @@ const authenticate = async ({ id_token: idToken, intent = 'login', name, phone, 
         role: 'cliente',
         phone: phone ? normalizePhone(phone) : null,
         email_verified_at: new Date(),
+        ...(termsVersion ? { terms_version: String(termsVersion), terms_accepted_at: new Date() } : {}),
       },
       { transaction }
     );

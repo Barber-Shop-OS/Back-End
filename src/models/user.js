@@ -48,6 +48,15 @@ const User = sequelize.define("users", {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    // BE-40: aceite dos termos/privacidade.
+    terms_accepted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    terms_version: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
   },
   {
     timestamps: true,

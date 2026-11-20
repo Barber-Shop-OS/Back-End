@@ -11,6 +11,8 @@ module.exports = {
       email: email().required(),
       password: password().required(),
       phone: text(20).required(),
+      // BE-40: versão dos termos aceita na tela de cadastro.
+      terms_version: text(20),
       barbershop: Joi.object({
         name: text(120).min(2).required(),
         slug: Joi.string().trim().lowercase().min(3).max(60),
@@ -23,6 +25,7 @@ module.exports = {
       name: text(120).min(2).required(),
       email: email().required(),
       password: password().required(),
+      terms_version: text(20),
     }),
   }),
   // Sem mínimo de tamanho no login: contas antigas podem ter senha de 6 caracteres.
@@ -41,6 +44,7 @@ module.exports = {
       phone: text(20),
       barbershop: Joi.object({ name: text(120).min(2).required(), slug: Joi.string().trim().lowercase().min(3).max(60) }),
       plan_code: Joi.string().valid(...PLAN_CODES),
+      terms_version: text(20),
     }),
   }),
   // BE-27

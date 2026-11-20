@@ -6,6 +6,7 @@ const { Joi, pagination, email, password } = require('../../shared/schemas');
 const { authLimiter, emailTargetLimiter } = require('../../middlewares/rateLimitMiddleware');
 const accountSecurityService = require('./accountSecurityService');
 const sessionService = require('../auth/sessionService');
+const privacyService = require('./privacyService');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
@@ -165,5 +166,62 @@ router.delete(
     return res.status(204).end();
   })
 );
+
+/**
+ * @swagger
+ * /me/export:
+ *   get:
+ *     summary: Exportar meus dados (LGPD)
+ *     description: Perfil, contas vinculadas, agendamentos com pagamentos, barbearias, fichas de cliente e perfis de barbeiro.
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: JSON com todos os dados pessoais }
+ * /me/delete:
+ *   post:
+ *     summary: Excluir minha conta (LGPD) — alias de DELETE /me para clientes HTTP sem corpo em DELETE
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Conta excluída (anonimizada) }
+ */
+router.get(
+  '/export',
+  handle(async (req, res) => {
+    res.set('Content-Disposition', 'attachment; filename="barberos-meus-dados.json"');
+    return success(res, await privacyService.exportData(req.user.id));
+  })
+);
+const deleteAccount = handle(async (req, res) => {
+  const result = await privacyService.deleteAccount(req.user.id, req.body || {});
+  res.clearCookie(sessionService.COOKIE_NAME, { path: '/api/auth' });
+  return success(res, result);
+});
+const deleteSchema = validate({ body: Joi.object({ password: Joi.string().max(72) }) });
+/**
+ * @swagger
+ * /me:
+ *   delete:
+ *     summary: Excluir minha conta (LGPD)
+ *     description: >
+ *       Anonimiza nome/e-mail/telefone, remove sessões e vínculos, mantém agendamentos e pagamentos sem
+ *       dados pessoais. Exige a senha (conta só-Google não precisa). Dono com assinatura vigente → 409
+ *       ACTIVE_SUBSCRIPTION (cancele antes).
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema: { type: object, properties: { password: { type: string } } }
+ *     responses:
+ *       200: { description: Conta excluída }
+ *       400: { description: INVALID_CURRENT_PASSWORD }
+ *       409: { description: ACTIVE_SUBSCRIPTION }
+ */
+router.delete('/', authLimiter, deleteSchema, deleteAccount);
+router.post('/delete', authLimiter, deleteSchema, deleteAccount);
 
 module.exports = router;

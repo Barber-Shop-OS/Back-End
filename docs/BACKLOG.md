@@ -354,10 +354,11 @@
 - **Aceite:** `npm run migrate:reset && npm run seed` em MySQL limpo; nunca roda com `NODE_ENV=production`.
 - **Feito:** `src/seeders/devSeed.js` + `npm run seed` (aplica migrations pendentes). Contas `admin@barberos.dev`, `dono.navalha@barberos.dev` (Profissional ativo, 2 filiais, slug `navalha-de-ouro`), `dono.bigode@barberos.dev` (trial Essencial), `barbeiro1..6@`, `cliente1..8@barberos.dev`; senha `Barberos#Dev2026`. ~42 agendamentos (domingos pulados), pagamentos dos concluídos e cliente de balcão.
 
-### [ ] BE-40 — LGPD: exportar e excluir conta `[SEC-20]`
+### [x] BE-40 — LGPD: exportar e excluir conta `[SEC-20]`
 - **Depende de:** BE-36
 - **Fazer:** `GET /api/me/export` (JSON com dados pessoais e agendamentos), `DELETE /api/me` (anonimiza: nome "Usuário removido", e-mail `deleted+<id>@invalid`, telefone nulo; mantém agendamentos para o financeiro da barbearia). Owner com assinatura ativa precisa cancelar antes. Registrar aceite de termos/privacidade (`users.terms_accepted_at`, `terms_version`) no cadastro.
 - **Aceite:** após exclusão não é possível logar e os dados pessoais não aparecem em nenhuma listagem.
+- **Feito:** `GET /api/me/export`; `DELETE /api/me` (alias `POST /api/me/delete`) com senha: anonimiza usuário (`deleted+<id>@deleted.invalid`), fichas de cliente nas barbearias, perfis de barbeiro; apaga sessões/tokens/identidades; soft delete; agendamentos e pagamentos ficam. Dono com assinatura `trialing/pending/active/past_due` → 409 `ACTIVE_SUBSCRIPTION`. `terms_version` aceito no cadastro (cliente, dono, Google) → `terms_accepted_at`. **Pendente (SEC-20):** textos de termos/privacidade publicados, retenção/expurgo automático, registro de operadores.
 
 ### [ ] BE-41 — API administrativa da plataforma
 - **Depende de:** BE-31, BE-36

@@ -35,7 +35,7 @@ const sendWelcome = (user, barbershop) =>
 
 const registerOwner = async (input) => {
   // Campos fora da lista (role, owner_id...) → 400 em vez de ignorados.
-  const data = pickFields(input, ['name', 'email', 'password', 'phone', 'barbershop', 'plan_code']);
+  const data = pickFields(input, ['name', 'email', 'password', 'phone', 'barbershop', 'plan_code', 'terms_version']);
   pickFields(data.barbershop, ['name', 'slug']);
   const email = String(data.email).trim().toLowerCase();
   const name = String(data.name).trim();
@@ -54,18 +54,26 @@ const registerOwner = async (input) => {
   }
 
   const password = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
-  return createOwnerAccount({ name, email, password, phone, shopName, slug: data.barbershop.slug, planCode: data.plan_code });
+  return createOwnerAccount({ name, email, password, phone, shopName, slug: data.barbershop.slug, planCode: data.plan_code, termsVersion: data.terms_version });
 };
 
 /**
  * Cria dono + barbearia + trial numa transação e dispara os e-mails pós-cadastro.
  * `password` nulo = conta só-Google (BE-28); `emailVerifiedAt` vem do Google quando aplicável.
  */
-const createOwnerAccount = async ({ name, email, password, phone, shopName, slug, planCode, emailVerifiedAt = null, identity }) => {
+const createOwnerAccount = async ({ name, email, password, phone, shopName, slug, planCode, emailVerifiedAt = null, identity, termsVersion }) => {
   const data = { barbershop: { slug }, plan_code: planCode };
   const { user, barbershop, subscription } = await sequelize.transaction(async (transaction) => {
     const createdUser = await User.create(
-      { name, email, password, phone, role: 'owner', email_verified_at: emailVerifiedAt },
+      {
+        name,
+        email,
+        password,
+        phone,
+        role: 'owner',
+        email_verified_at: emailVerifiedAt,
+        ...(termsVersion ? { terms_version: String(termsVersion), terms_accepted_at: new Date() } : {}),
+      },
       { transaction }
     );
     if (identity) await identity(createdUser, transaction);

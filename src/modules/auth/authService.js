@@ -38,6 +38,7 @@ const register = async (data = {}) => {
     email,
     password: hashedPassword,
     role: 'cliente',
+    ...(data.terms_version ? { terms_version: String(data.terms_version).slice(0, 20), terms_accepted_at: new Date() } : {}),
   });
   // BE-27: link de confirmação (o vínculo com clientes de balcão acontece ao confirmar — BE-23).
   await require('./emailVerificationService').afterSignup(user);
