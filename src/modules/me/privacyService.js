@@ -52,6 +52,8 @@ const exportData = async (userId) => {
     barbershops_owned: barbershops.map((row) => row.toJSON()),
     barbershop_customer_records: customerRecords.map((row) => row.toJSON()),
     barber_profiles: barberProfiles.map((row) => row.toJSON()),
+    // BE-58: histórico das escolhas do banner de cookies.
+    cookie_consents: await require('../consent/consentService').listForUser(userId),
   };
 };
 

@@ -143,6 +143,7 @@ const MATRIX = {
   'GET /api/admin/metrics': ['admin'],
   'GET /api/plans': 'public',
   'GET /api/app-config': 'public',
+  'POST /api/consents/cookies': 'public',
   'POST /api/billing/checkout': ['admin', 'owner'],
   'POST /api/billing/change-plan': ['admin', 'owner'],
   'POST /api/billing/cancel': ['admin', 'owner'],

@@ -450,6 +450,9 @@
 ### [x] BE-56 — E-mail pelo Resend (API HTTP)
 - **Feito:** `MAIL_DRIVER=resend` (padrão quando há `RESEND_API_KEY`): envio por HTTPS (o Railway bloqueia SMTP de saída em alguns planos), anexos `.ics` em base64, erro HTTP vira exceção para a fila reenviar.
 
+### [x] BE-58 — Registro de consentimento de cookies (GA4) `[SEC-20]`
+- **Feito (2026-11-21):** `POST /api/consents/cookies` (público, token opcional vincula ao usuário, `consentLimiter` 30/15 min por IP) grava cada escolha do banner (`accept_all`, `reject_all`, `custom`, `withdraw`) com versão da política em `cookie_consents` — prova do consentimento (LGPD art. 8º §2º). IP só como HMAC-SHA256 (`CONSENT_IP_SECRET`, padrão `JWT_SECRET`), user agent truncado. Histórico entra em `GET /me/export`; retenção apaga registros com mais de 5 anos. Teste: `security/cookie-consent.test.js`.
+
 ---
 
 ## Sequência recomendada (sprints)

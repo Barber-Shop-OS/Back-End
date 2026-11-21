@@ -30,6 +30,7 @@ const Upload = require('./upload');
 const BarbershopMember = require('./barbershopMember');
 const PushToken = require('./pushToken');
 const UserNotification = require('./userNotification');
+const CookieConsent = require('./cookieConsent');
 
 // ============================================
 // User associations
@@ -205,11 +206,14 @@ PushToken.belongsTo(User, { foreignKey: 'user_id' });
 
 User.hasMany(UserNotification, { foreignKey: 'user_id', onDelete: 'CASCADE' });
 UserNotification.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(CookieConsent, { foreignKey: 'user_id' });
+CookieConsent.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = {
   sequelize,
   PushToken,
   UserNotification,
+  CookieConsent,
   BarbershopMember,
   Upload,
   AuditLog,

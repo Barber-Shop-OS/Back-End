@@ -103,7 +103,18 @@ const loginAccountLimiter = rateLimit({
   skip: () => isTestEnv && process.env.RATE_LIMIT_IN_TESTS !== 'true',
 });
 
+// BE-58: registro do banner de cookies — 30 escolhas por IP a cada 15 min (uso normal é 1 ou 2).
+const consentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { code: 'RATE_LIMITED', message: 'Muitas solicitações. Tente novamente em alguns minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv && !limitersInTests(),
+});
+
 module.exports = {
+  consentLimiter,
   loginAccountLimiter,
   emailIpLimiter,
   emailTargetLimiter,

@@ -2,14 +2,16 @@
 // - Barbearia encerrada (assinatura cancelada/expirada ou barbearia excluída) há mais de RETENTION_DAYS:
 //   fichas de clientes perdem nome/telefone/e-mail/observações, agendamentos perdem observações e o CPF/CNPJ
 //   de cobrança é apagado. Valores e contagens ficam (obrigação fiscal/contábil), sem identificar pessoas.
-// - Limpeza: refresh tokens e tokens de uso único vencidos há mais de 30 dias; notificações lidas há 180 dias.
+// - Limpeza: refresh tokens e tokens de uso único vencidos há mais de 30 dias; notificações lidas há 180 dias;
+//   registros do banner de cookies (BE-58) com mais de 5 anos (prazo prescricional do CDC, art. 27).
 const { Op } = require('sequelize');
-const { sequelize, Barbershop, BarbershopClient, Appointment, Subscription, RefreshToken, UserToken, UserNotification } = require('../../models');
+const { sequelize, Barbershop, BarbershopClient, Appointment, Subscription, RefreshToken, UserToken, UserNotification, CookieConsent } = require('../../models');
 const logger = require('../../utils/logger');
 
 const DAY = 24 * 60 * 60 * 1000;
 const retentionDays = () => Number(process.env.RETENTION_DAYS) > 0 ? Number(process.env.RETENTION_DAYS) : 90;
 const ENDED = ['canceled', 'expired'];
+const CONSENT_RETENTION_DAYS = 5 * 365;
 
 /** Fim efetivo de uma assinatura encerrada (o último marco de tempo conhecido). */
 const endedAt = (subscription) =>
@@ -47,7 +49,8 @@ const purgeExpired = async (now) => {
   const refresh = await RefreshToken.destroy({ where: { expires_at: { [Op.lt]: tokenLimit } } });
   const single = await UserToken.destroy({ where: { expires_at: { [Op.lt]: tokenLimit } } });
   const notifications = await UserNotification.destroy({ where: { read_at: { [Op.lt]: new Date(now.getTime() - 180 * DAY) } } });
-  return { refresh, single, notifications };
+  const consents = await CookieConsent.destroy({ where: { created_at: { [Op.lt]: new Date(now.getTime() - CONSENT_RETENTION_DAYS * DAY) } } });
+  return { refresh, single, notifications, consents };
 };
 
 const runRetention = async (now = new Date()) => {
@@ -55,7 +58,7 @@ const runRetention = async (now = new Date()) => {
   let clients = 0;
   for (const id of barbershops) clients += await anonymizeBarbershop(id, now);
   const purged = await purgeExpired(now);
-  if (barbershops.length || purged.refresh || purged.single || purged.notifications) {
+  if (barbershops.length || purged.refresh || purged.single || purged.notifications || purged.consents) {
     logger.info('[lgpd] retenção aplicada', { barbershops: barbershops.length, clients, ...purged });
   }
   return { barbershops, clients, ...purged };

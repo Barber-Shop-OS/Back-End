@@ -4400,6 +4400,80 @@
         ]
       }
     },
+    "/consents/cookies": {
+      "post": {
+        "description": "Prova do consentimento (LGPD art. 8º §2º). Cada escolha é um novo registro — aceitar, recusar,\npersonalizar ou revogar. O IP é guardado apenas como hash. Com token válido, vincula ao usuário.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "accept_all",
+                      "reject_all",
+                      "custom",
+                      "withdraw"
+                    ],
+                    "type": "string"
+                  },
+                  "analytics": {
+                    "type": "boolean"
+                  },
+                  "consent_id": {
+                    "description": "Identificador aleatório gerado no navegador",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "marketing": {
+                    "type": "boolean"
+                  },
+                  "policy_version": {
+                    "example": "2026-11",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "consent_id",
+                  "policy_version",
+                  "analytics",
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "analytics": true,
+                  "consent_id": "7f1c...",
+                  "id": 12,
+                  "marketing": false,
+                  "recorded_at": "2026-11-21T18:00:00.000Z"
+                }
+              }
+            },
+            "description": "Registrado"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "429": {
+            "description": "Muitas solicitações"
+          }
+        },
+        "security": [],
+        "summary": "Registrar escolha do banner de cookies (LGPD)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
     "/dashboard/barber": {
       "get": {
         "parameters": [
