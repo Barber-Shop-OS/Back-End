@@ -181,6 +181,11 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
   } else {
     // Modo cliente: a identidade vem do token, nunca do body (SEC-04).
     clientId = currentUser.id;
+    // SEC-21: para agendar online o cliente precisa de e-mail verificado OU telefone cadastrado.
+    const contact = await User.findByPk(clientId, { attributes: ['id', 'email_verified_at', 'phone'] });
+    if (contact && !contact.email_verified_at && !String(contact.phone || '').trim()) {
+      throw new AppError('Confirme seu e-mail ou cadastre um celular para agendar', 403, CODES.CONTACT_REQUIRED);
+    }
     // BE-27: agendamento online só depois que o dono confirmar o e-mail.
     if (!(await require('../auth/emailVerificationService').ownerVerified(branch.Barbershop))) {
       throw new AppError('Esta barbearia ainda não está recebendo agendamentos online', 404, CODES.BARBERSHOP_UNAVAILABLE);
@@ -212,7 +217,12 @@ const create = async (payload = {}, currentUser, { idempotencyKey, now = new Dat
       if (!client) throw new NotFoundError('Cliente não encontrado');
       // BE-23: todo agendamento aponta para o cliente da barbearia (cria/vincula se preciso).
       if (!customerId) {
-        customerId = (await clientService.ensureForUser(branch.barbershop_id, clientId, { transaction })).id;
+        const customer = await clientService.ensureForUser(branch.barbershop_id, clientId, { transaction });
+        customerId = customer.id;
+        // SEC-21: cliente bloqueado pela barbearia não agenda online (a equipe ainda pode agendar).
+        if (!actsAsStaff && customer.blocked_at) {
+          throw new AppError('Não é possível agendar online nesta barbearia. Fale com a barbearia.', 403, CODES.CLIENT_BLOCKED);
+        }
       }
     } else {
       await BarbershopClient.findByPk(customerId, { attributes: ['id'], lock: transaction.LOCK.UPDATE, transaction });

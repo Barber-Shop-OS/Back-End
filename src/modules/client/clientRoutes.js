@@ -29,7 +29,11 @@ const schemas = {
     params: idParams,
     body: Joi.object({ ...fields, name: fields.name.required(), phone: fields.phone.required() }),
   }),
-  update: validate({ params: clientParams, body: Joi.object(fields).min(1) }),
+  update: validate({
+    params: clientParams,
+    // SEC-21: blocked/blocked_reason só têm efeito para dono e gerente.
+    body: Joi.object({ ...fields, blocked: Joi.boolean(), blocked_reason: text(255).allow('', null) }).min(1),
+  }),
 };
 
 // BE-49: recepcionista atende clientes no balcão.

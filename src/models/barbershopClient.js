@@ -18,6 +18,9 @@ const BarbershopClient = sequelize.define('BarbershopClient', {
   phone: { type: DataTypes.STRING(20), allowNull: true },
   email: { type: DataTypes.STRING(254), allowNull: true },
   notes: { type: DataTypes.STRING(1000), allowNull: true },
+  // SEC-21: bloqueado pela barbearia → não agenda online (a equipe ainda agenda no balcão).
+  blocked_at: { type: DataTypes.DATE, allowNull: true },
+  blocked_reason: { type: DataTypes.STRING(255), allowNull: true },
   created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, allowNull: true },
 }, {

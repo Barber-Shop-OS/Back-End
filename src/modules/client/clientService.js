@@ -61,6 +61,9 @@ const present = (client) => {
     phone: json.phone,
     email: json.email,
     notes: json.notes,
+    blocked: Boolean(json.blocked_at),
+    blocked_at: toIso(json.blocked_at),
+    blocked_reason: json.blocked_reason || null,
     created_at: json.created_at,
     visits: Number(json.visits || 0),
     no_shows: Number(json.no_shows || 0),
@@ -210,10 +213,19 @@ const create = async (barbershopId, input, user) => {
 };
 
 const update = async (barbershopId, clientId, input, user) => {
-  await assertStaffOfBarbershop(user, barbershopId);
+  const barbershop = await assertStaffOfBarbershop(user, barbershopId);
   await assertWritable(user, barbershopId);
   const client = await findInBarbershop(barbershopId, clientId);
-  const data = normalizeContact(pickFields(input, ['name', 'phone', 'email', 'notes']));
+  const { blocked: _blocked, blocked_reason: _reason, ...contact } = pickFields(input, ['name', 'phone', 'email', 'notes', 'blocked', 'blocked_reason']);
+  const data = normalizeContact(contact);
+  // SEC-21: bloquear/desbloquear é decisão do dono ou gerente (não do barbeiro nem da recepção).
+  if (input.blocked !== undefined) {
+    if (!(ownsBarbershop(user, barbershop) || membershipFor(user, barbershop.id))) {
+      throw new ForbiddenError('Somente o dono ou o gerente bloqueia clientes');
+    }
+    data.blocked_at = input.blocked ? client.blocked_at || new Date() : null;
+    data.blocked_reason = input.blocked ? String(input.blocked_reason || '').trim().slice(0, 255) || null : null;
+  }
   await assertNoDuplicate(barbershopId, data, client.id);
   await client.update(data);
   if (await accessControl().hasFeature(barbershopId, 'clients_crm')) return getById(barbershopId, client.id, user);

@@ -103,7 +103,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Correção:** compose sem defaults sensíveis (`${VAR:?obrigatório}`), usuário MySQL de aplicação; varredura `gitleaks` no histórico dos 3 repos e no CI; `.gitignore` com `*-my-pc.*`, `.env*` exceto `.env.example`.
 - **Teste:** job `gitleaks` no CI dos três repositórios.
 
-### [ ] SEC-15 — Token de acesso persistido em `localStorage` no web — **Médio** → BE-30, FE-37
+### [x] SEC-15 — Token de acesso persistido em `localStorage` no web — **Médio** → BE-30, FE-37
+- **Fechado (2026-11-21):** o front (FE-37) guarda o access token só em memória; a sessão volta pelo refresh em cookie httpOnly.
 - **Onde:** `Front-End/src/store/index.ts` (`redux-persist`, whitelist `auth` → `localStorage`).
 - **Ataque:** qualquer XSS (inclusive via dependência) lê o JWT de 8 h e sequestra a sessão.
 - **Correção:** access token curto só em memória; refresh em cookie `httpOnly; Secure; SameSite=Strict`; CSP restritiva (SEC-17) para reduzir XSS. Até BE-30, reduzir validade e não persistir dados além do necessário.
@@ -138,7 +139,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [ ] SEC-20 — LGPD e privacidade — **Alto** → BE-40, FE-30
 - Política de privacidade e termos publicados e aceitos no cadastro (com versão); base legal por dado (execução de contrato para agendamento); minimização (barbeiro vê nome e telefone do cliente só dos próprios atendimentos); exportação e exclusão de conta; retenção definida (logs 90 dias, dados de tenant cancelado 90 dias e depois anonimização); registro de operadores (AbacatePay, provedor de e-mail, Cloudflare, hospedagem) e DPA; canal do encarregado (e-mail) no rodapé; e-mails de marketing só com opt-in.
 
-### [ ] SEC-21 — Abuso da agenda pública — **Médio** → BE-14, BE-13
+### [x] SEC-21 — Abuso da agenda pública — **Médio** → BE-14, BE-13
+- **Fechado (2026-11-21):** agendar online exige e-mail verificado **ou** telefone (`403 CONTACT_REQUIRED`, decisão de 20/11); dono/gerente bloqueia cliente na barbearia (`PATCH .../clients/:id { blocked, blocked_reason }` → `403 CLIENT_BLOCKED` no agendamento online; a equipe ainda agenda no balcão); faltas já visíveis no CRM. Captcha (Turnstile) fica para se surgir abuso.
 - **Parcial (2026-11-15, Sprint C):** máximo de 3 agendamentos futuros por cliente/barbearia (`409 TOO_MANY_ACTIVE_APPOINTMENTS`), 10 criações/hora por conta de cliente, rate limit de 60/min e `Cache-Control` 30 s em `GET /availability` e `GET /search/branches`, `Idempotency-Key` na criação (BE-13, BE-14, BE-25). **Falta:** e-mail verificado ou telefone para agendar [DECISÃO PENDENTE], faltas visíveis ao dono e bloqueio de cliente (BE-23), captcha se surgir abuso.
 - Limite de agendamentos futuros por cliente/barbearia (3); limite de criação por conta/IP (ex.: 10/h); exigir e-mail verificado **ou** telefone para agendar [DECISÃO PENDENTE]; contagem de faltas (`nao_compareceu`) visível ao dono e opção de bloquear cliente na barbearia; `GET /availability` com rate limit e cache curto; captcha (Cloudflare Turnstile) no cadastro e no agendamento sem conta se surgir abuso.
 
