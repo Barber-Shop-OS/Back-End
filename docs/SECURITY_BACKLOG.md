@@ -120,11 +120,13 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Teste:** assinatura inválida, timestamp velho, evento repetido, valor divergente → nenhuma mudança de status.
 - **Fechado (2026-11-19):** segredo em tempo constante + HMAC do corpo cru (quando a chave pública está configurada); a AbacatePay v2 não envia timestamp, então o replay é barrado pela idempotência por `event.id`; ativação só via webhook; produto e valor conferidos contra o plano (divergência → `rejected`, sem mudança); externalId autoritativo; reconciliação diária. Testes em `src/__tests__/integration/billing/webhooks.test.js`.
 
-### [ ] SEC-16 — Cadeia de dependências — **Alto**
-- **Parcial (2026-11-07, Back-End):** `npm audit fix` (18 → 1 vulnerabilidade de produção, só moderada: `uuid` interno do Sequelize), nodemailer 10, CI com `npm audit --audit-level=high`, Dependabot, gitleaks, deps sem uso removidas, `engines`. **Falta:** Front-End e Mobile.
+### [x] SEC-16 — Cadeia de dependências — **Alto**
+- **Fechado (2026-11-21):** `npm audit --omit=dev --audit-level=high` limpo nos dois repos (Back-End: `@aws-sdk/*` e `fast-xml-parser` atualizados; resta só a moderada do `uuid` interno do Sequelize, sem correção não-quebrante).
+- **Parcial (2026-11-07, Back-End):** `npm audit fix` (18 → 1 vulnerabilidade de produção, só moderada: `uuid` interno do Sequelize), nodemailer 10, CI com `npm audit --audit-level=high`, Dependabot, gitleaks, deps sem uso removidas, `engines`. **Front-End (2026-11-21):** zod 4.6 (alta: exaustão de memória), react-router 7.18 (moderada: open redirect), `redux-persist`/`redux-saga` sem uso removidos → `npm audit --omit=dev` com 0 vulnerabilidades; CI do front já roda `npm audit --audit-level=high`, Dependabot e gitleaks. Mobile cancelado.
 - `npm audit --omit=dev --audit-level=high` falhando o CI nos 3 repos; Dependabot (npm + GitHub Actions) semanal; `npm ci` com lockfile; fixar versão do Node (`.nvmrc` / `engines`); remover dependências sem uso (`mysql`, `body-parser`, `react-icons` — BE-08/FE-04); revisar `babel-plugin-react-compiler` beta.
 
-### [ ] SEC-17 — Cabeçalhos de segurança no web (Cloudflare) — **Alto** → FE
+### [x] SEC-17 — Cabeçalhos de segurança no web (Cloudflare) — **Alto** → FE
+- **Fechado (2026-11-21, FE-40):** `_headers` gerado no build do front com CSP/HSTS/nosniff/frame-ancestors/Referrer/Permissions-Policy; ESLint proíbe `dangerouslySetInnerHTML`. Validar com securityheaders.com no deploy.
 - **Onde:** `Front-End/wrangler.json` só serve assets; não há `_headers`.
 - **Fazer:** arquivo `public/_headers` (ou Worker) com: `Content-Security-Policy` (`default-src 'self'; script-src 'self' https://accounts.google.com; connect-src 'self' <API_URL>; img-src 'self' data: <R2_URL>; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`), `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: geolocation=(self), camera=()`. Validar com securityheaders.com.
 - **Front:** proibir `dangerouslySetInnerHTML` (regra ESLint) e sanitizar qualquer texto vindo do dono (descrição da barbearia) — React escapa por padrão, manter assim.
@@ -133,7 +135,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Fechado (2026-11-19):** helmet (HSTS incluso), sem `X-Powered-By`, Swagger fora de produção e `GET /` sem versão — com teste (`security-hardening.test.js`). HTTPS/redirect no proxy (runbook).
 - `helmet` já ativo — manter; adicionar `app.disable('x-powered-by')` (helmet cobre, confirmar); Swagger só fora de produção (já está — adicionar teste); `GET /` não revelar versão; HTTPS obrigatório (redirect/HSTS no proxy).
 
-### [ ] SEC-19 — Segurança do app mobile — **Alto** → MOB
+### [x] SEC-19 — Segurança do app mobile — **Alto** → MOB
+- **Descartado (2026-11-21):** o app mobile foi cancelado; o produto é só web.
 - Tokens em `expo-secure-store` (Keychain/Keystore), nunca `AsyncStorage`; nenhum segredo no bundle (só URL pública da API e IDs públicos); deep links validados (`barberos://convite/:token` não executa ação sem confirmação do usuário); `android:allowBackup=false` / excluir storage sensível de backup; desabilitar logs em release; checagem de versão mínima (`/api/app-config` força update em caso de falha crítica); ofuscação padrão (Hermes); certificate pinning [DECISÃO PENDENTE — recomendação: não no MVP, custo de rotação alto].
 
 ### [ ] SEC-20 — LGPD e privacidade — **Alto** → BE-40, FE-30
