@@ -1,5 +1,5 @@
 // Campos de usuário que nunca saem da API.
-const PRIVATE_USER_FIELDS = ['password', 'token_version'];
+const PRIVATE_USER_FIELDS = ['password', 'token_version', 'totp_secret', 'totp_pending_secret', 'totp_recovery_codes', 'totp_last_step'];
 
 const sanitizeUser = (user) => {
   if (!user) return null;

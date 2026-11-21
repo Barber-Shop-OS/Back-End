@@ -166,7 +166,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - 32 bytes de `crypto.randomBytes`, armazenados como SHA-256, expiração curta, uso único, invalidação ao trocar senha/e-mail; links nunca com o e-mail em texto; troca de senha derruba todas as sessões (`token_version`); aviso por e-mail em troca de senha/e-mail.
 - **Fechado (2026-11-19):** `user_tokens` (BE-26/27/29) + convites (BE-22): SHA-256, expiração, uso único com consumo atômico, link anterior invalidado, `token_version` derrubando sessões e avisos de segurança por e-mail.
 
-### [ ] SEC-27 — Contas privilegiadas — **Médio** → BE-41
+### [x] SEC-27 — Contas privilegiadas — **Médio** → BE-41
+- **Fechado (2026-11-21):** 2FA TOTP (RFC 6238, sem dependências) com segredo cifrado (AES-256-GCM, `TOTP_ENCRYPTION_KEY`), proteção contra reuso do código e 10 códigos de recuperação (hash SHA-256, uso único). Login com 2FA devolve `challenge_token` (5 min) e a sessão abre em `POST /auth/2fa/verify`. Obrigatório para admin (rotas `/api/admin` → `403 TWO_FACTOR_SETUP_REQUIRED` até ativar; admin não desativa) e opcional para os demais (decisão de 20/11). Dono recebe e-mail quando alguém entra na equipe (barbeiro, gerente, recepção, convite aceito). Admin só por script CLI e auditoria das ações admin já existiam.
 - Admin criado só por script CLI; 2FA (TOTP) obrigatório para admin e opcional para owner [DECISÃO PENDENTE para owner]; log de auditoria de toda ação admin (BE-36); alerta por e-mail ao owner quando um novo barbeiro/gerente é adicionado.
 
 ### [ ] SEC-28 — Monitoramento e resposta a incidentes — **Médio** → BE-42

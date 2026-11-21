@@ -146,7 +146,10 @@ const createInBranch = async (branchId, data, currentUser, { onUnknownEmail } = 
   if (!user) throw new NotFoundError('Usuário não encontrado', CODES.USER_NOT_FOUND);
   await assertBarberSeat(branch.barbershop_id, user.id);
 
-  return { barber: toPublicBarber(await attachUser({ user, branchId, ...data })) };
+  const barber = toPublicBarber(await attachUser({ user, branchId, ...data }));
+  // SEC-27: aviso ao dono (não bloqueia).
+  await require('../../shared/teamAlerts').notifyOwnerOfNewMember({ barbershopId: branch.barbershop_id, person: user, role: 'barber', actorId: currentUser.id });
+  return { barber };
 };
 
 // user_id nunca muda; troca de filial só dentro da mesma barbearia.

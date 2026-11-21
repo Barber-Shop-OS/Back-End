@@ -105,6 +105,8 @@ const add = async (barbershopId, input, user) => {
   });
   await audit.record({ action: 'member.added', entity: 'barbershop_member', entityId: row.id, barbershopId: shop.id, after: { user_id: target.id, role, branch_ids: row.branch_ids } });
   row.user = target;
+  // SEC-27: aviso ao dono (não bloqueia).
+  await require('../../shared/teamAlerts').notifyOwnerOfNewMember({ barbershopId: shop.id, person: target, role, actorId: user.id });
   return present(row);
 };
 

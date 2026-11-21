@@ -27,7 +27,7 @@ const authMiddleware = async (req, res, next) => {
     // require tardio para evitar ciclo models → config durante o boot.
     const { User } = require('../models');
     const user = await User.findByPk(payload.sub, {
-      attributes: ['id', 'email', 'role', 'token_version'],
+      attributes: ['id', 'email', 'role', 'token_version', 'totp_enabled_at'],
     });
     if (!user || Number(user.token_version || 0) !== Number(payload.tv || 0)) {
       return next(new UnauthorizedError('Token inválido ou expirado'));
@@ -45,6 +45,8 @@ const authMiddleware = async (req, res, next) => {
       role: user.role,
       memberships: memberships.map((row) => ({ barbershop_id: row.barbershop_id, role: row.role, branch_ids: row.branch_ids || null })),
       session_id: payload.sid || null,
+      // SEC-27: 2FA ativo (admin sem 2FA é barrado nas rotas /api/admin).
+      two_factor: Boolean(user.totp_enabled_at),
     };
     // BE-36: a auditoria descobre quem está agindo pelo contexto da requisição.
     const context = require('../shared/requestContext').get();

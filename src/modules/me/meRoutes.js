@@ -12,6 +12,7 @@ const notificationCenter = require('../notification/notificationCenter');
 const { handle } = require('../branchSchedule/branchScheduleController');
 const { success } = require('../../utils/responseHandler');
 const meService = require('./meService');
+const twoFactorService = require('../auth/twoFactorService');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -163,6 +164,71 @@ router.post(
  *       204: { description: Encerrada }
  *       404: { description: Sessão não encontrada }
  */
+/**
+ * @swagger
+ * /me/2fa:
+ *   get:
+ *     summary: Situação da verificação em duas etapas (SEC-27)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ enabled, enabled_at, required (admin), recovery_codes_left }" }
+ * /me/2fa/setup:
+ *   post:
+ *     summary: Gera o segredo TOTP pendente (QR code) — SEC-27
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ secret, otpauth_url }" }
+ *       409: { description: Já ativo }
+ * /me/2fa/enable:
+ *   post:
+ *     summary: Ativa o 2FA conferindo um código do app; devolve 10 códigos de recuperação (uma única vez)
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { type: object, required: [code], properties: { code: { type: string } } }
+ *     responses:
+ *       200: { description: "{ enabled: true, recovery_codes: [..] }" }
+ *       400: { description: TWO_FACTOR_INVALID }
+ * /me/2fa/disable:
+ *   post:
+ *     summary: Desativa o 2FA (senha + código). Admin não pode desativar.
+ *     tags: [Me]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: "{ enabled: false }" }
+ *       401: { description: Senha ou código inválidos }
+ *       409: { description: TWO_FACTOR_REQUIRED_FOR_ROLE (admin) }
+ */
+router.get('/2fa', handle(async (req, res) => success(res, await twoFactorService.status(req.user.id))));
+router.post('/2fa/setup', authLimiter, handle(async (req, res) => success(res, await twoFactorService.setup(req.user.id))));
+router.post(
+  '/2fa/enable',
+  authLimiter,
+  validate({ body: Joi.object({ code: Joi.string().trim().max(10).required() }) }),
+  handle(async (req, res) => success(res, await twoFactorService.enable(req.user.id, req.body.code)))
+);
+router.post(
+  '/2fa/disable',
+  authLimiter,
+  validate({
+    body: Joi.object({
+      password: Joi.string().max(72).required(),
+      code: Joi.string().trim().max(10),
+      recovery_code: Joi.string().trim().max(20),
+    }).xor('code', 'recovery_code'),
+  }),
+  handle(async (req, res) => success(res, await twoFactorService.disable(req.user.id, req.body)))
+);
+
 router.get('/sessions', handle(async (req, res) => success(res, { items: await sessionService.listSessions(req.user.id, req) })));
 router.delete(
   '/sessions/:id',

@@ -15,6 +15,14 @@ const { SUBSCRIPTION_STATUSES } = require('../../models/subscription');
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware(['admin']));
+// SEC-27: 2FA obrigatório para admin — sem ele, só a ativação em /api/me/2fa fica liberada.
+router.use((req, res, next) => {
+  if (req.user && req.user.role === 'admin' && !req.user.two_factor) {
+    const { AppError, CODES } = require('../../utils/errorHandler');
+    return next(new AppError('Ative a verificação em duas etapas para acessar a administração', 403, CODES.TWO_FACTOR_SETUP_REQUIRED));
+  }
+  return next();
+});
 
 /**
  * @swagger

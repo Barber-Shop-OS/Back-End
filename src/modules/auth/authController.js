@@ -1,6 +1,7 @@
 // Auth controller that delegates registration and login to the auth service.
 const authService = require('./authService');
 const sessionService = require('./sessionService');
+const twoFactor = require('./twoFactorService');
 const { User } = require('../../models');
 const { created, success } = require('../../utils/responseHandler');
 
@@ -27,13 +28,29 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const result = await authService.login(email, password);
+    const account = await User.findByPk(result.user.id);
+    // SEC-27: com 2FA ativo a senha só libera o desafio; a sessão abre em POST /auth/2fa/verify.
+    if (twoFactor.isEnabled(account)) {
+      return success(res, { two_factor_required: true, challenge_token: twoFactor.issueChallenge(account) });
+    }
     // BE-30: refresh token em cookie httpOnly (web) ou no corpo (mobile).
-    const session = await sessionService.start(req, res, await User.findByPk(result.user.id));
+    const session = await sessionService.start(req, res, account);
     return success(res, {
       message: 'Login realizado com sucesso',
       ...result,
       ...session,
     });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/** SEC-27: segundo fator do login (código do app ou de recuperação) → abre a sessão. */
+const verifyTwoFactor = async (req, res, next) => {
+  try {
+    const user = await twoFactor.completeChallenge(req.body);
+    const session = await sessionService.start(req, res, user);
+    return success(res, { message: 'Login realizado com sucesso', user: require('../../shared/sanitizeUser').sanitizeUser(user), ...session });
   } catch (error) {
     return next(error);
   }
@@ -54,4 +71,5 @@ module.exports = {
   registerOwner,
   login,
   getMe,
+  verifyTwoFactor,
 };

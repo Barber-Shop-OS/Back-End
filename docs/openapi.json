@@ -1516,6 +1516,49 @@
         ]
       }
     },
+    "/auth/2fa/verify": {
+      "post": {
+        "description": "Quando o login responde { two_factor_required, challenge_token }, envie o challenge_token (5 min) com o código de 6 dígitos do app autenticador (code) ou um código de recuperação (recovery_code).\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "challenge_token": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "example": "123456",
+                    "type": "string"
+                  },
+                  "recovery_code": {
+                    "example": "AB12C-34DEF",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "challenge_token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ token, user } (+ refresh no cookie ou no corpo, como no login)"
+          },
+          "401": {
+            "description": "TWO_FACTOR_INVALID ou TOKEN_INVALID_OR_EXPIRED"
+          }
+        },
+        "summary": "Segundo fator do login (SEC-27) — abre a sessão",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/auth/confirm-email-change": {
       "post": {
         "description": "Troca o e-mail, marca como verificado, derruba as sessões e avisa o e-mail antigo.",
@@ -4887,6 +4930,108 @@
           }
         ],
         "summary": "Atualizar meu perfil (name, phone)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/2fa": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "{ enabled, enabled_at, required (admin), recovery_codes_left }"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Situação da verificação em duas etapas (SEC-27)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/2fa/disable": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "{ enabled: false }"
+          },
+          "401": {
+            "description": "Senha ou código inválidos"
+          },
+          "409": {
+            "description": "TWO_FACTOR_REQUIRED_FOR_ROLE (admin)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Desativa o 2FA (senha + código). Admin não pode desativar.",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/2fa/enable": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "{ enabled: true, recovery_codes: [..] }"
+          },
+          "400": {
+            "description": "TWO_FACTOR_INVALID"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Ativa o 2FA conferindo um código do app; devolve 10 códigos de recuperação (uma única vez)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/me/2fa/setup": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "{ secret, otpauth_url }"
+          },
+          "409": {
+            "description": "Já ativo"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Gera o segredo TOTP pendente (QR code) — SEC-27",
         "tags": [
           "Me"
         ]

@@ -194,6 +194,8 @@ const accept = async (token, data, currentUser) => {
     { where: { id: invitation.id, accepted_at: null, revoked_at: null, expires_at: { [Op.gt]: new Date() } } }
   );
   if (!updated) throw new AppError('Convite expirado ou já utilizado', 410, CODES.INVITATION_GONE);
+  // SEC-27: aviso ao dono (não bloqueia).
+  await require('../../shared/teamAlerts').notifyOwnerOfNewMember({ barbershopId: invitation.barbershop_id, person: user, role: 'barber', actorId: invitation.invited_by });
 
   const fresh = await User.findByPk(user.id);
   return {

@@ -32,19 +32,37 @@ const resetDatabase = async () => {
   await Plan.bulkCreate(PLANS.map((plan) => ({ ...plan })));
 };
 
-const createUser = async ({ role = 'cliente', name, email, password = DEFAULT_PASSWORD, verified = true } = {}) => {
+// SEC-27: admin precisa de 2FA. Por padrão o admin de teste já nasce com TOTP ativo (segredo conhecido)
+// e o loginAs resolve o desafio sozinho. `twoFactor: false` cria admin sem 2FA.
+const totpSecrets = new Map();
+
+const createUser = async ({ role = 'cliente', name, email, password = DEFAULT_PASSWORD, verified = true, twoFactor = role === 'admin' } = {}) => {
   const n = next();
-  return User.create({
+  const secret = twoFactor ? require('../../shared/totp').generateSecret() : null;
+  const user = await User.create({
     name: name || `Usuário ${n}`,
     email: email || `user${n}@test.com`,
     password: await bcrypt.hash(password, 4),
     role,
     email_verified_at: verified ? new Date() : null,
+    ...(secret
+      ? { totp_secret: require('../../shared/secretBox').seal(secret), totp_enabled_at: new Date(), totp_recovery_codes: '[]' }
+      : {}),
   });
+  if (secret) totpSecrets.set(user.id, secret);
+  return user;
 };
 
 const loginAs = async (user, password = DEFAULT_PASSWORD) => {
-  const response = await request(app).post('/api/auth/login').send({ email: user.email, password });
+  let response = await request(app).post('/api/auth/login').send({ email: user.email, password });
+  if (response.status === 200 && response.body.two_factor_required) {
+    const secret = totpSecrets.get(user.id);
+    if (!secret) throw new Error('Usuário de teste com 2FA sem segredo conhecido');
+    // Vários logins de teste no mesmo intervalo de 30 s: libera o reuso do passo (o servidor o bloqueia).
+    await User.update({ totp_last_step: null }, { where: { id: user.id } });
+    const code = require('../../shared/totp').generate(secret);
+    response = await request(app).post('/api/auth/2fa/verify').send({ challenge_token: response.body.challenge_token, code });
+  }
   if (response.status !== 200) {
     throw new Error(`Falha no login de teste: ${response.status} ${JSON.stringify(response.body)}`);
   }

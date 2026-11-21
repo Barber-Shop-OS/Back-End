@@ -85,6 +85,9 @@ const getMe = async (userId) => {
     barbershops,
     barber_profiles: barberProfiles,
     front_desk: frontDesk,
+    // SEC-27: 2FA ativo; obrigatório para admin.
+    two_factor_enabled: Boolean(user.totp_enabled_at),
+    two_factor_required: user.role === 'admin',
   };
   for (const extend of profileExtensions) {
     Object.assign(profile, await extend(user, profile));

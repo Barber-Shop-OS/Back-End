@@ -39,6 +39,12 @@ const User = sequelize.define("users", {
       allowNull: false,
       defaultValue: 0,
     },
+    // SEC-27: 2FA (TOTP). Segredos cifrados (shared/secretBox); nunca saem da API.
+    totp_secret: { type: DataTypes.STRING(255), allowNull: true },
+    totp_pending_secret: { type: DataTypes.STRING(255), allowNull: true },
+    totp_enabled_at: { type: DataTypes.DATE, allowNull: true },
+    totp_recovery_codes: { type: DataTypes.TEXT, allowNull: true },
+    totp_last_step: { type: DataTypes.BIGINT, allowNull: true },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

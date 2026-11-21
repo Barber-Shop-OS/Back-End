@@ -8,6 +8,8 @@ const emailVerificationService = require('./emailVerificationService');
 const googleAuthService = require('./googleAuthService');
 const sessionService = require('./sessionService');
 const schemas = require('./authSchemas');
+const validate = require('../../middlewares/validate');
+const { Joi } = require('../../shared/schemas');
 
 const router = express.Router();
 
@@ -135,6 +137,43 @@ router.post('/register-owner', authLimiter, schemas.registerOwner, authControlle
  *               message: Credenciais inválidas
  */
 router.post('/login', authLimiter, schemas.login, loginAccountLimiter, authController.login);
+
+/**
+ * @swagger
+ * /auth/2fa/verify:
+ *   post:
+ *     summary: Segundo fator do login (SEC-27) — abre a sessão
+ *     description: >
+ *       Quando o login responde { two_factor_required, challenge_token }, envie o challenge_token (5 min)
+ *       com o código de 6 dígitos do app autenticador (code) ou um código de recuperação (recovery_code).
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [challenge_token]
+ *             properties:
+ *               challenge_token: { type: string }
+ *               code: { type: string, example: '123456' }
+ *               recovery_code: { type: string, example: 'AB12C-34DEF' }
+ *     responses:
+ *       200: { description: "{ token, user } (+ refresh no cookie ou no corpo, como no login)" }
+ *       401: { description: TWO_FACTOR_INVALID ou TOKEN_INVALID_OR_EXPIRED }
+ */
+router.post(
+  '/2fa/verify',
+  authLimiter,
+  validate({
+    body: Joi.object({
+      challenge_token: Joi.string().max(2000).required(),
+      code: Joi.string().trim().max(10),
+      recovery_code: Joi.string().trim().max(20),
+    }).xor('code', 'recovery_code'),
+  }),
+  authController.verifyTwoFactor
+);
 
 /**
  * @swagger
@@ -293,7 +332,13 @@ router.post('/resend-verification', emailIpLimiter, authMiddleware, emailTargetL
 router.post('/google', authLimiter, schemas.google, async (req, res, next) => {
   try {
     const result = await googleAuthService.authenticate(req.body);
-    const session = await sessionService.start(req, res, await require('../../models').User.findByPk(result.user.id));
+    const account = await require('../../models').User.findByPk(result.user.id);
+    // SEC-27: 2FA também vale para o login com Google.
+    const twoFactor = require('./twoFactorService');
+    if (twoFactor.isEnabled(account)) {
+      return res.status(200).json({ two_factor_required: true, challenge_token: twoFactor.issueChallenge(account) });
+    }
+    const session = await sessionService.start(req, res, account);
     return res.status(result.created ? 201 : 200).json({ ...result, ...session });
   } catch (error) {
     return next(error);
