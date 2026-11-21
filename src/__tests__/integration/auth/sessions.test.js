@@ -38,6 +38,23 @@ describe('BE-30 — sessões e refresh token', () => {
       expect(res.body.token).toBeTruthy();
     });
 
+    it('web: /me/sessions marca a sessão atual pelo access token (o cookie não vai para /api/me)', async () => {
+      const fresh = await createUser({ email: 'web-current@teste.com' });
+      const webLogin = () => request(app).post('/api/auth/login').send({ email: fresh.email, password: DEFAULT_PASSWORD });
+      const first = await webLogin();
+      await webLogin();
+      const list = await request(app).get('/api/me/sessions').set(bearer(first.body.token));
+      expect(list.status).toBe(200);
+      expect(list.body.items).toHaveLength(2);
+      expect(list.body.items.filter((item) => item.current)).toHaveLength(1);
+
+      // Depois do refresh o novo access token continua apontando para a mesma sessão.
+      const refreshed = await web(request(app).post('/api/auth/refresh')).set('Cookie', cookieFrom(first));
+      expect(refreshed.status).toBe(200);
+      const again = await request(app).get('/api/me/sessions').set(bearer(refreshed.body.token));
+      expect(again.body.items.find((item) => item.current).id).toBe(list.body.items.find((item) => item.current).id);
+    });
+
     it('refresh com cookie gira o token; o antigo reapresentado revoga a família inteira', async () => {
       const first = cookieFrom(await login());
       const rotated = await web(request(app).post('/api/auth/refresh').set('Cookie', first));

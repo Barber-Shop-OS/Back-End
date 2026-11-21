@@ -435,6 +435,10 @@
 - **Já existia:** `revenue_by_day` (série diária de qualquer período — semana = `from` segunda, `to` domingo) em `/api/dashboard/summary` e `/api/dashboard/barber`; `revenue_by_barber` e `top_services` (top 5) no summary com `branch_id`.
 - **Feito:** (a) `GET /api/dashboard/barber/clients` (barbeiro logado; atendimentos concluídos com ele: `client_id, user_id, name, phone, visits, last_visit, total_spent`; busca, `sortBy` e paginação padrão); (b) `comparison` no summary e no dashboard do barbeiro (`previous_period`, e `{ previous, change_pct }` para `revenue`, `payments`, `average_ticket`, `appointments`; período anterior de mesmo tamanho; `change_pct` nulo quando o anterior é zero); (c) `revenue_by_service` (todos os serviços, com `appointments` e `revenue`) no summary (sujeito ao recurso `financial_reports`) e no dashboard do barbeiro.
 
+### [x] BE-54 — Sessão atual na lista de sessões (web)
+- **Problema (achado na validação do front em 21/11):** o cookie de refresh tem `Path=/api/auth`, então `GET /api/me/sessions` na web nunca recebia o cookie e nenhuma sessão vinha com `current: true` — a tela "Sessões ativas" oferecia "Encerrar" para a própria sessão.
+- **Feito:** o access token passa a levar `sid` (família do refresh) quando emitido junto com a sessão (login, cadastro, Google, troca de senha, refresh); o `authMiddleware` expõe `req.user.session_id` e a lista usa-o quando não há refresh no corpo/cookie.
+
 ---
 
 ## Sequência recomendada (sprints)

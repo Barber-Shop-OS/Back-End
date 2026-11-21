@@ -44,6 +44,7 @@ const authMiddleware = async (req, res, next) => {
       email: user.email,
       role: user.role,
       memberships: memberships.map((row) => ({ barbershop_id: row.barbershop_id, role: row.role, branch_ids: row.branch_ids || null })),
+      session_id: payload.sid || null,
     };
     // BE-36: a auditoria descobre quem está agindo pelo contexto da requisição.
     const context = require('../shared/requestContext').get();

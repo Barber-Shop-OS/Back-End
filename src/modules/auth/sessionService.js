@@ -85,8 +85,9 @@ const deliver = (req, res, refreshToken) => {
 
 /** Abre uma sessão nova (login, cadastro, Google). Devolve campos extras para o corpo da resposta. */
 const start = async (req, res, user) => {
-  const { token } = await createRefresh(user, { req });
-  return { ...deliver(req, res, token), access_token_expires_in: config.jwt.expiresIn };
+  const { token, row } = await createRefresh(user, { req });
+  // Access token com o id da sessão (sid): substitui o token emitido antes da sessão existir.
+  return { token: signAccessToken(user, { sid: row.family_id }), ...deliver(req, res, token), access_token_expires_in: config.jwt.expiresIn };
 };
 
 const revokeFamily = (familyId, now = new Date()) =>
@@ -121,7 +122,7 @@ const refresh = async (req, res) => {
     await revokeFamily(row.family_id, now);
     throw new UnauthorizedError('Sessão encerrada por segurança. Entre novamente.', CODES.REFRESH_REUSED);
   }
-  return { token: signAccessToken(user), access_token_expires_in: config.jwt.expiresIn, ...deliver(req, res, nextToken) };
+  return { token: signAccessToken(user, { sid: row.family_id }), access_token_expires_in: config.jwt.expiresIn, ...deliver(req, res, nextToken) };
 };
 
 const clearCookie = (res) => res.clearCookie(COOKIE_NAME, { ...cookieOptions(), maxAge: undefined });
@@ -158,6 +159,8 @@ const listSessions = async (userId, req) => {
       const current = await RefreshToken.findOne({ where: { token_hash: hashToken(presented) }, attributes: ['family_id'] });
       currentFamily = current && current.family_id;
     }
+    // Web: o cookie só vai para /api/auth; a sessão atual vem do `sid` do access token.
+    if (!currentFamily && req.user && req.user.session_id) currentFamily = req.user.session_id;
   } catch {
     currentFamily = null;
   }

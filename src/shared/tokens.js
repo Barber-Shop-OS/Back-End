@@ -2,12 +2,14 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-const signAccessToken = (user) =>
+/** `sid` (opcional) = família do refresh token da sessão; permite marcar a sessão atual em /me/sessions. */
+const signAccessToken = (user, { sid } = {}) =>
   jwt.sign(
     {
       sub: String(user.id),
       role: user.role,
       tv: user.token_version || 0,
+      ...(sid ? { sid } : {}),
     },
     config.jwt.secret,
     {
