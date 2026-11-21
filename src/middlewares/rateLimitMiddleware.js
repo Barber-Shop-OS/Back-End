@@ -27,9 +27,11 @@ const refreshLimiter = rateLimit({
   skip: () => isTestEnv && !limitersInTests(),
 });
 
+// Geral por IP. 300/min: cada tela do painel faz ~10 chamadas e a barbearia costuma ter vários aparelhos
+// (balcão, barbeiros, dono) atrás do mesmo IP; 100/min derrubava uso normal (SEC-31).
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 300,
   message: {
     code: 'RATE_LIMITED',
     message: 'Limite de requisições atingido. Tente novamente em instantes.',
