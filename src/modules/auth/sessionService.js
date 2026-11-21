@@ -59,6 +59,9 @@ const clientInfo = (req) => ({
   ip: String(req.ip || '').slice(0, 64) || null,
 });
 
+/** Janela em que reapresentar o refresh recém-trocado não é tratado como roubo (abas/recargas simultâneas). */
+const REUSE_GRACE_MS = 30 * 1000;
+
 const createRefresh = async (user, { familyId, req, transaction } = {}) => {
   const token = crypto.randomBytes(32).toString('base64url');
   const row = await RefreshToken.create(
@@ -102,9 +105,22 @@ const refresh = async (req, res) => {
   if (!row) throw new UnauthorizedError('Sessão expirada', CODES.REFRESH_INVALID);
 
   if (row.revoked_at) {
-    // Reuso de um refresh já trocado: alguém tem uma cópia. Derruba a sessão inteira.
-    await revokeFamily(row.family_id, now);
-    throw new UnauthorizedError('Sessão encerrada por segurança. Entre novamente.', CODES.REFRESH_REUSED);
+    // Corrida legítima: duas abas abrindo juntas ou recarga durante uma renovação reapresentam o refresh
+    // que acabou de ser trocado. Dentro da janela de tolerância emite outro refresh da mesma família.
+    const graceful = row.replaced_by && now - new Date(row.revoked_at) <= REUSE_GRACE_MS;
+    const familyAlive = graceful && (await RefreshToken.count({ where: { family_id: row.family_id, revoked_at: null } })) > 0;
+    if (!familyAlive) {
+      // Reuso de um refresh já trocado: alguém tem uma cópia. Derruba a sessão inteira.
+      await revokeFamily(row.family_id, now);
+      throw new UnauthorizedError('Sessão encerrada por segurança. Entre novamente.', CODES.REFRESH_REUSED);
+    }
+    const sibling = await User.findByPk(row.user_id);
+    if (!sibling || Number(sibling.token_version || 0) !== Number(row.token_version)) {
+      await revokeFamily(row.family_id, now);
+      throw new UnauthorizedError('Sessão expirada', CODES.REFRESH_INVALID);
+    }
+    const { token: siblingToken } = await createRefresh(sibling, { familyId: row.family_id, req });
+    return { token: signAccessToken(sibling, { sid: row.family_id }), access_token_expires_in: config.jwt.expiresIn, ...deliver(req, res, siblingToken) };
   }
   const user = await User.findByPk(row.user_id);
   if (!user || new Date(row.expires_at) <= now || Number(user.token_version || 0) !== Number(row.token_version)) {

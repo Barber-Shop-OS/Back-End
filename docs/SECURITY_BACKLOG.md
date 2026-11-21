@@ -180,6 +180,9 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 ### [x] SEC-31 — Limite geral por IP compatível com o uso real — **Médio (disponibilidade)**
 - **Fechado (2026-11-21):** `apiLimiter` subiu de 100 para 300 req/min por IP. Na validação do front, navegar pelo painel em ritmo normal gerava 429 (cada tela faz ~10 chamadas, há polling da agenda) e barbearias têm vários aparelhos atrás do mesmo IP. Limites específicos (login, refresh, e-mail, pagamento, agendamento) continuam.
 
+### [x] SEC-32 — Tolerância de 30 s no reuso do refresh — **Médio (disponibilidade)**
+- **Fechado (2026-11-21):** a detecção de reuso (SEC-15) derrubava a sessão inteira em corridas legítimas — duas abas abrindo ao mesmo tempo, ou recarga enquanto uma renovação estava em voo (o `Set-Cookie` novo se perde). Reapresentar o refresh recém-trocado em até 30 s, com a família ainda ativa, agora emite outro refresh da mesma família; depois disso continua revogando tudo (`REFRESH_REUSED`).
+
 ---
 
 ## Ordem de execução recomendada

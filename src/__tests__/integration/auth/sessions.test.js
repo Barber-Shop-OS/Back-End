@@ -55,7 +55,7 @@ describe('BE-30 — sessões e refresh token', () => {
       expect(again.body.items.find((item) => item.current).id).toBe(list.body.items.find((item) => item.current).id);
     });
 
-    it('refresh com cookie gira o token; o antigo reapresentado revoga a família inteira', async () => {
+    it('refresh com cookie gira o token; o antigo reapresentado (fora da tolerância) revoga a família inteira', async () => {
       const first = cookieFrom(await login());
       const rotated = await web(request(app).post('/api/auth/refresh').set('Cookie', first));
       expect(rotated.status).toBe(200);
@@ -63,12 +63,25 @@ describe('BE-30 — sessões e refresh token', () => {
       const second = cookieFrom(rotated);
       expect(second).not.toBe(first);
 
+      // Passou a janela de tolerância de 30 s.
+      await RefreshToken.update({ revoked_at: new Date(Date.now() - 60 * 1000) }, { where: { replaced_by: { [require('sequelize').Op.ne]: null } } });
       const reuse = await web(request(app).post('/api/auth/refresh').set('Cookie', first));
       expect(reuse.status).toBe(401);
       expect(reuse.body.code).toBe('REFRESH_REUSED');
       // A sessão legítima (segundo token) também caiu.
       const after = await web(request(app).post('/api/auth/refresh').set('Cookie', second));
       expect(after.status).toBe(401);
+    });
+
+    it('corrida (duas abas / recarga durante a renovação): reapresentar o refresh recém-trocado não derruba a sessão', async () => {
+      const first = cookieFrom(await login());
+      const a = await web(request(app).post('/api/auth/refresh').set('Cookie', first));
+      const b = await web(request(app).post('/api/auth/refresh').set('Cookie', first));
+      expect(a.status).toBe(200);
+      expect(b.status).toBe(200);
+      // As duas abas seguem renovando normalmente.
+      expect((await web(request(app).post('/api/auth/refresh').set('Cookie', cookieFrom(a)))).status).toBe(200);
+      expect((await web(request(app).post('/api/auth/refresh').set('Cookie', cookieFrom(b)))).status).toBe(200);
     });
 
     it('CSRF: cookie sem X-Requested-With → 403; Origin desconhecida → 403', async () => {
