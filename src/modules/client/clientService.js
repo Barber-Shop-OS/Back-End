@@ -1,6 +1,8 @@
 // BE-23: clientes da barbearia (CRM) e cliente rápido sem conta.
 // Acesso: dono/admin da barbearia e barbeiros ativos lotados em alguma filial dela.
 // Escopo estrito: cliente da barbearia A nunca aparece para B (consultas sempre por barbershop_id).
+// SEC-20 (minimização): o barbeiro só vê os clientes dos próprios atendimentos (ou quem ele achar pelo
+// telefone completo, para agendar no balcão) e, no histórico, só os próprios atendimentos.
 const { Op } = require('sequelize');
 const { sequelize, BarbershopClient, Barbershop, Barber, Branch, User, Appointment, Payment } = require('../../models');
 const { ownsBarbershop, assertWritable, membershipFor, receptionistMembershipFor } = require('../../shared/authz');
@@ -24,6 +26,35 @@ const assertStaffOfBarbershop = async (user, barbershopId) => {
   });
   if (!barber) throw new ForbiddenError('Sem permissão para acessar os clientes desta barbearia');
   return barbershop;
+};
+
+/**
+ * SEC-20: ids de barbeiro quando o acesso é SÓ de barbeiro (dono/gerente/recepção veem tudo → null).
+ * Chamar depois de assertStaffOfBarbershop.
+ */
+const barberScope = async (user, barbershop) => {
+  if (ownsBarbershop(user, barbershop) || membershipFor(user, barbershop.id) || receptionistMembershipFor(user, barbershop.id)) return null;
+  const barbers = await Barber.findAll({
+    where: { user_id: user.id },
+    attributes: ['id'],
+    include: [{ model: Branch, attributes: [], where: { barbershop_id: barbershop.id }, required: true }],
+  });
+  return barbers.map((barber) => barber.id);
+};
+
+/** Clientes atendidos (ou agendados) pelos barbeiros informados. */
+const ownClientIds = async (barberIds) =>
+  (
+    await Appointment.findAll({
+      where: { barber_id: { [Op.in]: barberIds }, client_id: { [Op.ne]: null } },
+      attributes: ['client_id'],
+      group: ['client_id'],
+      raw: true,
+    })
+  ).map((row) => row.client_id);
+
+const assertBarberSeesClient = async (barberIds, clientId) => {
+  if (barberIds && !(await ownClientIds(barberIds)).includes(Number(clientId))) throw new NotFoundError('Cliente não encontrado');
 };
 
 // Subconsultas de estatística por cliente (mesmo SQL em PostgreSQL e SQLite).
@@ -91,7 +122,8 @@ const searchCondition = (search) => {
 };
 
 const list = async (barbershopId, query = {}, user) => {
-  await assertStaffOfBarbershop(user, barbershopId);
+  const barbershop = await assertStaffOfBarbershop(user, barbershopId);
+  const barberIds = await barberScope(user, barbershop);
   // BE-35: sem o recurso clients_crm (plano Essencial) a lista serve só para achar o cliente no
   // balcão — sem estatísticas.
   const crm = await accessControl().hasFeature(barbershopId, 'clients_crm');
@@ -100,6 +132,18 @@ const list = async (barbershopId, query = {}, user) => {
   if (query.search) {
     const condition = searchCondition(query.search);
     if (condition) conditions.push(condition);
+  }
+  if (barberIds) {
+    const visible = [{ id: { [Op.in]: await ownClientIds(barberIds) } }];
+    const digits = String(query.search || '').replace(/\D/g, '');
+    if (digits.length >= 10) {
+      try {
+        visible.push({ phone: normalizePhone(digits) });
+      } catch {
+        // telefone inválido: só os próprios clientes
+      }
+    }
+    conditions.push({ [Op.or]: visible });
   }
   const where = { [Op.and]: conditions };
   const [total, rows] = await Promise.all([
@@ -127,11 +171,13 @@ const findInBarbershop = async (barbershopId, clientId, options = {}) => {
 
 /** Cliente + estatísticas + histórico (últimos 50 agendamentos, com pagamento). */
 const getById = async (barbershopId, clientId, user) => {
-  await assertStaffOfBarbershop(user, barbershopId);
+  const barbershop = await assertStaffOfBarbershop(user, barbershopId);
   await accessControl().assertFeature(barbershopId, 'clients_crm');
+  const barberIds = await barberScope(user, barbershop);
+  await assertBarberSeesClient(barberIds, clientId);
   const client = await findInBarbershop(barbershopId, clientId, { attributes: { include: statAttributes() } });
   const appointments = await Appointment.findAll({
-    where: { client_id: client.id },
+    where: { client_id: client.id, ...(barberIds ? { barber_id: { [Op.in]: barberIds } } : {}) },
     attributes: ['id', 'start_at', 'end_at', 'status', 'service_name_snapshot', 'price_snapshot', 'branch_id', 'barber_id', 'notes'],
     include: [
       { model: Barber, attributes: ['id', 'display_name'], include: [{ model: User, attributes: ['name'] }] },
@@ -215,6 +261,7 @@ const create = async (barbershopId, input, user) => {
 const update = async (barbershopId, clientId, input, user) => {
   const barbershop = await assertStaffOfBarbershop(user, barbershopId);
   await assertWritable(user, barbershopId);
+  await assertBarberSeesClient(await barberScope(user, barbershop), clientId);
   const client = await findInBarbershop(barbershopId, clientId);
   const { blocked: _blocked, blocked_reason: _reason, ...contact } = pickFields(input, ['name', 'phone', 'email', 'notes', 'blocked', 'blocked_reason']);
   const data = normalizeContact(contact);

@@ -39,6 +39,8 @@ const Barbershop = sequelize.define('Barbershop', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+  // SEC-20: dados pessoais anonimizados após o período de retenção (barbearia encerrada).
+  anonymized_at: { type: DataTypes.DATE, allowNull: true },
   deleted_at: {
     type: DataTypes.DATE,
     allowNull: true,

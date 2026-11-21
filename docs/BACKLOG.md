@@ -444,6 +444,9 @@
 - **Decisão (21/11):** lançar com custo baixo — banco no Supabase (PostgreSQL), API no Railway.
 - **Feito:** driver `pg`; conexão por `DATABASE_URL` (ou `DB_*`) com TLS (`DB_SSL`, `DB_SSL_CA`) e pool configurável (`DB_POOL_MAX`) em `src/config/dbOptions.js`, usado pela API e pelo CLI; busca sem diferenciar caixa (`ILIKE`); SQL sem crases; lock das migrations com `pg_advisory_xact_lock`; `READ COMMITTED` explícito; migrations portáveis (`SMALLINT`, troca de ENUM com `setEnumValues`, `dropTable` com opções); docker compose com `postgres:16`; CI roda a suíte inteira em PostgreSQL 16; `mysql2` removido. Suíte completa (1035 testes) verde em PostgreSQL e SQLite; 39 migrations sobem e descem no PostgreSQL.
 
+### [x] BE-57 — Retenção LGPD e minimização de clientes para o barbeiro `[SEC-20]`
+- **Feito (2026-11-21):** `retentionService` no ciclo diário (anonimiza barbearias encerradas/excluídas há `RETENTION_DAYS`=90, coluna `barbershops.anonymized_at`; limpa tokens vencidos e notificações lidas antigas); `clientService` restringe o barbeiro aos clientes dos próprios atendimentos; logs locais com rotação. Testes: `security/lgpd-retention.test.js`, `client/client-minimization.test.js`.
+
 ### [x] BE-56 — E-mail pelo Resend (API HTTP)
 - **Feito:** `MAIL_DRIVER=resend` (padrão quando há `RESEND_API_KEY`): envio por HTTPS (o Railway bloqueia SMTP de saída em alguns planos), anexos `.ics` em base64, erro HTTP vira exceção para a fila reenviar.
 

@@ -38,9 +38,12 @@ const enrich = winston.format((info) => {
 const isProduction = process.env.NODE_ENV === 'production';
 const json = winston.format.combine(enrich(), winston.format.timestamp(), winston.format.json());
 
+// SEC-20: arquivos locais com tamanho limitado (a retenção de 90 dias vale na plataforma de logs do stdout).
+const ROTATION = { maxsize: 10 * 1024 * 1024, maxFiles: 5, tailable: true };
+
 const transports = [
-  new winston.transports.File({ filename: path.join(logsDir, 'error.log'), level: 'error', format: json }),
-  new winston.transports.File({ filename: path.join(logsDir, 'combined.log'), level: 'info', format: json }),
+  new winston.transports.File({ filename: path.join(logsDir, 'error.log'), level: 'error', format: json, ...ROTATION }),
+  new winston.transports.File({ filename: path.join(logsDir, 'combined.log'), level: 'info', format: json, ...ROTATION }),
 ];
 
 if (isProduction) {

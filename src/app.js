@@ -19,6 +19,8 @@ require("./modules/billing/billingWebhookService").register();
 require("./modules/subscription/accessControl").register();
 // BE-27: verificação de e-mail no cadastro do dono.
 require("./modules/auth/emailVerificationService").register();
+// SEC-20: retenção LGPD (anonimização de barbearias encerradas e limpeza de tokens) no ciclo diário.
+require("./modules/me/retentionService").register();
 const app = express();
 
 // BE-42 / SEC-07: atrás de proxy (Render, Cloudflare) o IP real vem do X-Forwarded-For. Número de
