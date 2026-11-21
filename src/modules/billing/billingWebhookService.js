@@ -15,6 +15,7 @@
 //   checkout.completed           → só vincula o checkout (a ativação vem do subscription.*)
 //   desconhecido                 → registrado e ignorado
 const crypto = require('crypto');
+const securityAlerts = require('../../shared/securityAlerts');
 const { Op } = require('sequelize');
 const { WebhookEvent, Subscription, Plan, Barbershop, User } = require('../../models');
 const queue = require('../../jobs/queue');
@@ -40,11 +41,17 @@ const verify = ({ rawBody, secret, signature }) => {
   const expected = process.env.ABACATEPAY_WEBHOOK_SECRET;
   // 503 faz a AbacatePay tentar de novo depois que o segredo for configurado (4xx não é retentado).
   if (!expected) throw new AppError('Webhook não configurado', 503, CODES.BILLING_UNAVAILABLE);
-  if (!safeEqual(secret, expected)) throw new UnauthorizedError('Webhook não autorizado');
+  if (!safeEqual(secret, expected)) {
+    securityAlerts.record('webhook_signature', { reason: 'secret' });
+    throw new UnauthorizedError('Webhook não autorizado');
+  }
   const publicKey = process.env.ABACATEPAY_WEBHOOK_PUBLIC_KEY;
   if (publicKey) {
     const digest = crypto.createHmac('sha256', publicKey).update(rawBody || Buffer.alloc(0)).digest('base64');
-    if (!safeEqual(signature, digest)) throw new UnauthorizedError('Assinatura do webhook inválida');
+    if (!safeEqual(signature, digest)) {
+      securityAlerts.record('webhook_signature', { reason: 'hmac' });
+      throw new UnauthorizedError('Assinatura do webhook inválida');
+    }
   }
 };
 

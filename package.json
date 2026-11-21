@@ -19,6 +19,7 @@
     "billing:sync-products": "node scripts/billing-sync-products.js",
     "seed": "node scripts/seed.js",
     "create-admin": "node scripts/create-admin.js",
+    "revoke-sessions": "node scripts/revoke-sessions.js",
     "openapi:export": "node scripts/openapi-export.js",
     "migrate:release": "node scripts/migrate-release.js"
   },

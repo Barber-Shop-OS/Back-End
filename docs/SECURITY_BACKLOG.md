@@ -173,7 +173,8 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Fechado (2026-11-21):** 2FA TOTP (RFC 6238, sem dependências) com segredo cifrado (AES-256-GCM, `TOTP_ENCRYPTION_KEY`), proteção contra reuso do código e 10 códigos de recuperação (hash SHA-256, uso único). Login com 2FA devolve `challenge_token` (5 min) e a sessão abre em `POST /auth/2fa/verify`. Obrigatório para admin (rotas `/api/admin` → `403 TWO_FACTOR_SETUP_REQUIRED` até ativar; admin não desativa) e opcional para os demais (decisão de 20/11). Dono recebe e-mail quando alguém entra na equipe (barbeiro, gerente, recepção, convite aceito). Admin só por script CLI e auditoria das ações admin já existiam.
 - Admin criado só por script CLI; 2FA (TOTP) obrigatório para admin e opcional para owner [DECISÃO PENDENTE para owner]; log de auditoria de toda ação admin (BE-36); alerta por e-mail ao owner quando um novo barbeiro/gerente é adicionado.
 
-### [ ] SEC-28 — Monitoramento e resposta a incidentes — **Médio** → BE-42
+### [x] SEC-28 — Monitoramento e resposta a incidentes — **Médio** → BE-42
+- **Fechado (2026-11-21):** `src/shared/securityAlerts.js` — picos de 401/403/429/5xx e falhas de segredo/assinatura do webhook viram `[security] ALERTA` no log (um por tipo/minuto, limites por env; sem Sentry); `npm run revoke-sessions` derruba sessões em massa (todos, por papel ou por usuário); `docs/security/incident-response.md` (papéis, buscas de alerta, contenção, revogação, comunicação à ANPD/titulares em 3 dias úteis). **No deploy:** criar os alertas por busca na plataforma de logs e preencher os contatos.
 - Alertas: pico de 401/403/429, falhas de assinatura de webhook, erros 5xx; `docs/security/incident-response.md` (quem acionar, como revogar tokens em massa — incrementar `token_version` global —, como rotacionar chaves, como comunicar titulares/ANPD em até 3 dias úteis quando aplicável).
 
 ### [x] SEC-29 — Logs seguros — **Baixo**

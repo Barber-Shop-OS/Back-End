@@ -1,5 +1,6 @@
 // Logs each HTTP request on response finish without exposing request body.
 const logger = require('../utils/logger');
+const securityAlerts = require('../shared/securityAlerts');
 
 // SEC-29: tokens nunca vão para o log — caminho de convite e parâmetros sensíveis da query.
 const SENSITIVE_QUERY = /([?&](?:token|webhookSecret|secret|code|id_token|refresh_token)=)[^&]*/gi;
@@ -20,6 +21,8 @@ const requestLoggerMiddleware = (req, res, next) => {
       statusCode: res.statusCode,
       responseTimeMs: Date.now() - startTime,
     });
+    // SEC-28: picos de 401/403/429/5xx viram alerta no log (última rota e IP ajudam a triagem).
+    securityAlerts.recordResponse(res.statusCode, { last_url: safeUrl(req.originalUrl), last_ip: req.ip });
   });
 
   next();

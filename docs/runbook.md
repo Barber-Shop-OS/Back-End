@@ -71,6 +71,7 @@ Local (igual à produção): `docker compose up -d --build` com `.env` de `NODE_
 5. Webhook respondendo 503 = `ABACATEPAY_WEBHOOK_SECRET` ausente; 401 = segredo divergente do cadastrado no painel.
 
 ## Observabilidade
+- Alertas de segurança: buscas `[security] ALERTA` e `[billing] ALERTA` → ver `docs/security/incident-response.md`.
 - Logs JSON no stdout com `request_id` (também devolvido no header `X-Request-Id` e no corpo dos erros 500).
 - Campos sensíveis (senhas, tokens, authorization, CPF/CNPJ) são mascarados.
 - `GET /health` para liveness e `GET /ready` para readiness (banco).
