@@ -2,7 +2,7 @@
 const express = require('express');
 const authController = require('./authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
-const { authLimiter, emailIpLimiter, emailTargetLimiter, loginAccountLimiter } = require('../../middlewares/rateLimitMiddleware');
+const { authLimiter, refreshLimiter, emailIpLimiter, emailTargetLimiter, loginAccountLimiter } = require('../../middlewares/rateLimitMiddleware');
 const passwordResetService = require('./passwordResetService');
 const emailVerificationService = require('./emailVerificationService');
 const googleAuthService = require('./googleAuthService');
@@ -358,7 +358,7 @@ router.post('/confirm-email-change', authLimiter, schemas.verifyEmail, async (re
  *     responses:
  *       204: { description: Sessões encerradas }
  */
-router.post('/refresh', authLimiter, async (req, res, next) => {
+router.post('/refresh', refreshLimiter, async (req, res, next) => {
   try {
     return res.status(200).json(await sessionService.refresh(req, res));
   } catch (error) {

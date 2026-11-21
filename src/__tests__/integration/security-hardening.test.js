@@ -40,6 +40,13 @@ describe('SEC — endurecimento da API', () => {
       const other = await request(app).post('/api/auth/login').send({ email: 'outro@sec.com', password: 'x' });
       expect(other.status).toBe(401);
     });
+
+    it('renovar a sessão (/auth/refresh) não consome a cota do login: 15 recargas seguidas não dão 429', async () => {
+      for (let i = 0; i < 15; i += 1) {
+        const res = await request(app).post('/api/auth/refresh').set('X-Forwarded-For', '10.9.9.9');
+        expect(res.status).toBe(401);
+      }
+    });
   });
 
   describe('SEC-18 — superfície em produção', () => {

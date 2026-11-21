@@ -174,6 +174,9 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - **Fechado (2026-11-19):** logs sem corpo; `authorization`, senhas, tokens, CPF/CNPJ mascarados; URL do log sem token de convite nem `token/secret` na query (`safeUrl`).
 - `requestLoggerMiddleware` já não loga corpo — manter e testar; scrubbing de `authorization`, `password`, `token`, `cpf`, `cnpj` em logs e no Sentry; não logar query string de rotas com token (`/invitations/:token`, `verify-email?token=`).
 
+### [x] SEC-30 — Limite próprio para `/auth/refresh` — **Médio (disponibilidade)**
+- **Fechado (2026-11-21):** o refresh dividia a cota de 10/15 min do login (`authLimiter`); com access token de 15 min e um refresh a cada carregamento do app, poucas recargas geravam 429 e derrubavam a sessão. Agora usa `refreshLimiter` (120/15 min por IP). `authLimiter` passa a ser testável com `RATE_LIMIT_IN_TESTS`.
+
 ---
 
 ## Ordem de execução recomendada

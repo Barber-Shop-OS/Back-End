@@ -2,6 +2,8 @@
 const rateLimit = require('express-rate-limit');
 const isTestEnv = process.env.NODE_ENV === 'test';
 
+const limitersInTests = () => process.env.RATE_LIMIT_IN_TESTS === 'true';
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -11,7 +13,18 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => isTestEnv,
+  skip: () => isTestEnv && !limitersInTests(),
+});
+
+// /auth/refresh roda a cada carregamento do app e a cada 15 min (access token curto, FE-37): não pode
+// dividir a cota de 10 do login, senão quem recarrega a página algumas vezes perde a sessão (429).
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: { code: 'RATE_LIMITED', message: 'Muitas renovações de sessão. Tente novamente em instantes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv && !limitersInTests(),
 });
 
 const apiLimiter = rateLimit({
@@ -93,6 +106,7 @@ module.exports = {
   emailTargetLimiter,
   bookingLimiter,
   authLimiter,
+  refreshLimiter,
   apiLimiter,
   paymentLimiter,
 };
