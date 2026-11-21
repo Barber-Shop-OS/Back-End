@@ -160,6 +160,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - DAST: OWASP ZAP baseline contra staging no CI semanal.
 
 ### [ ] SEC-24 — Pentest antes do lançamento — **Alto**
+- **Parcial (2026-11-21):** OWASP API Top 10 executado contra a produção local com `scripts/security/pentest.mjs` — 23/23 OK; evidências em `docs/security/pentest-2026-11.md`. **Falta:** reexecutar no staging (com o checkout AbacatePay devMode e webhook real) quando ele existir.
 - Após sprints A–D: checklist OWASP API Top 10 executado manualmente contra staging (registrar evidências em `docs/security/pentest-AAAA-MM.md`), incluindo fluxo de pagamento AbacatePay em devMode. Corrigir achados e reexecutar.
 
 ### [x] SEC-25 — Banco e infraestrutura — **Médio** → BE-44
