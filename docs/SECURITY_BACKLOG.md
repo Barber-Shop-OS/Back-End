@@ -175,7 +175,7 @@ Referências usadas para o checklist: OWASP API Security Top 10 (2023), OWASP To
 - `requestLoggerMiddleware` já não loga corpo — manter e testar; scrubbing de `authorization`, `password`, `token`, `cpf`, `cnpj` em logs e no Sentry; não logar query string de rotas com token (`/invitations/:token`, `verify-email?token=`).
 
 ### [x] SEC-30 — Limite próprio para `/auth/refresh` — **Médio (disponibilidade)**
-- **Fechado (2026-11-21):** o refresh dividia a cota de 10/15 min do login (`authLimiter`); com access token de 15 min e um refresh a cada carregamento do app, poucas recargas geravam 429 e derrubavam a sessão. Agora usa `refreshLimiter` (120/15 min por IP). `authLimiter` passa a ser testável com `RATE_LIMIT_IN_TESTS`.
+- **Fechado (2026-11-21):** o refresh dividia a cota de 10/15 min do login (`authLimiter`); com access token de 15 min e um refresh a cada carregamento do app, poucas recargas geravam 429 e derrubavam a sessão. Agora usa `refreshLimiter` (600/15 min por IP — vários aparelhos da barbearia saem pelo mesmo IP; o token tem 256 bits, então o limite não protege contra adivinhação). `authLimiter` passa a ser testável com `RATE_LIMIT_IN_TESTS`.
 
 ### [x] SEC-31 — Limite geral por IP compatível com o uso real — **Médio (disponibilidade)**
 - **Fechado (2026-11-21):** `apiLimiter` subiu de 100 para 300 req/min por IP. Na validação do front, navegar pelo painel em ritmo normal gerava 429 (cada tela faz ~10 chamadas, há polling da agenda) e barbearias têm vários aparelhos atrás do mesmo IP. Limites específicos (login, refresh, e-mail, pagamento, agendamento) continuam.

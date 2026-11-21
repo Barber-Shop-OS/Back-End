@@ -18,9 +18,10 @@ const authLimiter = rateLimit({
 
 // /auth/refresh roda a cada carregamento do app e a cada 15 min (access token curto, FE-37): não pode
 // dividir a cota de 10 do login, senão quem recarrega a página algumas vezes perde a sessão (429).
+// 600/15 min por IP: vários aparelhos da barbearia (balcão, barbeiros) costumam sair pelo mesmo IP.
 const refreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 120,
+  max: 600,
   message: { code: 'RATE_LIMITED', message: 'Muitas renovações de sessão. Tente novamente em instantes.' },
   standardHeaders: true,
   legacyHeaders: false,
