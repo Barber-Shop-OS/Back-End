@@ -28,6 +28,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('idempotency_keys');
+    await queryInterface.dropTable('idempotency_keys', {});
   },
 };

@@ -38,14 +38,20 @@ const visibleSubscriptionWhere = (now) => ({
  * Distância em km (Haversine). lat/lng já validados como números pelo schema; ainda assim são
  * convertidos com Number() e formatados — nunca concatenamos texto do usuário no SQL.
  */
+// Coluna do endereço com as aspas do dialeto (PostgreSQL usa aspas duplas, não crases).
+const col = (name) => {
+  const queryInterface = require('../../config/sequelize').getQueryInterface();
+  return `${queryInterface.quoteIdentifier('Address')}.${queryInterface.quoteIdentifier(name)}`;
+};
+
 const distanceSql = (lat, lng) => {
   const la = Number(lat).toFixed(6);
   const lo = Number(lng).toFixed(6);
   return (
     `(${EARTH_RADIUS_KM} * 2 * ASIN(SQRT(` +
-    `POWER(SIN(RADIANS(\`Address\`.\`latitude\` - ${la}) / 2), 2) + ` +
-    `COS(RADIANS(${la})) * COS(RADIANS(\`Address\`.\`latitude\`)) * ` +
-    `POWER(SIN(RADIANS(\`Address\`.\`longitude\` - ${lo}) / 2), 2))))`
+    `POWER(SIN(RADIANS(${col('latitude')} - ${la}) / 2), 2) + ` +
+    `COS(RADIANS(${la})) * COS(RADIANS(${col('latitude')})) * ` +
+    `POWER(SIN(RADIANS(${col('longitude')} - ${lo}) / 2), 2))))`
   );
 };
 
@@ -131,7 +137,7 @@ const searchBranches = async (query = {}, now = new Date()) => {
     ],
     order: withDistance
       ? [
-          [literal(`(\`Address\`.\`latitude\` IS NULL OR \`Address\`.\`longitude\` IS NULL)`), 'ASC'],
+          [literal(`(${col('latitude')} IS NULL OR ${col('longitude')} IS NULL)`), 'ASC'],
           [literal(distance), 'ASC'],
           ['id', 'ASC'],
         ]

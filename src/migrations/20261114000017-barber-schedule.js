@@ -12,7 +12,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      weekday: { type: Sequelize.TINYINT, allowNull: false },
+      weekday: { type: Sequelize.SMALLINT, allowNull: false },
       start_time: { type: Sequelize.TIME, allowNull: false },
       end_time: { type: Sequelize.TIME, allowNull: false },
     });
@@ -45,7 +45,7 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('barber_time_off');
-    await queryInterface.dropTable('barber_working_hours');
+    await queryInterface.dropTable('barber_time_off', {});
+    await queryInterface.dropTable('barber_working_hours', {});
   },
 };

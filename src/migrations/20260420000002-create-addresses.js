@@ -38,6 +38,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('addresses');
+    await queryInterface.dropTable('addresses', {});
   },
 };

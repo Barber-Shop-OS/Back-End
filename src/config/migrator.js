@@ -59,18 +59,18 @@ const verifySchema = async () => {
 };
 
 /**
- * BE-44: várias instâncias subindo juntas não rodam migrations em paralelo — no MySQL usa GET_LOCK
- * numa conexão reservada (transação) até terminar. SQLite (testes) serializa sozinho.
+ * BE-44: várias instâncias subindo juntas não rodam migrations em paralelo — no PostgreSQL usa um
+ * advisory lock de transação numa conexão reservada até terminar. SQLite (testes) serializa sozinho.
  */
+const MIGRATION_LOCK_KEY = 7314159; // número fixo e arbitrário que identifica o lock das migrations
 const withMigrationLock = async (fn) => {
-  if (sequelize.getDialect() !== 'mysql') return fn();
+  if (sequelize.getDialect() !== 'postgres') return fn();
   const holder = await sequelize.transaction();
   try {
-    const [rows] = await sequelize.query("SELECT GET_LOCK('barberos_migrations', 120) AS acquired", { transaction: holder });
-    if (!rows[0] || Number(rows[0].acquired) !== 1) throw new Error('Não foi possível obter o lock de migrations (120 s)');
+    await sequelize.query("SET LOCAL lock_timeout = '120s'", { transaction: holder });
+    await sequelize.query(`SELECT pg_advisory_xact_lock(${MIGRATION_LOCK_KEY})`, { transaction: holder });
     return await fn();
   } finally {
-    await sequelize.query("SELECT RELEASE_LOCK('barberos_migrations')", { transaction: holder }).catch(() => {});
     await holder.commit().catch(() => {});
   }
 };

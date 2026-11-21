@@ -20,7 +20,7 @@ const Service = sequelize.define('Service', {
   price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
-    // MySQL devolve string e SQLite número: normaliza para "0.00" nos dois.
+    // PostgreSQL devolve string e SQLite número: normaliza para "0.00" nos dois.
     get() {
       const value = this.getDataValue('price');
       return value === null || value === undefined ? value : Number(value).toFixed(2);

@@ -30,6 +30,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('barbershop_members');
+    await queryInterface.dropTable('barbershop_members', {});
   },
 };

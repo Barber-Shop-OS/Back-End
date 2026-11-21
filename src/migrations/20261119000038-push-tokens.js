@@ -21,6 +21,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('push_tokens');
+    await queryInterface.dropTable('push_tokens', {});
   },
 };

@@ -19,6 +19,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('webhook_events');
+    await queryInterface.dropTable('webhook_events', {});
   },
 };

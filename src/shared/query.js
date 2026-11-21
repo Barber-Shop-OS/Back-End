@@ -20,13 +20,14 @@ const escapeLike = (value) => String(value).replace(/[\\%_]/g, (char) => `\\${ch
 const likeContains = (value) => ({ [Op.like]: `%${escapeLike(String(value).slice(0, 100))}%` });
 
 /**
- * `coluna LIKE %termo% ESCAPE '!'` com escape explícito — igual em MySQL e SQLite (o SQLite não tem
- * caractere de escape padrão). `column` é 'Modelo.coluna' como aparece na consulta.
+ * `coluna LIKE %termo% ESCAPE '!'` com escape explícito, sem diferenciar maiúsculas: ILIKE no
+ * PostgreSQL; no SQLite (testes) o LIKE já ignora caixa para ASCII. `column` é 'Modelo.coluna'.
  */
 const likeMatch = (column, value) => {
   const sequelize = require('../config/sequelize');
   const term = String(value).slice(0, 100).replace(/[!%_]/g, (char) => `!${char}`);
-  return sequelize.where(sequelize.col(column), Op.like, sequelize.literal(`${sequelize.escape(`%${term}%`)} ESCAPE '!'`));
+  const operator = sequelize.getDialect() === 'postgres' ? Op.iLike : Op.like;
+  return sequelize.where(sequelize.col(column), operator, sequelize.literal(`${sequelize.escape(`%${term}%`)} ESCAPE '!'`));
 };
 
 const paginated = (result, { page, pageSize }) => ({

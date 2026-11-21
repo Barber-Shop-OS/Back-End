@@ -34,7 +34,7 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('audit_logs');
+    await queryInterface.dropTable('audit_logs', {});
     for (const table of PARANOID_TABLES) {
       await queryInterface.removeColumn(table, 'deleted_at');
     }

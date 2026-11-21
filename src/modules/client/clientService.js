@@ -26,7 +26,7 @@ const assertStaffOfBarbershop = async (user, barbershopId) => {
   return barbershop;
 };
 
-// Subconsultas de estatística por cliente (mesmo SQL em MySQL e SQLite).
+// Subconsultas de estatística por cliente (mesmo SQL em PostgreSQL e SQLite).
 const q = (name) => sequelize.getQueryInterface().quoteIdentifier(name);
 const clientIdCol = () => `${q('BarbershopClient')}.${q('id')}`;
 const statAttributes = () => [

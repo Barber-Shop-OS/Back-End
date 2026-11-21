@@ -22,7 +22,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      weekday: { type: Sequelize.TINYINT, allowNull: false },
+      weekday: { type: Sequelize.SMALLINT, allowNull: false },
       opens_at: { type: Sequelize.TIME, allowNull: false },
       closes_at: { type: Sequelize.TIME, allowNull: false },
     });
@@ -50,8 +50,8 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('branch_closures');
-    await queryInterface.dropTable('branch_opening_hours');
+    await queryInterface.dropTable('branch_closures', {});
+    await queryInterface.dropTable('branch_opening_hours', {});
     await queryInterface.removeColumn('branches', 'active');
     await queryInterface.removeColumn('branches', 'whatsapp');
     await queryInterface.removeColumn('branches', 'phone');

@@ -66,6 +66,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('appointments');
+    await queryInterface.dropTable('appointments', {});
   },
 };

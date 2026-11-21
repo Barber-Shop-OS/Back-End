@@ -1,42 +1,26 @@
 // Conexão Sequelize.
-// - Testes: SQLite em memória por padrão; TEST_DB_DIALECT=mysql usa o MySQL configurado em DB_* (job de CI).
-// - Demais ambientes: MySQL, datas em UTC e sem log de SQL (evita dados pessoais nos logs).
+// - Testes: SQLite em memória por padrão; TEST_DB_DIALECT=postgres usa o PostgreSQL configurado
+//   (DATABASE_URL ou DB_*) — job de CI e validação local.
+// - Demais ambientes: PostgreSQL (Supabase em produção), datas em UTC e sem log de SQL.
 const { Sequelize } = require('sequelize');
 const dotenv = require('dotenv');
 const logger = require('../utils/logger');
+const { postgresConfig } = require('./dbOptions');
 
 dotenv.config();
 
 const isTestEnv = process.env.NODE_ENV === 'test';
-const useMysqlInTests = isTestEnv && process.env.TEST_DB_DIALECT === 'mysql';
-const usesSsl = process.env.DB_SSL === 'true';
+const usePostgresInTests = isTestEnv && process.env.TEST_DB_DIALECT === 'postgres';
 
-/**
- * BE-44 / SEC-12: TLS com o banco validando o certificado. DB_SSL_CA = conteúdo PEM ou caminho do
- * arquivo da CA do provedor; sem CA usa as CAs do sistema. Nunca desliga a validação por padrão.
- */
-const sslOptions = () => {
-  const fs = require('fs');
-  const ca = process.env.DB_SSL_CA;
-  const options = { require: true, rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
-  // PEM em variável de ambiente costuma vir com "\n" literais no lugar das quebras de linha.
-  if (ca) options.ca = ca.includes('BEGIN CERTIFICATE') ? ca.replace(/\\n/g, '\n') : fs.readFileSync(ca, 'utf8');
-  return options;
-};
-
-const mysqlOptions = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'mysql',
-  timezone: '+00:00',
-  logging: false,
-  dialectOptions: usesSsl ? { ssl: sslOptions() } : undefined,
+const createPostgres = () => {
+  const config = postgresConfig();
+  return config.url
+    ? new Sequelize(config.url, config.options)
+    : new Sequelize(config.database, config.username, config.password, config.options);
 };
 
 const sequelize =
-  isTestEnv && !useMysqlInTests
-    ? new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false })
-    : new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, mysqlOptions);
+  isTestEnv && !usePostgresInTests ? new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false }) : createPostgres();
 
 const connectDatabase = async () => {
   try {

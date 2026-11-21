@@ -1,6 +1,6 @@
 // BE-14: criação de agendamento à prova de concorrência.
 //
-// Dentro de uma transação READ COMMITTED (MySQL — ver src/shared/transaction.js):
+// Dentro de uma transação READ COMMITTED (PostgreSQL — ver src/shared/transaction.js):
 //   1. trava a linha do cliente (serializa o limite de agendamentos ativos e o Idempotency-Key);
 //   2. trava as linhas dos barbeiros candidatos (ordem por id → sem deadlock);
 //   3. revalida o horário com o mesmo computeSlots do GET /availability (BE-13);

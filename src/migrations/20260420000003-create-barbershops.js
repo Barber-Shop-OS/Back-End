@@ -32,6 +32,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('barbershops');
+    await queryInterface.dropTable('barbershops', {});
   },
 };

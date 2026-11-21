@@ -1,4 +1,5 @@
 'use strict';
+const { setEnumValues } = require('../shared/migrationEnum');
 
 // BE-07: pagamento presencial completo — método CARD (maquininha), quem registrou, filial e barbearia
 // desnormalizadas (listagem/financeiro sem join) e índice para o relatório por período.
@@ -18,10 +19,7 @@ const ensureIndexes = async (queryInterface, withNew) => {
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.changeColumn('payments', 'method', {
-      type: Sequelize.ENUM('PIX', 'CASH', 'CARD'),
-      allowNull: false,
-    });
+    await setEnumValues(queryInterface, 'payments', 'method', ['PIX', 'CASH', 'CARD']);
     await queryInterface.addColumn('payments', 'recorded_by', {
       type: Sequelize.INTEGER,
       allowNull: true,
@@ -55,7 +53,7 @@ module.exports = {
     await ensureIndexes(queryInterface, true);
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     const names = new Set((await queryInterface.showIndex('payments')).map((index) => index.name));
     for (const name of ['payments_barbershop_created_idx', 'payments_branch_created_idx']) {
       if (names.has(name)) await queryInterface.removeIndex('payments', name);
@@ -65,7 +63,7 @@ module.exports = {
     await queryInterface.removeColumn('payments', 'branch_id');
     await queryInterface.removeColumn('payments', 'recorded_by');
     await queryInterface.sequelize.query("UPDATE payments SET method = 'PIX' WHERE method = 'CARD'");
-    await queryInterface.changeColumn('payments', 'method', { type: Sequelize.ENUM('PIX', 'CASH'), allowNull: false });
+    await setEnumValues(queryInterface, 'payments', 'method', ['PIX', 'CASH']);
     await ensureIndexes(queryInterface, false);
   },
 };

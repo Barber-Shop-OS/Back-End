@@ -1,4 +1,5 @@
 'use strict';
+const { setEnumValues } = require('../shared/migrationEnum');
 
 // BE-12: agendamento v2 — intervalo [start_at, end_at) em UTC, snapshots de preço/nome/duração,
 // status completos, dados de cancelamento, origem e updated_at.
@@ -76,16 +77,9 @@ module.exports = {
     await add('updated_at', { type: Sequelize.DATE, allowNull: true });
 
     // Status: primeiro um ENUM com a união dos valores, migra os dados, depois o ENUM final.
-    await queryInterface.changeColumn('appointments', 'status', {
-      type: Sequelize.ENUM(...TRANSITION_STATUS),
-      allowNull: false,
-    });
+    await setEnumValues(queryInterface, 'appointments', 'status', TRANSITION_STATUS);
     await queryInterface.sequelize.query("UPDATE appointments SET status = 'confirmado' WHERE status = 'pendente'");
-    await queryInterface.changeColumn('appointments', 'status', {
-      type: Sequelize.ENUM(...NEW_STATUS),
-      allowNull: false,
-      defaultValue: 'confirmado',
-    });
+    await setEnumValues(queryInterface, 'appointments', 'status', NEW_STATUS, { defaultValue: 'confirmado' });
 
     const existing = await rows(
       queryInterface,
@@ -147,17 +141,11 @@ module.exports = {
     await removeIndexIfExists(queryInterface, 'appointments_barber_start_idx');
     await removeIndexIfExists(queryInterface, 'appointments_branch_start_idx');
 
-    await queryInterface.changeColumn('appointments', 'status', {
-      type: Sequelize.ENUM(...TRANSITION_STATUS),
-      allowNull: false,
-    });
+    await setEnumValues(queryInterface, 'appointments', 'status', TRANSITION_STATUS);
     // O schema antigo não tem concluído/falta: concluído volta como confirmado; falta como cancelado.
     await queryInterface.sequelize.query("UPDATE appointments SET status = 'confirmado' WHERE status = 'concluido'");
     await queryInterface.sequelize.query("UPDATE appointments SET status = 'cancelado' WHERE status = 'nao_compareceu'");
-    await queryInterface.changeColumn('appointments', 'status', {
-      type: Sequelize.ENUM(...OLD_STATUS),
-      allowNull: false,
-    });
+    await setEnumValues(queryInterface, 'appointments', 'status', OLD_STATUS);
 
     // MySQL não remove coluna com FK: tira a constraint de cancelled_by antes.
     const references = await queryInterface.getForeignKeyReferencesForTable('appointments');

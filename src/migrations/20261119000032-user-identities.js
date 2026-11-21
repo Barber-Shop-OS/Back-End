@@ -29,7 +29,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('user_identities');
+    await queryInterface.dropTable('user_identities', {});
     // Contas só-Google não cabem no schema antigo: recebem uma senha inutilizável (hash aleatório).
     await queryInterface.sequelize.query("UPDATE users SET password = '!google-only' WHERE password IS NULL");
     await queryInterface.changeColumn('users', 'password', { type: Sequelize.STRING, allowNull: false });

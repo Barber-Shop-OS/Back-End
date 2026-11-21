@@ -1,6 +1,6 @@
 // BE-14: criação à prova de concorrência, revalidação do horário, "sem preferência",
 // limite de agendamentos ativos [SEC-21] e Idempotency-Key.
-// O caso de 10 requisições simultâneas roda no SQLite e no job MySQL do CI (TEST_DB_DIALECT=mysql).
+// O caso de 10 requisições simultâneas roda no SQLite e no job PostgreSQL do CI (TEST_DB_DIALECT=postgres).
 jest.setTimeout(120000);
 
 const {

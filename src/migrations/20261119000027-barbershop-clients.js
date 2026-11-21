@@ -91,6 +91,6 @@ module.exports = {
     await queryInterface.removeColumn('appointments', 'client_id');
     await queryInterface.changeColumn('appointments', 'user_id', userIdColumn(Sequelize, false));
     await ensureAppointmentIndexes(queryInterface);
-    await queryInterface.dropTable('barbershop_clients');
+    await queryInterface.dropTable('barbershop_clients', {});
   },
 };

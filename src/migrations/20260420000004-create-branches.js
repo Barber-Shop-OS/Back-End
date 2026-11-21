@@ -42,6 +42,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('branches');
+    await queryInterface.dropTable('branches', {});
   },
 };

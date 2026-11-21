@@ -28,6 +28,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('refresh_tokens');
+    await queryInterface.dropTable('refresh_tokens', {});
   },
 };

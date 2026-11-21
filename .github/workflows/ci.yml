@@ -25,25 +25,24 @@ jobs:
       - name: Dependências de produção sem vulnerabilidade alta/crítica
         run: npm audit --omit=dev --audit-level=high
 
-  mysql:
-    name: Migrations em MySQL 8
+  postgres:
+    name: Suíte completa em PostgreSQL 16
     runs-on: ubuntu-latest
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16-alpine
         env:
-          MYSQL_ROOT_PASSWORD: ci-root-password
-          MYSQL_DATABASE: barberos_test
-          MYSQL_USER: barberos
-          MYSQL_PASSWORD: ci-password
-        ports: ['3306:3306']
+          POSTGRES_DB: barberos_test
+          POSTGRES_USER: barberos
+          POSTGRES_PASSWORD: ci-password
+        ports: ['5432:5432']
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password"
+          --health-cmd="pg_isready -U barberos -d barberos_test"
           --health-interval=10s --health-timeout=5s --health-retries=10
     env:
-      TEST_DB_DIALECT: mysql
+      TEST_DB_DIALECT: postgres
       DB_HOST: 127.0.0.1
-      DB_PORT: 3306
+      DB_PORT: 5432
       DB_USER: barberos
       DB_PASS: ci-password
       DB_NAME: barberos_test
@@ -54,10 +53,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      # Valida no MySQL real o que o SQLite não pega (ENUM, DECIMAL, índices, ordem das FKs)
-      # a reserva concorrente com SELECT ... FOR UPDATE (BE-14), a fila com SKIP LOCKED (BE-16) e o
-      # Haversine/LIKE ESCAPE da busca (BE-25).
-      - run: npx cross-env TEST_DB_DIALECT=mysql jest --runInBand --forceExit src/__tests__/integration/migrations.test.js src/__tests__/integration/appointment/appointments-v2-migration.test.js src/__tests__/integration/appointment/booking-concurrency.test.js src/__tests__/integration/jobs/notifications.test.js src/__tests__/integration/search/search-branches.test.js
+      # Suíte inteira no PostgreSQL real (o banco de produção — Supabase): ENUM, DECIMAL, índices, FKs,
+      # FOR UPDATE da reserva (BE-14), SKIP LOCKED da fila (BE-16), ILIKE/Haversine da busca (BE-25).
+      - run: npx jest --runInBand --forceExit
 
   secrets:
     name: Varredura de segredos

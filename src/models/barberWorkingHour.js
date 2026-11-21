@@ -6,7 +6,7 @@ const { hhmm } = require('./branchOpeningHour');
 const BarberWorkingHour = sequelize.define('BarberWorkingHour', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   barber_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'barbers', key: 'id' } },
-  weekday: { type: DataTypes.TINYINT, allowNull: false },
+  weekday: { type: DataTypes.SMALLINT, allowNull: false },
   start_time: { type: DataTypes.TIME, allowNull: false, get: hhmm('start_time') },
   end_time: { type: DataTypes.TIME, allowNull: false, get: hhmm('end_time') },
 }, {

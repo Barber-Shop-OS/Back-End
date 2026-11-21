@@ -23,11 +23,25 @@ const schema = Joi.object({
   // BE-30: access token curto; a sessão continua pelo refresh token (30 dias, rotativo).
   JWT_EXPIRES_IN: Joi.string().default('15m'),
 
-  DB_HOST: Joi.string().when('NODE_ENV', { is: 'test', then: Joi.optional(), otherwise: Joi.required() }),
-  DB_PORT: Joi.number().port().default(3306),
-  DB_USER: Joi.string().when('NODE_ENV', { is: 'test', then: Joi.optional(), otherwise: Joi.required() }),
+  // PostgreSQL: DATABASE_URL (Supabase/Railway) ou DB_HOST/DB_USER/DB_NAME.
+  DATABASE_URL: Joi.string().uri({ scheme: ['postgres', 'postgresql'] }),
+  DB_HOST: Joi.string().when('NODE_ENV', {
+    is: 'test',
+    then: Joi.optional(),
+    otherwise: Joi.when('DATABASE_URL', { is: Joi.exist(), then: Joi.optional(), otherwise: Joi.required() }),
+  }),
+  DB_PORT: Joi.number().port().default(5432),
+  DB_USER: Joi.string().when('NODE_ENV', {
+    is: 'test',
+    then: Joi.optional(),
+    otherwise: Joi.when('DATABASE_URL', { is: Joi.exist(), then: Joi.optional(), otherwise: Joi.required() }),
+  }),
   DB_PASS: Joi.string().allow('').default(''),
-  DB_NAME: Joi.string().when('NODE_ENV', { is: 'test', then: Joi.optional(), otherwise: Joi.required() }),
+  DB_NAME: Joi.string().when('NODE_ENV', {
+    is: 'test',
+    then: Joi.optional(),
+    otherwise: Joi.when('DATABASE_URL', { is: Joi.exist(), then: Joi.optional(), otherwise: Joi.required() }),
+  }),
   DB_SSL: Joi.boolean().truthy('true').falsy('false').default(false),
 
   // Lista separada por vírgula. Obrigatória em produção (SEC-08).
@@ -61,6 +75,7 @@ const loadEnv = (source = process.env) => {
       algorithm: 'HS256',
     },
     db: {
+      url: value.DATABASE_URL,
       host: value.DB_HOST,
       port: value.DB_PORT,
       user: value.DB_USER,

@@ -1,21 +1,20 @@
 # Ambiente local. Exige um .env (ver .env.example) — não há senhas/segredos padrão (SEC-05, SEC-14).
 services:
+  # PostgreSQL 16 (mesma major do Supabase). Em produção o banco é o Supabase (DATABASE_URL).
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     container_name: barberos-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:?Defina DB_ROOT_PASS no .env}
-      MYSQL_DATABASE: ${DB_NAME:?Defina DB_NAME no .env}
-      # Usuário da aplicação (não-root).
-      MYSQL_USER: ${DB_USER:?Defina DB_USER no .env}
-      MYSQL_PASSWORD: ${DB_PASS:?Defina DB_PASS no .env}
+      POSTGRES_DB: ${DB_NAME:?Defina DB_NAME no .env}
+      POSTGRES_USER: ${DB_USER:?Defina DB_USER no .env}
+      POSTGRES_PASSWORD: ${DB_PASS:?Defina DB_PASS no .env}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -34,7 +33,7 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
       DB_HOST: db
-      DB_PORT: 3306
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
@@ -47,6 +46,7 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASS: ${MAIL_PASS:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
       JOBS_WORKER: ${JOBS_WORKER:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       EXPO_PUSH_URL: ${EXPO_PUSH_URL:-}
@@ -76,4 +76,4 @@ services:
       - "${PORT:-3000}:3000"
 
 volumes:
-  db_data:
+  pg_data:

@@ -34,7 +34,7 @@ const cancelByReference = async (reference, { types, match, transaction } = {}) 
 const parsePayload = (job) => (typeof job.payload === 'string' ? JSON.parse(job.payload) : job.payload);
 
 /**
- * Reserva até `limit` jobs vencidos. Em MySQL 8 usa SKIP LOCKED: duas instâncias do worker nunca
+ * Reserva até `limit` jobs vencidos. No PostgreSQL usa SKIP LOCKED: duas instâncias do worker nunca
  * pegam o mesmo job. A reserva é curta (só marca running); o processamento é fora da transação.
  */
 const claimDue = ({ now = new Date(), limit = 20 } = {}) =>

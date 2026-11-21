@@ -95,8 +95,8 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('subscription_events');
-    await queryInterface.dropTable('subscriptions');
-    await queryInterface.dropTable('plans');
+    await queryInterface.dropTable('subscription_events', {});
+    await queryInterface.dropTable('subscriptions', {});
+    await queryInterface.dropTable('plans', {});
   },
 };
