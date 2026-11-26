@@ -50,6 +50,11 @@ const schema = Joi.object({
     then: Joi.required(),
     otherwise: Joi.string().default('http://localhost:5173,http://localhost:4173'),
   }),
+
+  // SEC-07: quantos proxies reversos ficam na frente da API (Railway/Render/Cloudflare = 1).
+  // 0 = acesso direto. Sem isso, atrás de proxy todos os clientes compartilham o IP do proxy
+  // no rate limit.
+  TRUST_PROXY: Joi.number().integer().min(0).max(5).default(0),
 }).unknown(true);
 
 /**
@@ -83,6 +88,7 @@ const loadEnv = (source = process.env) => {
       name: value.DB_NAME,
       ssl: value.DB_SSL,
     },
+    trustProxy: value.TRUST_PROXY,
     corsOrigins: String(value.CORS_ORIGINS)
       .split(',')
       .map((origin) => origin.trim())
