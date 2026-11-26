@@ -15,6 +15,9 @@ require("./models/index");
 require("./modules/notification/appointmentNotifications").register();
 const app = express();
 
+// SEC-07: IP real do cliente atrás do proxy da hospedagem (rate limit e logs).
+app.set('trust proxy', config.trustProxy);
+
 // Middleware
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));

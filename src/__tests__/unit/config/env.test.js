@@ -57,3 +57,17 @@ describe('loadEnv (BE-02)', () => {
     }
   });
 });
+
+describe('loadEnv — TRUST_PROXY (SEC-07)', () => {
+  it('usa 0 (sem proxy) por padrão', () => {
+    expect(loadEnv(base).trustProxy).toBe(0);
+  });
+
+  it('aceita o número de proxies na frente da API', () => {
+    expect(loadEnv({ ...base, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+  });
+
+  it('recusa valores inválidos', () => {
+    expect(() => loadEnv({ ...base, TRUST_PROXY: 'true' })).toThrow('TRUST_PROXY');
+  });
+});
